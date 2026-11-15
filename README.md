@@ -80,3 +80,7 @@ python -X utf8 scripts/package.py
 需求、来源研究和可继续开发的状态在 `docs/ai/`，REA 实际检查、测试和基准报告在 `docs/evidence/`。REA 已执行本地 PE/资源/导入和 apate 托管元数据检查；没有将这些检查称为完整 Python 源码恢复。本地 EXE 与公开 1.x 源码无法逐字证明相同。
 
 bit7z 使用 MPL2；本项目仅扩展其本地卷路径解析/观测接口，用于改名 RAR 多卷及准确记录参与卷。修改保留原许可，补丁位于 `patches/bit7z-volumes.patch`。解压引擎许可见随程序的 `7-Zip-License.txt`。参考实现及源码链接见 `docs/ai/requirements-and-route.md`。
+
+## 许可
+
+本项目以 MIT 许可发布，完整文本见 `LICENSE`。
