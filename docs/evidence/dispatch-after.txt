@@ -1,0 +1,1 @@
+Dispatch 1500 metadata tasks ms: 13; no archives opened.

@@ -1,0 +1,14 @@
+{
+  "sample": "社会运行的经济视角-S01E16_50100487.7z",
+  "header_verified_by": "SDK-decoded metadata plus retained CRC bits; independently decoded AES header",
+  "body_declared_bytes": 941992259,
+  "body_expected_crc32": 392423924,
+  "body_actual_crc32": 1436167600,
+  "ciphertext_physical_begin": 208,
+  "ciphertext_physical_end": 941992480,
+  "independent_body_decode": "streamed reverse read, AES-CBC, format-required file CRC; no extra plaintext file written",
+  "native_output_length_correct": true,
+  "native_output_first_and_last_blocks_match_independent_decode": true,
+  "padding_verified": true,
+  "conclusion": "Metadata is readable and header password verified, but body verification fails; source and partial output must be retained. Do not rewrite the CRC or count extraction as successful."
+}

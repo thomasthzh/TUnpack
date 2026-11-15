@@ -1,0 +1,22 @@
+#include <windows.h>
+#pragma code_page(65001)
+101 ICON "t-unpack.ico"
+1 RT_MANIFEST "app.manifest"
+1 VERSIONINFO
+FILEVERSION 0,13,0,0
+PRODUCTVERSION 0,13,0,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "040904B0"
+  BEGIN
+   VALUE "FileDescription", "T解压"
+   VALUE "ProductName", "T解压"
+   VALUE "OriginalFilename", "T解压.exe"
+   VALUE "FileVersion", "0.13.0"
+   VALUE "ProductVersion", "0.13.0"
+  END
+ END
+END

@@ -1,0 +1,9 @@
+Test project <PROJECT>/build
+    Start 4: queue_flows
+1/2 Test #4: queue_flows ......................   Passed    1.37 sec
+    Start 7: shell_open
+2/2 Test #7: shell_open .......................   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   1.56 sec

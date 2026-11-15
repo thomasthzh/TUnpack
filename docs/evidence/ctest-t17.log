@@ -1,0 +1,13 @@
+Test project <PROJECT>/build
+    Start 1: brand_resources
+1/4 Test #1: brand_resources ..................   Passed    0.06 sec
+    Start 2: ui_model
+2/4 Test #2: ui_model .........................   Passed    0.29 sec
+    Start 4: queue_flows
+3/4 Test #4: queue_flows ......................   Passed    0.25 sec
+    Start 5: layout_dpi
+4/4 Test #5: layout_dpi .......................   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.71 sec

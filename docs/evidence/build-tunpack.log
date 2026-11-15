@@ -1,0 +1,148 @@
+[0/1] Re-running CMake...
+-- Standard filesystem: NO (using ghc::filesystem)
+-- Target Version: 0.13.0
+-- Compiler ID: GNU
+-- Compiler Version: 16.1.0
+-- Architecture: x64
+-- Build Type: Release
+-- Language Standard for bit7z: C++14
+-- Auto format detection: ON
+-- Detect format from file extension: OFF
+-- Regex matching extraction: OFF
+-- Use std::byte: OFF
+-- Use native string: ON
+-- Generate Position Independent Code: OFF
+-- Disable Zip ASCII password check: OFF
+-- Disable using std::filesystem: ON
+-- 7-zip version: 23.01
+-- Build tests: OFF
+-- Build docs: OFF
+-- Auto prefix long paths: ON
+-- Use the default codepage: OFF
+-- Path sanitization: OFF
+-- CPM: Adding package 7-zip@23.01 (v23.01)
+-- Populating 7-zip
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: <PROJECT>/build/_deps/7-zip-subbuild
+[0/7] Performing update step for '7-zip-populate'
+-- Already at requested tag: v23.01
+[1/7] No patch step for '7-zip-populate'
+[3/7] No configure step for '7-zip-populate'
+[4/7] No build step for '7-zip-populate'
+[5/7] No install step for '7-zip-populate'
+[6/7] No test step for '7-zip-populate'
+[7/7] Completed '7-zip-populate'
+-- 7-zip source code available at <PROJECT>/build/_deps/7-zip-src
+-- CPM: Adding package ghc_filesystem@0 (983650f374699e3979f9cdefe13ddff60bd4ac68)
+-- Populating ghc_filesystem
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: <PROJECT>/build/_deps/ghc_filesystem-subbuild
+[0/7] Performing update step for 'ghc_filesystem-populate'
+-- Already at requested ref: 983650f374699e3979f9cdefe13ddff60bd4ac68
+[1/7] No patch step for 'ghc_filesystem-populate'
+[3/7] No configure step for 'ghc_filesystem-populate'
+[4/7] No build step for 'ghc_filesystem-populate'
+[5/7] No install step for 'ghc_filesystem-populate'
+[6/7] No test step for 'ghc_filesystem-populate'
+[7/7] Completed 'ghc_filesystem-populate'
+-- ghc::filesystem source code available at <PROJECT>/build/_deps/ghc_filesystem-src
+-- Enable sanitizers: OFF
+-- Configuring done (4.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: <PROJECT>/build
+[1/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchiveopener.cpp.obj
+[2/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchivehandler.cpp.obj
+[3/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveitemoffset.cpp.obj
+[4/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveiteminfo.cpp.obj
+[5/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bit7zlibrary.cpp.obj
+[6/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchivecreator.cpp.obj
+[7/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveitem.cpp.obj
+[8/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/biterror.cpp.obj
+[9/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitformat.cpp.obj
+[10/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveeditor.cpp.obj
+[11/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitexception.cpp.obj
+[12/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bittypes.cpp.obj
+[13/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchivewriter.cpp.obj
+[14/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitfilecompressor.cpp.obj
+[15/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferutil.cpp.obj
+[16/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitinputarchive.cpp.obj
+[17/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitpropvariant.cpp.obj
+[18/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bititemsvector.cpp.obj
+[19/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferitem.cpp.obj
+[20/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchivereader.cpp.obj
+[21/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferextractcallback.cpp.obj
+[22/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitoutputarchive.cpp.obj
+[23/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cbufferinstream.cpp.obj
+[24/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/callback.cpp.obj
+[25/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfixedbufferoutstream.cpp.obj
+[26/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cbufferoutstream.cpp.obj
+[27/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfileinstream.cpp.obj
+[28/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cmultivolumeoutstream.cpp.obj
+[29/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cstdinstream.cpp.obj
+[30/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cstdoutstream.cpp.obj
+[31/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfileoutstream.cpp.obj
+[32/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cvolumeinstream.cpp.obj
+[33/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cvolumeoutstream.cpp.obj
+[34/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/dateutil.cpp.obj
+[35/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cmultivolumeinstream.cpp.obj
+[36/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/failuresourcecategory.cpp.obj
+[37/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/csymlinkinstream.cpp.obj
+[38/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/extractcallback.cpp.obj
+[39/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/guids.cpp.obj
+[40/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fixedbufferextractcallback.cpp.obj
+[41/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/hresultcategory.cpp.obj
+[42/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/genericinputitem.cpp.obj
+[43/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/formatdetect.cpp.obj
+[44/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/internalcategory.cpp.obj
+[45/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/operationresult.cpp.obj
+[46/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/operationcategory.cpp.obj
+[47/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/processeditem.cpp.obj
+[48/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsitem.cpp.obj
+[49/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsindexer.cpp.obj
+[50/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fileextractcallback.cpp.obj
+[51/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsutil.cpp.obj
+[52/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/windows.cpp.obj
+[53/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/opencallback.cpp.obj
+[54/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/streamextractcallback.cpp.obj
+[55/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/stringutil.cpp.obj
+[56/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/stdinputitem.cpp.obj
+[57/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/updatecallback.cpp.obj
+[58/95] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/renameditem.cpp.obj
+[59/95] Linking CXX static library lib\libbit7z64.a
+[60/95] Building CXX object CMakeFiles/unpack_ui_model.dir/src/ui_layout.cpp.obj
+[61/95] Building CXX object CMakeFiles/unpack_core.dir/src/storage.cpp.obj
+[62/95] Building CXX object CMakeFiles/unpack_core.dir/src/password_probe.cpp.obj
+[63/95] Building CXX object CMakeFiles/unpack_drop.dir/src/file_drop.cpp.obj
+[64/95] Building CXX object CMakeFiles/unpack_ui_model.dir/src/shell_open.cpp.obj
+[65/95] Building CXX object CMakeFiles/unpack_ui_model.dir/src/ui_model.cpp.obj
+[66/95] Building CXX object CMakeFiles/unpack_core.dir/src/passwords.cpp.obj
+[67/95] Building CXX object CMakeFiles/unpack_core.dir/src/input.cpp.obj
+[68/95] Building CXX object CMakeFiles/unpack_ui_model.dir/src/queue_runner.cpp.obj
+[69/95] Building CXX object CMakeFiles/unpack_core.dir/src/core.cpp.obj
+[70/95] Building CXX object CMakeFiles/unpack_ui_model.dir/src/workspace.cpp.obj
+[71/95] Linking CXX static library libunpack_core.a
+[72/95] Linking CXX static library libunpack_ui_model.a
+[73/95] Linking CXX static library libunpack_drop.a
+[74/95] Generating app.rc.obj
+[75/95] Building CXX object CMakeFiles/unpack_cli.dir/src/cli.cpp.obj
+[76/95] Building CXX object CMakeFiles/unpack_checks.dir/tests/core_checks.cpp.obj
+[77/95] Building CXX object CMakeFiles/layout_checks.dir/tests/layout_checks.cpp.obj
+[78/95] Linking CXX executable bin\unpack_cli.exe
+[79/95] Linking CXX executable bin\unpack_checks.exe
+[80/95] Building CXX object CMakeFiles/drop_checks.dir/tests/drop_checks.cpp.obj
+[81/95] Linking CXX executable bin\layout_checks.exe
+[82/95] Building CXX object CMakeFiles/open_checks.dir/tests/open_checks.cpp.obj
+[83/95] Linking CXX executable bin\drop_checks.exe
+[84/95] Linking CXX executable bin\open_checks.exe
+[85/95] Building CXX object CMakeFiles/workspace_checks.dir/tests/workspace_checks.cpp.obj
+[86/95] Building CXX object CMakeFiles/resource_checks.dir/tests/resource_checks.cpp.obj
+[87/95] Linking CXX executable bin\workspace_checks.exe
+[88/95] Linking CXX executable bin\resource_checks.exe
+[89/95] Building CXX object CMakeFiles/ui_checks.dir/tests/ui_checks.cpp.obj
+[90/95] Linking CXX executable bin\ui_checks.exe
+[91/95] Building CXX object CMakeFiles/TUnpack.dir/src/app.cpp.obj
+[92/95] Building CXX object CMakeFiles/flow_checks.dir/tests/flow_checks.cpp.obj
+[93/95] Linking CXX executable bin\TUnpack.exe
+[94/95] Linking CXX executable bin\flow_checks.exe

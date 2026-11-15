@@ -1,0 +1,8 @@
+[1/8] Building CXX object CMakeFiles/unpack_checks.dir/tests/core_checks.cpp.obj
+[2/8] Building CXX object CMakeFiles/unpack_cli.dir/src/cli.cpp.obj
+[3/8] Building CXX object CMakeFiles/LightUnpack.dir/src/app.cpp.obj
+[4/8] Building CXX object CMakeFiles/unpack_core.dir/src/core.cpp.obj
+[5/8] Linking CXX static library libunpack_core.a
+[6/8] Linking CXX executable bin\LightUnpack.exe
+[7/8] Linking CXX executable bin\unpack_cli.exe
+[8/8] Linking CXX executable bin\unpack_checks.exe

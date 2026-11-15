@@ -1,0 +1,13 @@
+{
+  "count": 1500,
+  "before_ms": 1566,
+  "after_ms": 13,
+  "command": "ui_checks.exe --dispatch-bench 1500",
+  "baseline": "Queue::resolve before member-count fast path; benchmark harness added to the prior implementation.",
+  "baseline_binary_retained": false,
+  "scope": "Generated, unrelated path metadata only: takeNext -> resolve -> finish, plus final model checks. No archive open, extraction, disk attributes or UI operations.",
+  "measurements_per_version": 1,
+  "cache_controlled": false,
+  "not_an_extraction_or_ui_benchmark": true,
+  "current_5000_dispatch_ms": 54
+}

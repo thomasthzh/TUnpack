@@ -1,0 +1,14 @@
+{
+  "generated_input_only": true,
+  "command": "inspect --keep --progress with a fresh isolated book path",
+  "ok": true,
+  "event_count": 2,
+  "units": [
+    "files",
+    "candidates"
+  ],
+  "created_windows": false,
+  "real_book_accessed": false,
+  "phase_change_visible": true,
+  "timing_scope": "Actual CLI phase/unit events plus shared ProgressGate deterministic-clock interval checks in ui_model; not a CLI latency benchmark."
+}

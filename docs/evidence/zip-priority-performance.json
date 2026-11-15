@@ -1,0 +1,88 @@
+{
+  "version": "0.13.0",
+  "cli_bytes": 2553344,
+  "cli_mtime_ns": 1794526901160039300,
+  "saved_candidates": 513,
+  "payload_bytes": 13312,
+  "samples": {
+    "preferred": [
+      {
+        "wall_ms": 69.48459998238832,
+        "engine_operation_ms": 20.1378,
+        "max_header_candidates": 4,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 50.327699980698526,
+        "engine_operation_ms": 15.1029,
+        "max_header_candidates": 4,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 81.19679999072105,
+        "engine_operation_ms": 13.1811,
+        "max_header_candidates": 4,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 52.03240003902465,
+        "engine_operation_ms": 13.9775,
+        "max_header_candidates": 4,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 56.977299973368645,
+        "engine_operation_ms": 15.0888,
+        "max_header_candidates": 4,
+        "password_checked": true,
+        "payload_matches": true
+      }
+    ],
+    "bulk_tail": [
+      {
+        "wall_ms": 346.22319997288287,
+        "engine_operation_ms": 271.183,
+        "max_header_candidates": 509,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 331.07299997936934,
+        "engine_operation_ms": 280.822,
+        "max_header_candidates": 509,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 311.5285000531003,
+        "engine_operation_ms": 276.101,
+        "max_header_candidates": 509,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 370.4177000327036,
+        "engine_operation_ms": 289.398,
+        "max_header_candidates": 509,
+        "password_checked": true,
+        "payload_matches": true
+      },
+      {
+        "wall_ms": 370.1636000769213,
+        "engine_operation_ms": 297.174,
+        "max_header_candidates": 509,
+        "password_checked": true,
+        "payload_matches": true
+      }
+    ]
+  },
+  "median_wall_ms": {
+    "preferred": 56.977299973368645,
+    "bulk_tail": 346.22319997288287
+  },
+  "scope": "Same current native CLI and AES ZIP, small single entry. Preferred key versus correct key late in ranked saved candidates; five interleaved samples per mode, independent DPAPI book copied before each run so success history cannot improve later runs. Wall time includes process launch, book load, ranking, filtering, SDK validation, output writes and success persistence; operation ms excludes initial CLI setup. Warm OS cache, uncontrolled CPU scheduling, no prior-version comparison or general format speed claim. All output bytes checked; no GUI, real passwords, deletion or recycling."
+}

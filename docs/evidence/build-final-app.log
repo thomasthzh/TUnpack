@@ -1,0 +1,82 @@
+[1/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchiveopener.cpp.obj
+[2/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchivehandler.cpp.obj
+[3/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveitemoffset.cpp.obj
+[4/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveiteminfo.cpp.obj
+[5/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bit7zlibrary.cpp.obj
+[6/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitabstractarchivecreator.cpp.obj
+[7/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveitem.cpp.obj
+[8/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/biterror.cpp.obj
+[9/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitformat.cpp.obj
+[10/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitexception.cpp.obj
+[11/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchivewriter.cpp.obj
+[12/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchiveeditor.cpp.obj
+[13/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitfilecompressor.cpp.obj
+[14/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bittypes.cpp.obj
+[15/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitinputarchive.cpp.obj
+[16/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitpropvariant.cpp.obj
+[17/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bititemsvector.cpp.obj
+[18/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitarchivereader.cpp.obj
+[19/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/bitoutputarchive.cpp.obj
+[20/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferutil.cpp.obj
+[21/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/callback.cpp.obj
+[22/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferitem.cpp.obj
+[23/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cbufferinstream.cpp.obj
+[24/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cbufferoutstream.cpp.obj
+[25/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/bufferextractcallback.cpp.obj
+[26/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfixedbufferoutstream.cpp.obj
+[27/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfileinstream.cpp.obj
+[28/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cfileoutstream.cpp.obj
+[29/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cstdinstream.cpp.obj
+[30/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cstdoutstream.cpp.obj
+[31/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cvolumeoutstream.cpp.obj
+[32/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cvolumeinstream.cpp.obj
+[33/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cmultivolumeoutstream.cpp.obj
+[34/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/dateutil.cpp.obj
+[35/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/csymlinkinstream.cpp.obj
+[36/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/failuresourcecategory.cpp.obj
+[37/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fixedbufferextractcallback.cpp.obj
+[38/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/formatdetect.cpp.obj
+[39/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/cmultivolumeinstream.cpp.obj
+[40/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/extractcallback.cpp.obj
+[41/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/guids.cpp.obj
+[42/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/internalcategory.cpp.obj
+[43/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/hresultcategory.cpp.obj
+[44/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/operationcategory.cpp.obj
+[45/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/genericinputitem.cpp.obj
+[46/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fileextractcallback.cpp.obj
+[47/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsindexer.cpp.obj
+[48/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/operationresult.cpp.obj
+[49/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsitem.cpp.obj
+[50/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/fsutil.cpp.obj
+[51/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/windows.cpp.obj
+[52/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/streamextractcallback.cpp.obj
+[53/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/opencallback.cpp.obj
+[54/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/stringutil.cpp.obj
+[55/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/processeditem.cpp.obj
+[56/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/stdinputitem.cpp.obj
+[57/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/updatecallback.cpp.obj
+[58/75] Building CXX object tools/bit7z/CMakeFiles/bit7z64.dir/src/internal/renameditem.cpp.obj
+[59/75] Linking CXX static library lib\libbit7z64.a
+[60/75] Building CXX object CMakeFiles/unpack_ui_model.dir/src/ui_layout.cpp.obj
+[61/75] Building CXX object CMakeFiles/unpack_core.dir/src/storage.cpp.obj
+[62/75] Building CXX object CMakeFiles/unpack_core.dir/src/password_probe.cpp.obj
+[63/75] Building CXX object CMakeFiles/unpack_ui_model.dir/src/queue_runner.cpp.obj
+[64/75] Building CXX object CMakeFiles/unpack_ui_model.dir/src/ui_model.cpp.obj
+[65/75] Building CXX object CMakeFiles/unpack_ui_model.dir/src/shell_open.cpp.obj
+[66/75] Building CXX object CMakeFiles/unpack_drop.dir/src/file_drop.cpp.obj
+[67/75] Building CXX object CMakeFiles/unpack_core.dir/src/input.cpp.obj
+[68/75] Building CXX object CMakeFiles/unpack_ui_model.dir/src/workspace.cpp.obj
+[69/75] Building CXX object CMakeFiles/unpack_core.dir/src/passwords.cpp.obj
+[70/75] Building CXX object CMakeFiles/unpack_core.dir/src/core.cpp.obj
+<PROJECT>/src/core.cpp: In member function 'lu::Result lu::Engine::scan(const std::filesystem::__cxx11::path&, const lu::Options&, const lu::Progress&, const std::function<void(const std::vector<std::filesystem::__cxx11::path>&, const lu::Result&)>&)':
+<PROJECT>/src/core.cpp:340:17: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+  340 |                 if(error)throw fs::filesystem_error("Cannot continue scan directory",directory,error);visit(*it);
+      |                 ^~
+<PROJECT>/src/core.cpp:340:103: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+  340 |                 if(error)throw fs::filesystem_error("Cannot continue scan directory",directory,error);visit(*it);
+      |                                                                                                       ^~~~~
+[71/75] Linking CXX static library libunpack_core.a
+[72/75] Linking CXX static library libunpack_ui_model.a
+[73/75] Linking CXX static library libunpack_drop.a
+[74/75] Building CXX object CMakeFiles/TUnpack.dir/src/app.cpp.obj
+[75/75] Linking CXX executable bin\TUnpack.exe

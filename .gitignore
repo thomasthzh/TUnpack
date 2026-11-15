@@ -1,0 +1,31 @@
+/build/
+/dist/
+/test-data/
+/tools/
+/reference/
+/tests/fixtures/
+__pycache__/
+
+# 编译与工具产物
+*.obj
+*.o
+*.pdb
+*.ilk
+CMakeUserPresets.json
+CMakeCache.txt
+
+# 编辑器与系统
+.vs/
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 本地私密数据（密码本 / 配置 / 历史）
+*.dpapi
+passwords.dpapi
+password.pickle
+config.ini
+history.txt

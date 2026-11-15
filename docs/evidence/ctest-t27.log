@@ -1,0 +1,9 @@
+Test project <PROJECT>/build
+    Start 4: queue_flows
+1/2 Test #4: queue_flows ......................   Passed    1.06 sec
+    Start 8: integration
+2/2 Test #8: integration ......................   Passed    4.67 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   5.74 sec

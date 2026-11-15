@@ -1,0 +1,81 @@
+diff --git a/include/bit7z/bit7zlibrary.hpp b/include/bit7z/bit7zlibrary.hpp
+index 652b5b6..d910e8b 100644
+--- a/include/bit7z/bit7zlibrary.hpp
++++ b/include/bit7z/bit7zlibrary.hpp
+@@ -11,6 +11,7 @@
+ #define BIT7ZLIBRARY_HPP
+ 
+ #include <string>
++#include <functional>
+ 
+ #include "bitformat.hpp"
+ #include "bittypes.hpp"
+@@ -82,9 +83,24 @@ class Bit7zLibrary final {
+          */
+         void setLargePageMode();
+ 
++        // LightUnpack extension: map explicit, renamed native RAR volumes without copying files.
++        // A library instance is used by one queue worker at a time.
++        using VolumeResolver = std::function<tstring(const tstring&)>;
++        void setVolumeResolver(VolumeResolver resolver, tstring firstName = {}) {
++            mVolumeResolver = std::move(resolver);
++            mVirtualVolumeName = std::move(firstName);
++        }
++        auto volumeResolver() const -> const VolumeResolver& { return mVolumeResolver; }
++        auto virtualVolumeName() const -> const tstring& { return mVirtualVolumeName; }
++        void setVolumeObserver(std::function<void(const tstring&)> observer) { mVolumeObserver = std::move(observer); }
++        auto volumeObserver() const -> const std::function<void(const tstring&)>& { return mVolumeObserver; }
++
+     private:
+         HMODULE mLibrary;
+         FARPROC mCreateObjectFunc;
++        VolumeResolver mVolumeResolver;
++        tstring mVirtualVolumeName;
++        std::function<void(const tstring&)> mVolumeObserver;
+ 
+         BIT7Z_NODISCARD
+         auto initInArchive( const BitInFormat& format ) const -> CMyComPtr< IInArchive >;
+diff --git a/src/internal/opencallback.cpp b/src/internal/opencallback.cpp
+index ce1be86..f35851f 100644
+--- a/src/internal/opencallback.cpp
++++ b/src/internal/opencallback.cpp
+@@ -41,6 +41,9 @@ STDMETHODIMP OpenCallback::GetProperty( PROPID property, PROPVARIANT* value ) no
+     BitPropVariant prop;
+     if ( property == kpidName ) {
+         prop = mSubArchiveMode ? mSubArchiveName : path_to_wide_string( mArchivePath.filename() );
++        if ( !mSubArchiveMode && !mHandler.library().virtualVolumeName().empty() ) {
++            prop = mHandler.library().virtualVolumeName();
++        }
+     }
+     *value = prop;
+     prop.bstrVal = nullptr; // NOLINT(*-pro-type-union-access)
+@@ -57,7 +60,11 @@ STDMETHODIMP OpenCallback::GetStream( const wchar_t* name, IInStream** inStream
+             return S_FALSE;
+         }
+         fs::path streamPath = mArchivePath;
+-        if ( name != nullptr ) {
++        if ( mHandler.library().volumeResolver() ) {
++            const auto resolved = mHandler.library().volumeResolver()( name == nullptr ? tstring{} : tstring{name} );
++            if ( resolved.empty() ) { return S_FALSE; }
++            streamPath = fs::path{resolved};
++        } else if ( name != nullptr ) {
+             streamPath = streamPath.parent_path();
+             streamPath.append( name );
+             std::error_code error;
+@@ -69,6 +76,9 @@ STDMETHODIMP OpenCallback::GetStream( const wchar_t* name, IInStream** inStream
+ 
+         try {
+             auto inStreamTemp = bit7z::make_com< CFileInStream >( streamPath );
++            if ( mHandler.library().volumeObserver() ) {
++                mHandler.library().volumeObserver()( path_to_tstring(streamPath) );
++            }
+             *inStream = inStreamTemp.Detach();
+         } catch ( const BitException& ex ) {
+             return ex.nativeCode();
+@@ -114,4 +124,4 @@ auto OpenCallback::passwordWasAsked() const -> bool {
+     return mPasswordWasAsked;
+ }
+ 
+-} // namespace bit7z
+\ No newline at end of file
++} // namespace bit7z

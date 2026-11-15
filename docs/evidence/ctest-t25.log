@@ -1,0 +1,13 @@
+Test project <PROJECT>/build
+    Start 2: ui_model
+1/4 Test #2: ui_model .........................   Passed    0.44 sec
+    Start 4: queue_flows
+2/4 Test #4: queue_flows ......................   Passed    0.54 sec
+    Start 6: workspace
+3/4 Test #6: workspace ........................   Passed    0.19 sec
+    Start 8: integration
+4/4 Test #8: integration ......................   Passed    4.78 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   5.97 sec

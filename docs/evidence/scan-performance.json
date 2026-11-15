@@ -1,0 +1,24 @@
+{
+  "before": {
+    "binary": {
+      "path": "<PROJECT>\\build\\bin\\unpack_cli.exe",
+      "size": 2527232,
+      "mtime_ns": 1794401066589794200
+    },
+    "ms": 179352,
+    "scanned_files": 8456,
+    "groups": 13
+  },
+  "scope": "same directory corpus, sequential runs; directory metadata reused per batch, duplicate volume resolution removed; cache and system load may vary",
+  "after": {
+    "binary": {
+      "path": "<PROJECT>\\build\\bin\\unpack_cli.exe",
+      "size": 2529280,
+      "mtime_ns": 1794401805617407000
+    },
+    "wall_seconds": 98.666,
+    "ms": 98597.4,
+    "scanned_files": 8456,
+    "groups": 13
+  }
+}

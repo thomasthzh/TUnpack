@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "name": "T解压.exe",
+      "bytes": 3026944
+    },
+    {
+      "name": "7z.dll",
+      "bytes": 5186048
+    },
+    {
+      "name": "7-Zip-License.txt",
+      "bytes": 6031
+    },
+    {
+      "name": "bit7z-LICENSE.txt",
+      "bytes": 17100
+    }
+  ],
+  "total_bytes": 8236123,
+  "zip_bytes": 3611967,
+  "resource_check": "PASS TUnpack brand metadata and nine native ICO sizes; no window created",
+  "zip_crc_check": true,
+  "published": false
+}

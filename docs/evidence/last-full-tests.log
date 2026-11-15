@@ -1,0 +1,432 @@
+Start testing: Nov 13 07:42 �й���׼ʱ��
+----------------------------------------------------------
+1/8 Testing: brand_resources
+1/8 Test: brand_resources
+Command: "<PROJECT>/build/bin/resource_checks.exe" "<PROJECT>/build/bin/T解压.exe"
+Directory: <PROJECT>/build
+"brand_resources" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS TUnpack brand metadata and nine native ICO sizes; no window created
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"brand_resources" end time: Nov 13 07:42 �й���׼ʱ��
+"brand_resources" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/8 Testing: ui_model
+2/8 Test: ui_model
+Command: "<PROJECT>/build/bin/ui_checks.exe" "<PROJECT>/test-data"
+Directory: <PROJECT>/build
+"ui_model" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS Windows path duplicates are case insensitive
+PASS Repeated moves preserve the selected task identity
+PASS Running tasks cannot be removed or changed
+PASS Resolved volumes merge pending pieces but preserve distinct operations
+PASS Manual volume order is not overwritten by inferred order
+PASS Shared sources remain available until the last reader
+PASS Active inputs reject conflicting admission and retry
+PASS SDK-discovered continuation and nested sources are protected
+PASS Retry preserves operation, clears stale output and deduplicates
+PASS Late progress cannot overwrite completed result
+PASS Cancellation leaves unstarted work queued
+PASS Folder scans cannot become file operations
+PASS Create tasks with different targets remain distinct
+PASS Volume draft appends without replacing order
+PASS Volume draft survives navigation until saved
+PASS Merged selection and focus follow the actual surviving task
+PASS Multiple selection retains its independent keyboard focus
+PASS Merge identity survives compaction before the running row
+PASS Virtual list search is case insensitive and respects wrap/exact match
+PASS Batch task actions require eligible file tasks
+PASS Drop routing accepts useful TXT subsets without changing pages
+PASS Queue search includes renamed continuations and preserves execution scope
+PASS Every state filter follows the actual task state
+PASS Background updates coalesce and final drain accepts the next batch
+PASS Concurrent production and draining lose no background update
+PASS Selected volume blocks move together and preserve internal order
+PASS Explicit volume name sorting is natural and stable
+PASS Explorer copied path text keeps spaces and Unicode
+PASS Batch queue operations protect the active task and release removed inputs
+PASS Missing volume and password statuses carry next steps
+PASS Unknown progress is distinct from zero and completion
+PASS Queue layouts retain list and scrollable content at high DPI
+PASS Password import reports duplicates and skips no-op writes
+PASS Password save failure preserves a retryable draft
+PASS Recycle decision receives actual native RAR volumes with keep enabled
+PASS Partial password import reports every file and keeps valid additions
+PASS Disguised binary and oversized TXT never enter password storage
+PASS Bulk password import deduplicates without repeated database writes
+PASS Password draft preview is read only and matches actual save rules
+PASS Volume actions remain separate on the compact scrollable canvas
+Bulk 5000 admission ms: 32
+Bulk 5000 actions/removal ms: 42
+PASS Bulk queue admission uses metadata keys without file reads
+PASS Confirmed root volumes merge pieces but retain independent nested readers
+PASS Stopping caption takes priority over a delayed engine phase
+PASS Mixed completed and failed selection retries only eligible items without busy warning
+PASS Retry rejected by an active source reports the actual blocked count
+PASS Explicit container mode remains visible in task labels and details
+PASS Distinct output policies remain distinct when another volume triggers merging
+PASS Paused volume remains a protected reader and is not auto-merged
+PASS Configuring completed or failed tasks preserves state and retry preserves policy
+PASS Per-task settings participate in admission and release old metadata keys
+PASS Paused state has separate counts and view without changing ready execution
+PASS Task settings draft survives return and explicitly reports mixed selection
+PASS Task override changes no batch password or callback and reset follows batch
+PASS Relocating a manual source keeps its slot, policy and pause intent
+PASS Automatic relocation forgets old inferred volumes and rejects active readers atomically
+PASS Source repair preserves scan action and compression target and labels root failures clearly
+PASS Workspace revisions change for work state but not for frequent progress
+PASS Batch pause distinguishes current completion, ready continuation and immediate stop
+PASS Output publication persists once, survives cancellation and ignores late events
+PASS Automatic hints strip BOM, preserve spaces and skip invalid or locked text independently
+PASS Filename hints remove only known trailing archive and volume suffixes and keep exact fallback
+Password 5000 candidate ranking ms: 2
+PASS 5000 saved candidates rank with stable uniqueness without rewriting the book
+PASS Reason filters admit attention only and combine with source and result path search
+PASS Visible retry preparation excludes hidden, successful, waiting and running tasks
+PASS Queue block moves preserve selected and unselected order for steps and extremes
+PASS Boundary queue blocks stay while independent blocks move and no-ops do not persist
+PASS Running and history positions remain fixed while paused source readers move intact
+PASS Multiple queue selection keeps its independent focus and shift anchor after reorder
+Bulk 5000 reorder first/last ms: 2
+PASS 5000 waiting tasks reorder in two batch passes without reading files
+PASS Stage changes, unit changes and observed counter resets bypass progress throttling
+PASS Live progress counts have explicit units and monotonic elapsed without workspace revisions
+Bulk 5000 dispatch ms: 61
+PASS Unrelated archive tasks dispatch without losing queue identities
+PASS Inner retry is a fresh task with local output and inherited explicit policy
+PASS Inner retry freezes batch defaults and shares the volume draft policy
+PASS Only actual failed inner paths can be prepared, including cancelled inner work
+PASS Repeated inner preparation uses queue deduplication without resetting parent history
+76/76 UI model checks passed; no windows created.
+<end of output>
+Test time =   0.34 sec
+----------------------------------------------------------
+Test Passed.
+"ui_model" end time: Nov 13 07:42 �й���׼ʱ��
+"ui_model" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/8 Testing: native_drop
+3/8 Test: native_drop
+Command: "<PROJECT>/build/bin/drop_checks.exe" "<PROJECT>/test-data"
+Directory: <PROJECT>/build
+"native_drop" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS COM identity and reference ownership
+PASS Unicode HDROP enter/drop uses native path decoding
+PASS Long paths are not truncated
+PASS Borrowed HDROP decoding leaves ownership with the caller
+PASS DragOver reuses data without repeated GetData
+PASS Move-only source is never moved
+PASS Changed allowed effects are honored
+PASS Page or closing policy is rechecked before drop
+PASS Leave clears prior payload and hover
+PASS Unsupported data is refused
+PASS Empty HDROP is refused and released
+PASS Failed GetData cannot call receiver
+PASS Failed second GetData preserves ownership
+PASS Receiver rejection is not reported as copy success
+PASS Receiver exception stays inside COM and releases data
+PASS Changed payload is validated again
+PASS Native HDROP -> production queue -> real extraction result
+17/17 native drop checks passed; no windows created.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"native_drop" end time: Nov 13 07:42 �й���׼ʱ��
+"native_drop" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/8 Testing: queue_flows
+4/8 Test: queue_flows
+Command: "<PROJECT>/build/bin/flow_checks.exe" "<PROJECT>/test-data" "<PROJECT>/tests/fixtures"
+Directory: <PROJECT>/build
+"queue_flows" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS One wrong body password -> import -> retry -> verified output
+PASS Nested password failure retains parent context and retries with saved password
+PASS Renamed manual volumes -> correct order -> retry same task
+PASS Automatic incomplete group -> newly added renamed tail -> retry within same batch
+PASS Nested missing volume -> separate inner repair task, parent preserved
+PASS Cancel active task -> remaining work waits -> retry and resume
+PASS Queue accepts new work during processing and consumes it in order
+PASS Scan discovers disguised archives and executes only unique groups
+PASS Create -> inspect -> restore -> extract share the production dispatcher
+PASS Actual SDK source list protects a later reader without recycling
+PASS RAR middle-volume and ambiguous-volume failures expose repair actions
+PASS Dragging every legacy RAR volume extracts once and keeps merged selection identity
+PASS Root volume callback excludes nested archives from queue grouping
+PASS Saved password selected for the batch is tried first without displaying it
+PASS Same archive with separate task destinations produces both verified outputs
+PASS Folder discovery inherits task settings through real extraction
+PASS Per-task nested policy distinguishes intact outer files from expanded inner files
+PASS Recovered task destinations and paused work continue through the real engine
+PASS Pause after current task finishes preserves pending work and resumes without redo
+PASS Retracting a batch pause consumes remaining tasks while immediate stop still cancels
+PASS Real running output -> saved checkpoint -> cancellation -> recovered output and fresh retry
+PASS Nested extraction reports its root once and never replaces it with inner output
+PASS Create and restore publish actual unique targets before task completion
+PASS UTF-8 BOM local hint unlocks a real encrypted archive without prior book import
+PASS Invalid optional hint does not prevent a valid saved password from extracting
+PASS Changed generated scan entry is retained elsewhere while the next archive still extracts
+PASS Password import prepares only visible password failures and leaves other problems untouched
+PASS Live priority reorder keeps the current task and extracts remaining work in stable order
+PASS Paused priority and task output survive a real batch, workspace restore and later continuation
+PASS Real nested extraction immediately publishes root, password and inner stages with units
+PASS Cancelled directory construction does not cache a partial volume snapshot
+PASS Renamed split candidate matching cancels and resumes with the same complete metadata cache
+PASS Runner cancels during volume analysis without fallback or output and later retries normally
+Root directory snapshots for inspect/restore/extract: 1
+PASS Inspect restore and extract reuse one root directory snapshot across disguised single files
+PASS One-shot cancellation inside scan identification cannot become a skipped or admitted file
+PASS One-shot cancellation during nested probing retains outer output and never reports success
+PASS Explicit full verification cancellation keeps cancellation ahead of verification failure
+PASS Missing-first diagnostic inspection preserves a one-shot cancellation request
+PASS SDK body verification cancellation remains cancelled rather than CRC failure
+PASS SDK password-probe cancellation is not swallowed as an ordinary wrong candidate
+ZIP preferred precheck max variants with 512 saved candidates: 4
+PASS Known ZIP priority candidate avoids whole-book prechecks and verifies real output
+PASS Plain ZIP and encrypted ZIP metadata and restore do no password KDF filtering
+PASS A weak ZipCrypto priority-header collision fails SDK body check then tail candidate succeeds
+PASS Large single-entry ZIP keeps the bulk verifier instead of a forced extra body pass
+PASS Unsupported ZIP method during priority body verification remains an engine failure
+PASS ZIP priority header and native probe and bulk fallback each preserve cancellation
+PASS Cancelled stale password status suggests retry rather than repair
+PASS Missing source -> relocated first volume -> refreshed group and verified output
+PASS Manual missing middle source repairs its original slot through real engine
+PASS File-open payload feeds the same real queue without duplicate extraction
+PASS Nested password repair runs only the inner archive after workspace recovery
+PASS Cancelled inner extraction restarts locally with a fresh output instead of repeating outer
+PASS A missing prepared inner source is reported without changing its failed parent
+PASS A later nested read error retains the correct containing inner package for local repair
+PASS Nested repair draft follows changed inner file after parent retry
+55/55 full production queue flows passed; no windows, no recycling, generated sources retained.
+<end of output>
+Test time =   0.81 sec
+----------------------------------------------------------
+Test Passed.
+"queue_flows" end time: Nov 13 07:42 �й���׼ʱ��
+"queue_flows" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/8 Testing: layout_dpi
+5/8 Test: layout_dpi
+Command: "<PROJECT>/build/bin/layout_checks.exe"
+Directory: <PROJECT>/build
+"layout_dpi" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS Production control rectangles stay inside every supported canvas at 100-300 percent
+PASS Queue controls and optional drop area do not overlap
+PASS Password search, list, draft and feedback do not overlap
+PASS Volume feedback and both action rows do not overlap
+PASS Task settings editor keeps controls and actions separate
+PASS Fractional DPI uses shared edges instead of rounding each width separately
+PASS Scrollbar interdependence leaves the final row and right edge reachable
+PASS Enlarging a window releases both unnecessary scrollbars
+PASS Scrollbar decisions include one-pixel limits at fractional DPI
+PASS Large focused controls align their leading edge without oscillation
+PASS Focused row is revealed without pulling the entire table into view
+PASS Wide password editing follows the caret instead of the full edit frame
+PASS Reveal offsets stay within range after resizing or DPI changes
+PASS Columns fit the actual list client width including vertical scrollbar changes
+PASS Unchanged background refresh does not reset manually adjusted widths
+PASS Custom column sizes scale from their original DPI without round-trip drift
+PASS Queue keyboard order follows search, list, actions and extraction settings
+PASS Password and volume keyboard order follows each page workflow
+PASS Persistent notice and live phase fit separate footer rows at all DPI scales
+PASS Real GDI font metrics fit long Chinese labels at all eight DPI scales
+PASS Every shared state and problem filter label fits the native combo at eight DPI scales
+PASS Typed stage counters and elapsed labels fit the native footer at eight DPI scales
+22/22 layout and DPI checks passed; shared production geometry and GDI metrics, no windows created.
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"layout_dpi" end time: Nov 13 07:42 �й���׼ʱ��
+"layout_dpi" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/8 Testing: workspace
+6/8 Test: workspace
+Command: "<PROJECT>/build/bin/workspace_checks.exe" "<PROJECT>/test-data"
+Directory: <PROJECT>/build
+"workspace" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS Absent workspace uses defaults without writing
+PASS Runtime progress units, counters and steady clock never enter workspace records
+PASS Old filter numbers remain stable and every appended reason filter roundtrips
+PASS Workspace roundtrip keeps task policies, results, draft order and stable identities
+PASS Running task becomes interrupted without losing partial output or enabling cleanup
+PASS Recovery rebuilds paused reader protection and future task IDs
+PASS Recovered paused work resumes with a runnable caption
+PASS Recovered merged identities are never reused by later tasks
+PASS Reordered queue restores policies, pause and independent selection in its full view
+PASS Detached volume draft preserves files and settings as a new group
+PASS Session schema drops batch password and callbacks by construction
+PASS Corrupt workspace is rejected and preserved before replacement
+PASS Truncated workspace never partially restores a queue
+PASS Invalid UTF-8 in a framed record is rejected without replacing the record
+PASS Background writer keeps the newest submitted workspace
+PASS Failed atomic save keeps old record and a later retry succeeds
+PASS Original DPAPI password record format still loads and appends byte-compatibly
+Workspace 5000 save/load/reindex ms: 49
+PASS 5000-task session saves, reloads and rebuilds indexes without source reads
+18/18 workspace checks passed; generated records only, no windows or source cleanup.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"workspace" end time: Nov 13 07:42 �й���׼ʱ��
+"workspace" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/8 Testing: shell_open
+7/8 Test: shell_open
+Command: "<PROJECT>/build/bin/open_checks.exe" "<PROJECT>/test-data"
+Directory: <PROJECT>/build
+"shell_open" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS Empty open request represents activation without adding files
+PASS Unicode, spaces and relative paths preserve order as absolute paths
+PASS Unknown version, truncation and extra data cannot admit partial requests
+PASS Relative, embedded-null and invalid UTF-8 payload paths are rejected
+PASS Oversized/count-mismatched requests fail before path admission
+PASS Independent mutex handles serialize the same isolated workspace
+PASS Production instance identity is user scoped within the login session
+5000 file-open paths bytes: 143906
+PASS Large file batch preserves every ordered path within a compact packet
+PASS Native result target prepares exact Unicode file selection without launching it
+PASS Output folder opens contents while explicit source location selects the folder
+PASS Missing exact item never falls back to an existing parent
+PASS Empty navigation cannot accidentally open the working directory
+12/12 file-open protocol, native location preparation and kernel gate checks passed; no Explorer execution, windows or GUI messages.
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"shell_open" end time: Nov 13 07:42 �й���׼ʱ��
+"shell_open" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/8 Testing: integration
+8/8 Test: integration
+Command: "python" "-X" "utf8" "<PROJECT>/tests/integration.py"
+Directory: <PROJECT>/build
+"integration" start time: Nov 13 07:42 �й���׼ʱ��
+Output:
+----------------------------------------------------------
+PASS plain ZIP + unicode + zero-length file
+PASS ZIP renamed to MP4
+PASS ZIP disguised as DOCX
+PASS existing output preserved and renamed
+PASS full SDK integrity test creates no extraction files
+PASS archive beyond 8MiB SFX window
+PASS shallow mode locates ZIP from tail without a carrier scan
+PASS signature across scan block boundary
+PASS apate recovery L=64
+PASS apate lossless save L=64
+PASS apate recovery L=4096
+PASS apate lossless save L=4096
+PASS real document identified
+PASS real document not unpacked or recycled
+PASS explicit document container extraction
+PASS path traversal rejected
+PASS case-insensitive duplicate paths rejected
+PASS nested extraction retains normal documents
+PASS nested carrier detected
+PASS manually ordered renamed raw volumes
+PASS tail-located archive never marks skipped concatenated files for cleanup
+PASS auto resolve .003 to first volume
+PASS missing first volume reported
+PASS ordinary media is not an archive
+PASS encrypted 7z wrong password
+PASS encrypted 7z special-character password
+PASS saved 7z password reused
+PASS encrypted zip wrong password
+PASS encrypted zip special-character password
+PASS saved zip password reused
+PASS valid 7z first piece reports exact missing bytes without password attempts
+PASS reversed encrypted 7z with truncated signature and CRC trailer
+PASS recovery never fabricates missing compressed body bytes
+PASS content validated numeric MP4 volumes from first piece
+PASS content validated numeric MP4 volumes from second piece
+PASS same size numbered decoy never accepted without header CRC
+PASS numeric filename outside closed group is not silently replaced with first piece
+PASS first volume discovers unique renamed .003 by size and header CRC
+PASS renamed DOCX continuation discovers first and second volumes
+PASS multiple matching renamed tails require explicit selection
+PASS explicit renamed tail disambiguates identical alternatives
+PASS numbered volumes may each use a different disguise extension
+PASS unique renamed middle .003 is inserted before known .004
+PASS renamed tail matching multiple first volumes is ambiguous
+PASS selected unrelated .002 never processes a complete .001 instead
+PASS complete ZIP content overrides misleading numeric extension
+PASS multiple same-size middle candidates are never chosen arbitrarily
+PASS body password errors never bypass later candidate validation
+PASS 7z continuation tail identifies original format and exact missing prefix
+PASS missing signature block is rebuilt using intact encoded tail
+PASS overwritten 32-byte archive header rebuilt from intact tail
+PASS tail metadata locates header-covered archive inside carrier
+PASS automatic nesting shares header recovery without changing source
+PASS encrypted empty-only archive can use a later saved candidate
+PASS UTF8 Chinese ZIP password without UTF8 flag and with media trailer
+PASS ZIP remembers original Unicode password after native encoding adaptation
+PASS system-codepage Chinese ZIP password remains compatible
+PASS central directory locates encrypted item after unencrypted descriptor
+PASS ZIP64 tail directory locates prefix and ignores appended media
+PASS folder scan identifies content, skips documents and signature literals
+PASS recursive scan shares the same content detection
+PASS batch scan isolates directories and skips locked unrelated candidates
+PASS nested scan never treats binary signature constants as an archive
+PASS create and read back 7z
+PASS create and read back zip
+PASS RAR4 single archive
+PASS encrypted/encrypted.rar4.rar
+PASS encrypted/encrypted.rar5.rar
+PASS header_encrypted/header_encrypted.rar5.rar
+PASS RAR5 native volumes from part3
+PASS RAR4 native volumes from r01
+PASS renamed RAR native volume mapping
+PASS auto group renamed RAR parts from first volume
+PASS auto group renamed RAR parts from last volume
+PASS ambiguous renamed RAR part number requires explicit selection
+PASS missing middle renamed RAR volume reported
+PASS renamed RAR4 old-style native volumes
+PASS native RAR records real volume paths instead of guessed decoys
+PASS restore complete native volume set RAR5
+PASS restore complete native volume set RAR4
+PASS codec gzip
+PASS codec bzip2
+PASS codec xz
+PASS codec zstd
+PASS codec lz4
+PASS codec lz5
+PASS codec lizard
+PASS cancellation during scan and before completion
+PASS ZipCrypto wrong candidate rejected
+PASS ZipCrypto header precheck with full validation
+PASS UTF-8 BOM password input
+PASS TAR content recognition and extraction
+92/92 passed; <PROJECT>\test-data\20261113-074243\report.json
+<end of output>
+Test time =   6.01 sec
+----------------------------------------------------------
+Test Passed.
+"integration" end time: Nov 13 07:42 �й���׼ʱ��
+"integration" time elapsed: 00:00:06
+----------------------------------------------------------
+
+End testing: Nov 13 07:42 �й���׼ʱ��
