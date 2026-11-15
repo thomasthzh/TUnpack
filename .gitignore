@@ -29,3 +29,8 @@ passwords.dpapi
 password.pickle
 config.ini
 history.txt
+
+# 本地真实语料验收（仅本机运行，不入库）
+/tests/known_failures.txt
+/.local-corpus-out/
+/docs/evidence/real-corpus.json
