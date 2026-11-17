@@ -1,21 +1,23 @@
 # T解压
 
-Windows x64 原生轻量解压工具，当前版本 0.13.0。运行 `dist/T解压/T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
+[官网与产品短片](https://thomasthzh.github.io/TUnpack/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0)
+
+Windows x64 原生轻量解压工具，当前版本 0.13.0。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
 
 ## 构建
 
-依赖 Visual Studio 2022（MSVC v143，x64）与 CMake 3.21+。
+需要 CMake 3.24+、Git、Python 3 与 C++20 工具链。当前发布使用 WinLibs GCC 16 / Ninja 构建；也提供 CMake 的 MSVC 配置。获取依赖时需已安装 7-Zip，或传入其命令行路径；构建工具不是软件运行依赖。
 
 ```powershell
-python scripts/fetch_deps.py          # 拉取 bit7z 与 7-Zip ZS 引擎到 tools/
-cmake -S . -B build -A x64
-cmake --build build --config Release
-python scripts/package.py             # 产出 dist/T解压/ 与便携 zip
+python scripts/fetch_deps.py --seven-zip "C:/Program Files/7-Zip/7z.exe"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel 8
+python scripts/package.py
 ```
 
-`tools/` 存放第三方依赖，不入库（见 `.gitignore`）：`bit7z` 取自
-[rikyoz/bit7z](https://github.com/rikyoz/bit7z)（MIT），7-Zip ZS 引擎取自
-[7-zip.org](https://www.7-zip.org/) 官方包（LGPL / BSD 许可，随包附带许可文件）。
+生成 `dist/TUnpack-0.13.0-windows-x64.zip` 和 `SHA256SUMS.txt`，保留解压目录 `dist/T解压/`。MSVC 可在开发者终端使用 `cmake -S . -B build -A x64` 与 `cmake --build build --config Release`；打包脚本支持可执行文件在 `bin/Release`、附属引擎在 `bin` 的布局；本轮未对 MSVC 实际编译验收。首次 CMake 配置会联网获取固定版本 CPM / 7-Zip 接口头 / ghc::filesystem，不应关闭 TLS 校验。
+
+`tools/` 不入库。bit7z 固定 [v4.0.10 源码](https://github.com/rikyoz/bit7z/tree/0f03717920442abcdba80183534931c867feb9c0)（MPL-2.0）并应用本项目卷路径补丁；引擎来自 [7-Zip ZS 26.05 官方发布](https://github.com/mcmilk/7-Zip-zstd/releases/tag/v26.05-v1.5.7-R1)，核对官方校验值后用 7-Zip 展开，不运行安装器。脚本保留下载，重复执行会核对版本与补丁，不删除文件。第三方完整许可与对应源码见 `THIRD-PARTY-NOTICES.txt`，便携包同时附带 MIT、依赖许可和使用说明。
 
 拖入文件/文件夹，或点击“添加文件”。检查输出目录和选项后，点击“开始队列”。默认在原包目录创建同名文件夹；已有同名内容时使用新名称。运行中仍可添加任务。
 

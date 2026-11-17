@@ -2,6 +2,7 @@
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import struct
 import subprocess
@@ -11,7 +12,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "build/bin/unpack_cli.exe"
-SEVEN = Path(r"C:\TOOL\7-Zip-Zstandard\7z.exe")
+_repo_seven = ROOT / "tools/7zip-zs-26.05/7z.exe"
+SEVEN = Path(os.environ.get("SEVENZIP") or (_repo_seven if _repo_seven.exists() else None) or shutil.which("7z") or str(Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "7-Zip/7z.exe"))
 RUN = ROOT / "test-data" / time.strftime("%Y%m%d-%H%M%S")
 RUN.mkdir(parents=True, exist_ok=False)
 OUTPUT = RUN / "outputs"
