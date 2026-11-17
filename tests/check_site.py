@@ -49,7 +49,7 @@ def main():
     assert len(videos) == 1 and "src" not in videos[0] and videos[0]["preload"] == "none"
     assert all(attr in videos[0] for attr in ["controls", "muted", "playsinline", "aria-describedby", "hidden", "data-src-portrait", "data-poster-portrait"])
     chapters = [attrs for tag, attrs in page.elements if tag == "button" and "data-time" in attrs]
-    assert [float(item["data-time"]) for item in chapters] == [0, 6, 13]
+    assert [float(item["data-time"]) for item in chapters] == [0, 7, 14]
     assert all("disabled" in item for item in chapters), "No-JS chapter buttons must not pretend to seek"
     assert "非软件录屏" in html and "尚未进行数字签名" in html
     assert any("releases/download/v0.13.0/TUnpack-0.13.0-windows-x64.zip" in ref for ref in page.refs)
@@ -57,8 +57,8 @@ def main():
     assert "max-width:700px" in css and "prefers-reduced-motion" in css and "focus-visible" in css
     assert not re.search(r"@import|https?://", css), "External font or CSS dependency"
     for shape in ["wide", "portrait"]:
-        assert (SITE / ("assets/hero-art-20261117-" + shape + ".webp")).stat().st_size < 250_000
-        assert (SITE / ("assets/hero-art-20261117-" + shape + ".mp4")).stat().st_size < 12_000_000
+        assert (SITE / ("assets/hero-icons-20261117-" + shape + ".webp")).stat().st_size < 250_000
+        assert (SITE / ("assets/hero-icons-20261117-" + shape + ".mp4")).stat().st_size < 12_000_000
     assert videos[0]["data-src-portrait"] != videos[0]["data-src"]
     assert [videos[0][key] for key in ["data-wide-width", "data-wide-height", "data-portrait-width", "data-portrait-height"]] == ["1600", "900", "900", "1200"]
     assert "节奏不代表实际耗时" in html and "可唯一匹配" in html
@@ -67,8 +67,8 @@ def main():
     assert any("tunpack.thomasthzh.top/downloads/" in ref for ref in page.refs)
     assert "默认：每个任务及其嵌套包全部解压成功后" in html and "可在开始前关闭" in html and "当前 Windows 用户目录" in html
     assert any(tag == "input" and "readonly" in attrs and attrs.get("value", "").endswith("/v0.13.0/TUnpack-0.13.0-windows-x64.zip") for tag, attrs in page.elements)
-    captions = (SITE / "assets/hero-art-20261117.zh-CN.vtt").read_text(encoding="utf8")
-    assert captions.startswith("WEBVTT") and "00:24.000" in captions
+    captions = (SITE / "assets/hero-icons-20261117.zh-CN.vtt").read_text(encoding="utf8")
+    assert captions.startswith("WEBVTT") and "00:28.000" in captions
     print(f"Site static checks passed: {len(page.refs)} links/media paths, 3 chapter targets, accessibility/fallback and asset budgets. No browser run.")
 
 

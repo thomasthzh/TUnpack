@@ -1,0 +1,77 @@
+{
+  "family": "Microsoft Fluent UI System Icons / 24 Filled",
+  "commit": "41089846ad80c5749df505aef35a68712c1561b9",
+  "license": "MIT",
+  "source_root": "https://raw.githubusercontent.com/microsoft/fluentui-system-icons/41089846ad80c5749df505aef35a68712c1561b9/",
+  "icons": [
+    {
+      "name": "archive",
+      "source_path": "assets/Archive/SVG/ic_fluent_archive_24_filled.svg"
+    },
+    {
+      "name": "folder_zip",
+      "source_path": "assets/Folder Zip/SVG/ic_fluent_folder_zip_24_filled.svg"
+    },
+    {
+      "name": "video_clip",
+      "source_path": "assets/Video Clip/SVG/ic_fluent_video_clip_24_filled.svg"
+    },
+    {
+      "name": "folder",
+      "source_path": "assets/Folder/SVG/ic_fluent_folder_24_filled.svg"
+    },
+    {
+      "name": "document",
+      "source_path": "assets/Document/SVG/ic_fluent_document_24_filled.svg"
+    },
+    {
+      "name": "book",
+      "source_path": "assets/Book/SVG/ic_fluent_book_24_filled.svg"
+    },
+    {
+      "name": "lock_closed",
+      "source_path": "assets/Lock Closed/SVG/ic_fluent_lock_closed_24_filled.svg"
+    },
+    {
+      "name": "lock_open",
+      "source_path": "assets/Lock Open/SVG/ic_fluent_lock_open_24_filled.svg"
+    },
+    {
+      "name": "key",
+      "source_path": "assets/Key/SVG/ic_fluent_key_24_filled.svg"
+    },
+    {
+      "name": "image",
+      "source_path": "assets/Image/SVG/ic_fluent_image_24_filled.svg"
+    },
+    {
+      "name": "arrow_split",
+      "source_path": "assets/Arrow Split/SVG/ic_fluent_arrow_split_24_filled.svg"
+    },
+    {
+      "name": "delete",
+      "source_path": "assets/Delete/SVG/ic_fluent_delete_24_filled.svg"
+    },
+    {
+      "name": "checkmark_circle",
+      "source_path": "assets/Checkmark Circle/SVG/ic_fluent_checkmark_circle_24_filled.svg"
+    },
+    {
+      "name": "play",
+      "source_path": "assets/Play/SVG/ic_fluent_play_24_filled.svg"
+    },
+    {
+      "name": "music_note_2",
+      "source_path": "assets/Music Note 2/SVG/ic_fluent_music_note_2_24_filled.svg"
+    },
+    {
+      "name": "document_text",
+      "source_path": "assets/Document Text/SVG/ic_fluent_document_text_24_filled.svg"
+    },
+    {
+      "name": "arrow_down",
+      "source_path": "assets/Arrow Down/SVG/ic_fluent_arrow_down_24_filled.svg"
+    }
+  ],
+  "treatment": "Original filled paths recolored uniformly in the film. T mark is the project brand."
+}

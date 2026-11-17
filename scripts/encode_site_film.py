@@ -1,4 +1,4 @@
-"""Export illustrated layer animation, original score and responsive posters."""
+"""Export the vector icon workbench film, original score and responsive posters."""
 import argparse
 from concurrent.futures import ProcessPoolExecutor
 import json
@@ -12,7 +12,7 @@ from PIL import Image
 from render_site_film import render_frame,SIZES,FPS,DURATION,OUT,ROOT
 
 ASSETS=ROOT/'site/assets'
-STEM='hero-art-20261117'
+STEM='hero-icons-20261117'
 
 
 def score():
@@ -21,25 +21,25 @@ def score():
     # and a resolved chord at the final pullback. No third-party music.
     rng=np.random.default_rng(20261117)
     noise=rng.standard_normal(t.size);noise=np.convolve(noise,np.ones(18)/18,mode='same')
-    for start in [0,2.2,2.7,5.7,9.45,12.8,18.0,21.2]:
+    for start in [0,3.6,4.2,7.0,10.6,14.0,18.5,22.0]:
         local=t-start;env=np.where(local>=0,np.exp(-np.maximum(local,0)*5),0)
         freq=48+60*np.exp(-np.maximum(local,0)*12)
         mix+=.16*env*np.sin(2*np.pi*freq*local)
         air=np.exp(-((local-.16)/.17)**2);air[local<0]=0
         mix+=noise*air*.12
-    for start in [8.75,12.05,19.3,22.1]:
+    for start in [9.65,12.75,19.4,23.1]:
         local=t-start;env=np.where(local>=0,np.minimum(np.maximum(local,0)*50,1)*np.exp(-np.maximum(local,0)*2.7),0)
         for freq in [261.63,392,523.25]:mix+=.025*env*np.sin(2*np.pi*freq*local)
     mix*=np.minimum(t/.08,1)*np.minimum((DURATION-t)/.7,1)
     stereo=np.stack([mix,mix*.96],axis=1)
-    path=OUT/'original-art-score.wav'
+    path=OUT/'original-icons-score.wav'
     with wave.open(str(path),'wb') as stream:
         stream.setnchannels(2);stream.setsampwidth(2);stream.setframerate(rate);stream.writeframes((np.clip(stereo,-1,1)*32767).astype('<i2').tobytes())
     return path
 
 
 def posters(kind):
-    image=Image.fromarray(render_frame(23.2,kind)).convert('RGB')
+    image=Image.fromarray(render_frame(24.5,kind)).convert('RGB')
     image.save(ASSETS/f'{STEM}-{kind}.webp',quality=91)
     if kind=='wide':
         image.resize((1200,675),Image.Resampling.LANCZOS).crop((0,22,1200,652)).save(ASSETS/f'{STEM}-cover.jpg',quality=92)
@@ -67,8 +67,8 @@ def main():
                 if start%120==0:print(f'{kind}: {start}/{FPS*DURATION}',flush=True)
         process.stdin.close();assert process.wait()==0
         decoded=subprocess.run([ffmpeg,'-hide_banner','-i',str(target),'-f','null','-'],capture_output=True,check=True).stderr.decode('utf8',errors='replace')
-        assert '00:00:24.00' in decoded and 'h264' in decoded and 'aac' in decoded
-        report.append({'format':kind,'source':'Imagegen illustrated shell/content sprites, independently animated layers, Skia camera and paths; no Blender, GUI or browser','sequence_frames':FPS*DURATION,'fps':FPS,'duration_seconds':DURATION,'delivery_size':[w,h],'mp4_bytes':target.stat().st_size,'full_h264_aac_decode':True,'hero_moves':'2.15-2.55s macro zipper push; 2.65-4.00s opaque shell halves peel independently; 3.80-5.25s pullback reveals nested contents; 21.30-22.15s full illustration settles with brand'})
+        assert '00:00:28.00' in decoded and 'h264' in decoded and 'aac' in decoded
+        report.append({'format':kind,'source':'Microsoft Fluent SVG icon paths and native T mark, independent icon actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser','sequence_frames':FPS*DURATION,'fps':FPS,'duration_seconds':DURATION,'delivery_size':[w,h],'mp4_bytes':target.stat().st_size,'full_h264_aac_decode':True,'hero_moves':'3.6s start click and workbench full-bleed; 4.2-4.56s icon-detail push with continuous focus; 14.6-14.96s nested detail; 21.2s visible result opening; 22-23.1s format/app/output icon convergence'})
     if report:
         file=OUT/'media.json';old=json.loads(file.read_text(encoding='utf8')) if file.exists() else [];combined={item['format']:item for item in old+report};file.write_text(json.dumps(list(combined.values()),ensure_ascii=False,indent=2),encoding='utf8');print(json.dumps(report,ensure_ascii=False,indent=2))
 
