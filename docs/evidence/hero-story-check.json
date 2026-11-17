@@ -1,0 +1,10 @@
+{
+  "example": "generated MP4 prefix + ZIP containing encrypted 7z volumes (third renamed .docx) containing inner.zip",
+  "engine_ok": true,
+  "decoded_archives": 3,
+  "payload_matches": true,
+  "source_retained": true,
+  "saved_public_candidate_used": true,
+  "recycle_tested": false,
+  "scope": "One synthetic, uniquely resolvable three-part example. Does not imply all arbitrary renamed volumes or corrupt files can be recovered. Recycling is off; the film presents existing settings-controlled cleanup semantics, not an additional recycle test."
+}

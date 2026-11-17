@@ -55,11 +55,7 @@
   video.hidden = false;
   if (poster) poster.hidden = true;
   framing.addEventListener("change", chooseFraming);
-  function syncHero() {
-    if (hero) hero.dataset.detail = String(!video.paused && !video.ended && video.currentTime < 3.2);
-  }
   function syncControls() {
-    syncHero();
     const playing = !video.paused && !video.ended;
     toggle.querySelector("[data-play-icon]").textContent = playing ? "Ⅱ" : "▷";
     toggle.querySelector("[data-play-label]").textContent = playing ? "暂停" : "播放";
@@ -131,7 +127,6 @@
     }
   });
   video.addEventListener("play", () => {
-    syncHero();
     suspending = false;
     if (!wantsPlayback) {
       userChoice = true;
@@ -156,7 +151,6 @@
   });
   video.addEventListener("ended", syncControls);
   video.addEventListener("error", () => {
-    if (hero) hero.dataset.detail = "false";
     status.textContent = "影片暂时无法载入，可以使用页尾的下载链接。";
   });
   chapters.forEach((button) => {
@@ -172,7 +166,6 @@
     });
   });
   video.addEventListener("timeupdate", () => {
-    syncHero();
     for (const button of chapters) {
       const active =
         video.currentTime >= Number(button.dataset.time) &&

@@ -36,16 +36,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible,i
 .header .button { background: transparent; border-color: #ffffff50; color: var(--text); }
 .header .button:hover { background: var(--text); color: #080a0a; }
 .hero { position: relative; isolation: isolate; }
-.hero-copy { position: absolute; z-index: 2; top: clamp(88px,10vw,180px); left: max(48px,calc((100% - 1400px)/2)); width: auto; max-width: 50%; padding: 0; margin: 0; pointer-events: none; transition: opacity .7s ease,transform .7s ease; }
-.hero h1 { font-size: clamp(68px,7vw,120px); font-weight: 500; line-height: 1.14; letter-spacing: -.075em; }
-.hero h1>span { color: #dce2db; }
-.hero-copy>p { font-size: 15px; line-height: 1.95; color: #abb7ae; margin-top: 32px; }
-.hero[data-detail="true"] .hero-copy { opacity: 0; transform: translateY(14px); }
-.screen { width: 100%; max-width: 1920px; position: relative; margin: auto; height: min(900px,calc(100svh - 84px)); min-height: 650px; }
-.screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg,#050607eb 0%,#050607d9 38%,transparent 64%),linear-gradient(0deg,#050607 0%,transparent 14%); }
-.screen picture,.screen picture img,.screen video { height: 100%; width: 100%; display: block; object-fit: cover; }
-.screen[data-framing="portrait"] { width: min(100%,660px); height: auto; min-height: 0; }
-.screen video[data-framing="portrait"] { height: auto; }
+.hero-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px; padding: 52px 0 42px; }
+.hero h1 { font-size: clamp(48px,5.4vw,80px); font-weight: 500; line-height: 1.16; letter-spacing: -.06em; }
+.hero h1>span { color: #a9bbae; }
+.hero-copy>p { font-size: 14px; line-height: 1.95; color: #abb7ae; padding-bottom: 5px; }
+.hero-meta { display: block; margin-top: 15px; font-size: 11px; color: #8b9d91; }
+.screen { width: min(1536px,calc(100% - 48px)); position: relative; margin: auto; background: #050607; }
+.screen picture,.screen picture img,.screen video { height: auto; width: 100%; display: block; object-fit: contain; }
+.screen[data-framing="portrait"] { width: min(100%,660px); }
 .film-caption { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 20px; }
 .film-caption p { color: #c2c9c2; font-size: 12px; line-height: 1.8; letter-spacing: .02em; }
 .film-caption small { display: inline-block; margin-left: 20px; font-size: 10px; color: #869289; }
@@ -60,7 +58,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible,i
 .chapters strong { display: block; font-size: 14px; font-weight: 500; letter-spacing: .05em; line-height: 1.7; }
 .chapters small { display: block; font-size: 11px; color: #8d9a91; line-height: 1.9; margin-top: 5px; }
 .arrow { margin-left: auto; font-size: 16px; color: #bfcec2; }
-.film-description { color: #7c8a80; font-size: 10px; line-height: 1.9; margin-top: 10px; }
+.film-description { color: #9aa89f; font-size: 12px; line-height: 1.9; margin-top: 10px; }
 .workflow { padding-top: 155px; }
 .section-heading,.download-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 48px; }
 h2 { font-size: clamp(38px,4.7vw,70px); font-weight: 450; letter-spacing: -.045em; line-height: 1.25; }
@@ -111,19 +109,11 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
 .footer-bottom { display: flex; justify-content: space-between; gap: 25px; border-top: 1px solid var(--line); padding-top: 24px; width: 100%; font-size: 11px; color: #87968b; line-height: 1.9; }
 .footer-bottom>a { color: #c0d0c4; white-space: nowrap; }
 .footer-bottom>a:first-of-type { margin-left: auto; }
-@media (min-width:1700px) {
-  .hero-copy { left: max(70px,calc((100% - 1450px)/2)); }
-  .screen { min-height: 780px; }
-}
 @media (max-width:1000px) and (min-width:701px) {
   .wrap { width: calc(100% - 64px); }
-  .hero-copy { position: relative; left: auto; top: auto; max-width: none; width: calc(100% - 64px); margin: 36px auto 0; }
-  .hero h1 { font-size: 78px; }
+  .hero-copy { gap: 30px; padding-top: 36px; }
+  .hero h1 { font-size: 62px; }
   .hero-copy>p { font-size: 13px; }
-  .screen { height: auto; min-height: 0; }
-  .screen picture,.screen picture img,.screen video { height: auto; object-fit: contain; }
-  .hero[data-detail="true"] .hero-copy { opacity: 1; transform: none; }
-  .screen::after { background: linear-gradient(0deg,#050607 0%,transparent 12%); }
   .steps li>div { gap: 30px; grid-template-columns: minmax(180px,.8fr) minmax(0,1fr); }
   .chapters { gap: 22px; }
   .film-caption small { display: block; margin-left: 0; }
@@ -137,15 +127,10 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
   .brand { font-size: 16px; gap: 7px; }
   .brand img { width: 28px; height: 28px; }
   .header .button { padding-inline: 13px; font-size: 11px; min-height: 40px; gap: 12px; }
-  .hero-copy { position: relative; top: auto; left: auto; max-width: none; width: calc(100% - 40px); margin: 27px auto 0; text-align: left; transform: none; opacity: 1; }
-  .hero h1 { font-size: clamp(56px,12.3vw,82px); line-height: 1.13; letter-spacing: -.065em; }
-  .hero-copy>p { font-size: 13px; line-height: 1.95; margin-top: 24px; }
-  .hero[data-detail="true"] .hero-copy { opacity: 1; transform: none; }
-  .screen,.screen[data-framing="portrait"] { width: 100%; height: auto; min-height: 0; max-width: 620px; margin: 0 auto; }
-  .screen::after { background: linear-gradient(0deg,#050607 0%,transparent 12%); }
-  .screen picture,.screen picture img,.screen video { height: auto; object-fit: contain; }
-  .screen picture img { aspect-ratio: 4/5; object-fit: cover; }
-  .screen[data-framing="wide"] picture img { aspect-ratio: auto; }
+  .hero-copy { display: block; padding: 27px 0 20px; }
+  .hero h1 { font-size: clamp(45px,11vw,68px); line-height: 1.13; letter-spacing: -.055em; }
+  .hero-copy>p { font-size: 13px; line-height: 1.95; margin-top: 20px; }
+  .screen,.screen[data-framing="portrait"] { width: min(620px,100%); }
   .film-caption { align-items: flex-start; flex-direction: column; padding-top: 0; gap: 5px; }
   .film-caption p { font-size: 12px; }
   .film-caption small { font-size: 10px; margin-left: 12px; }
@@ -156,7 +141,7 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
   .chapters button { padding: 17px 0; }
   .chapters strong { font-size: 15px; }
   .chapters small { font-size: 12px; line-height: 1.8; }
-  .film-description { font-size: 11px; }
+  .film-description { font-size: 12px; }
   .workflow { padding-top: 86px; }
   .section-heading { flex-direction: column; gap: 22px; align-items: flex-start; }
   .section-heading h2 { font-size: 40px; }
@@ -190,11 +175,6 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
   .footer-bottom { flex-direction: column; gap: 15px; font-size: 10px; }
   .footer-bottom>a:first-of-type { margin-left: 0; }
 }
-@media (max-height:650px) and (min-width:1001px) {
-  .screen { height: 600px; min-height: 0; }
-  .hero-copy { top: 90px; }
-  .hero h1 { font-size: 78px; }
-}
 @media (prefers-reduced-motion:reduce) {
   html { scroll-behavior: auto; }
   *,*::before,*::after { transition: none !important; animation: none !important; }
@@ -204,8 +184,4 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
   .screen video { forced-color-adjust: none; }
 }
 
-/* A loaded portrait keeps the corresponding title layout after device rotation. */
-.hero[data-framing="portrait"] .hero-copy { position: relative; left: auto; top: auto; width: min(620px,calc(100% - 40px)); max-width: none; margin: 30px auto 0; pointer-events: none; }
-.hero[data-framing="portrait"][data-detail="true"] .hero-copy { opacity: 1; transform: none; }
-.hero[data-framing="portrait"] .screen { width: min(620px,100%); height: auto; min-height: 0; }
-.hero[data-framing="portrait"] .screen::after { background: linear-gradient(0deg,#050607 0%,transparent 12%); }
+.hero[data-framing="portrait"] .screen { width: min(660px,100%); }
