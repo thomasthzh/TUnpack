@@ -16,24 +16,25 @@ class Element {
   scrollIntoView() { this.scrolled = true; }
 }
 
-function setup({ reduced = false, saveData = false, observer = true } = {}) {
-  const document = new Element(), window = new Element(), motion = new Element(), connection = new Element();
-  motion.matches = reduced; connection.saveData = saveData; document.hidden = false;
-  const ids = ['product-film', 'film-actions', 'film-toggle', 'film-sound', 'film-fullscreen', 'film-status'];
+function setup({ reduced = false, saveData = false, observer = true, narrow = false, legacy = false } = {}) {
+  const document = new Element(), window = new Element(), motion = new Element(), connection = new Element(), framing = new Element();
+  framing.matches = narrow; motion.matches = reduced; connection.saveData = saveData; document.hidden = false;
+  const ids = ['product-film', 'film-actions', 'film-toggle', 'film-sound', 'film-fullscreen', 'film-status', 'film-screen', 'film-poster'];
   const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
   const video = elements['product-film'];
-  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 24, playCalls: 0 });
+  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4', srcPortrait: 'assets/portrait.mp4', posterWide: 'wide.webp', posterPortrait: 'portrait.webp' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 24, playCalls: 0 });
+  if (legacy) { delete video.dataset.srcPortrait; delete video.dataset.posterPortrait; delete video.dataset.posterWide; video.poster = 'legacy.webp'; }
   video.querySelector('track').dataset.src = 'assets/film.zh-CN.vtt';
   video.play = () => { video.playCalls++; if (video.reject) return Promise.reject(Object.assign(new Error('blocked'), {name: 'NotAllowedError'})); video.paused = false; video.emit('play'); return Promise.resolve(); };
   video.pause = () => { if (!video.paused) { video.paused = true; video.emit('pause'); } };
   const chapters = [0, 7.5, 15].map((time, i) => Object.assign(new Element(), { dataset: {time: String(time), end: String([7.5, 15, 24][i])} }));
   document.querySelector = name => elements[name.slice(1)]; document.querySelectorAll = () => chapters;
-  window.matchMedia = () => motion;
+  window.matchMedia = query => query.includes("max-width") ? framing : motion;
   let onIntersection;
   const context = { document, window, navigator: { connection } };
   if (observer) { context.IntersectionObserver = class { constructor(fn) {onIntersection = fn;} observe() {} }; window.IntersectionObserver = context.IntersectionObserver; }
   vm.runInNewContext(code, context);
-  return { ...elements, video, chapters, document, window, motion, connection, intersect(visible) { onIntersection([{isIntersecting: visible, intersectionRatio: visible ? 1 : 0}]); } };
+  return { ...elements, video, chapters, document, window, motion, connection, framing, intersect(visible) { onIntersection([{isIntersecting: visible, intersectionRatio: visible ? 1 : 0}]); } };
 }
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -89,4 +90,25 @@ test('Late play resolution cannot resume an offscreen or hidden film', async () 
   e.video.play = () => new Promise(done => {resolve = done;}); e.intersect(true); e.intersect(false); e.video.paused = false; resolve(); await tick();
   // A late media play event is also checked against the current visibility.
   e.video.emit('play'); assert.equal(e.video.paused, true);
+});
+
+test('Phone selects reflowed portrait poster and media without loading a second source', async () => {
+  const e = setup({narrow:true}); assert.equal(e.video.poster, 'portrait.webp'); assert.equal(e.video.width,720); assert.equal(e.video.height,900); assert.equal(e.video.src,undefined); assert.equal(e['film-poster'].hidden,true); assert.equal(e.video.hidden,false); assert.equal(e['film-screen'].dataset.framing,'portrait');
+  e.intersect(true); await tick(); assert.equal(e.video.src,'assets/portrait.mp4');
+  e.video.currentTime=12; e['film-toggle'].emit('click'); e.framing.matches=false; e.framing.emit('change'); await tick(); assert.equal(e.video.src,'assets/portrait.mp4'); assert.equal(e.video.currentTime,12); assert.equal(e.video.paused,true); assert.equal(e['film-screen'].dataset.framing,'portrait');
+});
+
+test('Framing may change before first load under reduced motion and save-data', async () => {
+  for (const option of [{reduced:true},{saveData:true}]) {
+    const e=setup(option); e.intersect(true); e.framing.matches=true; e.framing.emit('change'); assert.equal(e.video.poster,'portrait.webp'); assert.equal(e.video.src,undefined); assert.equal(e.video.querySelector('track').src,undefined);
+    e['film-toggle'].emit('click'); await tick(); assert.equal(e.video.src,'assets/portrait.mp4'); assert.equal(e.video.width,720);
+  }
+});
+
+test('Wide film also keeps position and framing across rotation after loading', async () => {
+  const e=setup();e.intersect(true);await tick(); e.video.currentTime=9;e.framing.matches=true;e.framing.emit('change');assert.equal(e.video.src,'assets/tunpack-film.mp4');assert.equal(e.video.width,1280);assert.equal(e.video.currentTime,9);
+});
+
+test('Cached prior homepage keeps its original poster when the new controller arrives', async () => {
+  const e=setup({legacy:true,reduced:true,narrow:true});e.intersect(true);assert.equal(e.video.poster,'legacy.webp');assert.equal(e.video.src,undefined);e['film-toggle'].emit('click');await tick();assert.equal(e.video.src,'assets/tunpack-film.mp4');assert.equal(e.video.width,1280);
 });

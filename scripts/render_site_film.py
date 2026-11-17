@@ -6,6 +6,7 @@ Requires Pillow, numpy, imageio-ffmpeg. Fonts are read from Windows, not bundled
 from functools import lru_cache
 from pathlib import Path
 import math
+import argparse
 import subprocess
 import wave
 
@@ -15,8 +16,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site/assets"
-SCRATCH = ROOT / "docs/evidence/site-film"
+SCRATCH = ROOT / "docs/evidence/site-refinement"
 W, H, FPS, DURATION = 1280, 720, 30, 24
+PORTRAIT = False
+MEDIA = "tunpack-20261117"
 MINT = (155, 230, 208)
 WHITE = (238, 245, 242)
 MUTED = (151, 171, 162)
@@ -60,26 +63,34 @@ def pill(image, x, y, label, color=MINT):
 @lru_cache(None)
 def background():
     y, x = np.mgrid[0:H, 0:W]
-    glow = np.exp(-((x - 870) / 530) ** 2 - ((y - 360) / 300) ** 2)
-    floor = np.exp(-((x - 740) / 500) ** 2 - ((y - 580) / 65) ** 2)
-    rgb = np.stack([7 + 8 * glow + 3 * floor, 9 + 23 * glow + 9 * floor, 10 + 19 * glow + 7 * floor], axis=2)
+    glow = np.exp(-((x - W * .68) / (W * .43)) ** 2 - ((y - H * .53) / (H * .44)) ** 2)
+    floor = np.exp(-((x - W * .60) / (W * .45)) ** 2 - ((y - H * .81) / (H * .09)) ** 2)
+    rgb = np.stack([7 + 7 * glow + 3 * floor, 9 + 24 * glow + 8 * floor, 10 + 20 * glow + 7 * floor], axis=2)
     return Image.fromarray(np.uint8(rgb)).convert("RGBA")
 
 
 def header(image, number, label):
-    text(image, (84, 47), "T解压", 18, (188, 208, 197), True)
-    text(image, (1197, 53), number + "  /  " + label, 13, MUTED, anchor="ra")
-    line(image, [(84, 89), (1196, 89)], (39, 54, 47), 1)
+    margin = 42 if PORTRAIT else 84
+    text(image, (margin, 42), "T解压", 22 if PORTRAIT else 18, (188, 208, 197), True)
+    text(image, (W - margin, 48), number + "  /  " + label, 18 if PORTRAIT else 13, MUTED, anchor="ra")
+    line(image, [(margin, 89), (W - margin, 89)], (39, 54, 47), 1)
 
 
-def copy(image, first, second, detail, x=84, y=204):
-    text(image, (x, y), first, 55, WHITE, True)
-    text(image, (x, y + 82), second, 55, MINT, True)
-    text(image, (x + 2, y + 192), detail, 18, MUTED)
+def heading(image, title, subtitle):
+    if PORTRAIT:
+        text(image, (W / 2, 143), title, 43, WHITE, True, anchor="ma")
+        text(image, (W / 2, 220), subtitle, 24, MUTED, anchor="ma")
+    else:
+        text(image, (84, 125), title, 45, WHITE, True)
+        text(image, (87, 198), subtitle, 18, MUTED)
+
+
+def footnote(image, value):
+    text(image, (W / 2, H - 55), value, 22 if PORTRAIT else 14, MUTED, anchor="ma")
 
 
 @lru_cache(None)
-def file_face(extension, archive=False):
+def file_face(extension, archive=False, label=True):
     width, height = 284, 340
     y = np.arange(height)[:, None, None] / height
     top, bottom = (np.array([49, 116, 100]), np.array([12, 43, 42])) if archive else (np.array([78, 94, 103]), np.array([25, 36, 43]))
@@ -103,7 +114,8 @@ def file_face(extension, archive=False):
     else:
         draw.ellipse((113, 99, 171, 157), outline=(172, 193, 202), width=2)
         draw.polygon([(137, 112), (137, 144), (154, 128)], fill=(218, 230, 234))
-    text(image, (27, 198), extension, 57, WHITE, True)
+    if label:
+        text(image, (27, 198), extension, 57, WHITE, True)
     text(image, (29, 289), "旅途记录.mp4" if extension in [".MP4", "ZIP"] else "内容归档", 18, (185, 209, 198))
     return image
 
@@ -118,90 +130,117 @@ def place(image, layer, center, angle=0, scale=1, alpha=1, shadow=True):
         tile = tile.rotate(angle, Image.Resampling.BICUBIC, expand=True)
     xy = (int(center[0] - tile.width / 2), int(center[1] - tile.height / 2))
     if shadow:
-        shade = Image.new("RGBA", tile.size, (0, 0, 0, 0))
-        shade.putalpha(tile.getchannel("A").point(lambda p: int(p * 0.40)))
-        shade = shade.filter(ImageFilter.GaussianBlur(17))
-        image.alpha_composite(shade, (xy[0] + 7, xy[1] + 23))
+        mask = Image.new("L", (tile.width + 80, tile.height + 80))
+        mask.paste(tile.getchannel("A"), (40, 40))
+        mask = mask.point(lambda p: int(p * .38)).filter(ImageFilter.GaussianBlur(17))
+        shade = Image.new("RGBA", mask.size)
+        shade.putalpha(mask)
+        image.alpha_composite(shade, (xy[0] - 32, xy[1] - 19))
     image.alpha_composite(tile, xy)
 
 
 def reveal_scene(t):
     image = background().copy()
     p = smooth((t - 2.7) / 2.5)
-    sway = math.sin(t * .7) * 3
+    cx, cy = (360, 548) if PORTRAIT else (850, 380)
+    depth = 1 + .28 * math.sin(t * .5)
     for index in [2, 1]:
-        layer = file_face("7Z", True).copy()
-        place(image, layer, (875 + 35 * index, 355 - 28 * index), -8 - index * 3, .98, .60, False)
-    face = file_face(".MP4").copy()
+        place(image, file_face("7Z", True), (cx + 32 * index * depth, cy - 23 * index * depth), -7 - index * 4, .94, .56, False)
+    face = file_face(".MP4", False, False).copy()
     mask = Image.new("L", face.size)
     ImageDraw.Draw(mask).rectangle((0, 0, int(face.width * p), face.height), fill=255)
-    face = Image.composite(file_face("ZIP", True), face, mask)
+    face = Image.composite(file_face("ZIP", True, False), face, mask)
     if .01 < p < .99:
         line(face, [(int(284 * p), 4), (int(284 * p), 335)], (202, 255, 233), 3)
-    place(image, face, (850 - 16 * p, 379 + sway), -8 + 3 * p, 1.06 + .06 * math.sin(t * .3))
-    # An authored wide -> 1.52x macro -> wide camera. The file scan is held
-    # inside the close-up; copy and controls are composited after the camera.
-    zoom = 1 + .52 * (smooth((t - 1.3) / 1.3) - smooth((t - 4.8) / 1.9))
-    left, top = 850 * (1 - 1 / zoom), 379 * (1 - 1 / zoom)
+    extension = Image.new("RGBA", face.size)
+    text(extension, (27, 198), ".MP4" if p < .5 else "ZIP", 57, (*WHITE, int(255 * min(1, abs(p - .5) * 6))), True)
+    face.alpha_composite(extension)
+    place(image, face, (cx - 13 * p, cy + math.sin(t * .7) * 3), -8 + 3 * p, 1.02)
+    # The subject camera moves between actions. Copy and diagnostic remain fixed.
+    zoom = 1 + (.26 if PORTRAIT else .58) * (smooth((t - 1.3) / 1.3) - smooth((t - 4.8) / 1.9))
+    left, top = cx * (1 - 1 / zoom), cy * (1 - 1 / zoom)
     image = image.crop((left, top, left + W / zoom, top + H / zoom)).resize((W, H), Image.Resampling.BICUBIC)
     header(image, "01", "内容识别")
-    copy(image, "名字会伪装。", "内容不会。", "识别压缩内容，而不只看文件后缀。")
+    if PORTRAIT:
+        text(image, (360, 139), "名字会伪装。", 46, WHITE, True, anchor="ma")
+        text(image, (360, 212), "内容不会。", 46, MINT, True, anchor="ma")
+    else:
+        text(image, (84, 214), "名字会伪装。", 55, WHITE, True)
+        text(image, (84, 296), "内容不会。", 55, MINT, True)
+        text(image, (86, 406), "按文件内容，识别真正的格式。", 18, MUTED)
     if t > 1:
         a = smooth((t - 1) / .8)
-        info = Image.new("RGBA", (440, 64))
-        panel(info, (0, 0, 438, 62), 14, (13, 24, 23), (65, 98, 81))
-        text(info, (21, 13), "50 4B 03 04" if p > .8 else "读取文件内容…", 19, MINT, mono=p > .8)
-        text(info, (410, 20), "ZIP" if p > .8 else "识别中", 15, MUTED, anchor="ra")
-        place(image, info, (858, 663 + 12 * (1 - a)), alpha=a)
-    text(image, (84, 647), "改名文件 · 部分前缀伪装 · 不修改原文件", 14, MUTED)
+        info = Image.new("RGBA", (520 if PORTRAIT else 440, 64))
+        panel(info, (0, 0, info.width - 2, 62), 14, (13, 24, 23), (65, 98, 81))
+        text(info, (21, 13), "50 4B 03 04" if p > .8 else "读取文件内容…", 25 if PORTRAIT else 19, MINT, mono=p > .8)
+        text(info, (info.width - 25, 19), "ZIP" if p > .8 else "识别中", 20 if PORTRAIT else 15, MUTED, anchor="ra")
+        place(image, info, (360 if PORTRAIT else 858, 788 if PORTRAIT else 663), alpha=a)
+    if PORTRAIT:
+        footnote(image, "识别受支持的伪装，不修改原文件")
+    else:
+        text(image, (84, 647), "改名文件 · 部分前缀伪装 · 原文件保留", 14, MUTED)
     return image
 
 
 def checkmark(image, x, y, active=True):
     d = ImageDraw.Draw(image)
-    d.ellipse((x, y, x + 24, y + 24), fill=(33, 76, 58) if active else (34, 44, 42))
+    d.ellipse((x, y, x + 28, y + 28), fill=(33, 76, 58) if active else (34, 44, 42))
     if active:
-        line(image, [(x + 6, y + 12), (x + 11, y + 17), (x + 19, y + 8)], MINT, 2)
+        line(image, [(x + 7, y + 14), (x + 13, y + 20), (x + 22, y + 9)], MINT, 3)
 
 
-def logic_scene(t):
+def password_scene(t):
     image = background().copy()
-    header(image, "02", "密码与分卷")
-    text(image, (84, 123), "各有来路，也能归队。", 45, WHITE, True)
-    text(image, (87, 193), "优先验证候选密码。分卷关系，清楚呈现。", 18, MUTED)
-    # One fixed work surface: attention moves from saved candidates to volume slots.
-    panel(image, (84, 260, 1196, 602), 23, (14, 23, 22), (63, 85, 73))
-    line(image, [(640, 261), (640, 601)], (51, 69, 58), 1)
-    text(image, (116, 288), "密码本", 23, WHITE, True)
-    text(image, (116, 329), "保存的候选，优先尝试", 14, MUTED)
+    header(image, "02", "候选密码")
+    heading(image, "先找对钥匙。", "优先候选，通过正文验证再使用。")
+    x, y, width, height = (50, 316, 620, 410) if PORTRAIT else (244, 276, 792, 320)
+    # A shallow stack establishes depth before the stable validation close-up.
+    for i in [2, 1]:
+        panel(image, (x + i * 8, y - i * 9, x + width - i * 8, y + height - i * 9), 24, (12, 25, 23), (42, 69, 55))
+    panel(image, (x, y, x + width, y + height), 24, (19, 33, 28), (82, 117, 96))
+    text(image, (x + 30, y + 27), "本机密码本", 28 if PORTRAIT else 22, WHITE, True)
+    text(image, (x + width - 30, y + 34), "WINDOWS DPAPI", 17 if PORTRAIT else 13, MUTED, anchor="ra")
     for i in range(3):
-        y = 389 + i * 53
-        panel(image, (115, y - 8, 603, y + 34), 9, (20, 33, 29), (39, 60, 47))
-        text(image, (133, y + 1), "● ● ● ● ● ● ● ●", 17, (137, 168, 150))
-        selected = t > 1.0 and i == 0
-        text(image, (552, y + 3), "已验证" if selected else "候选", 13, MINT if selected else MUTED, anchor="ra")
-        if selected:
-            checkmark(image, 566, y, True)
-    text(image, (674, 288), "分卷识别", 23, WHITE, True)
-    text(image, (674, 329), "改过名字，也可手工补齐顺序", 14, MUTED)
-    for i, name in enumerate(["资料.7z.001", "课程文档.docx", "资料.7z.003"]):
-        y = 389 + i * 53
-        selected = t > 3.3 + i * .45
-        panel(image, (674, y - 8, 1164, y + 34), 9, (20, 33, 29), (39, 60, 47))
-        text(image, (691, y + 1), name, 17, (191, 211, 198))
-        text(image, (1110, y + 3), f"卷 {i + 1:03d}" if selected else "待确认", 13, MINT if selected else MUTED, anchor="ra")
-        if selected:
-            checkmark(image, 1127, y)
-    progress = smooth((t - .4) / 1.4)
-    line(image, [(116, 571), (116 + 487 * progress, 571)], MINT, 2)
-    if t > 4:
-        line(image, [(675, 571), (675 + 488 * smooth((t - 4) / 2), 571)], MINT, 2)
-    text(image, (84, 647), "密码由 Windows 加密保存 · 有缺卷或歧义时，明确提示", 14, MUTED)
-    # Smooth macro push without moving controls relative to each other.
-    zoom = 1 + .028 * math.sin(min(t / 7.5, 1) * math.pi)
-    if zoom > 1.001:
-        crop_w, crop_h = int(W / zoom), int(H / zoom)
-        image = image.crop(((W - crop_w) // 2, (H - crop_h) // 2, (W + crop_w) // 2, (H + crop_h) // 2)).resize((W, H), Image.Resampling.BICUBIC)
+        row_y = y + 98 + i * (88 if PORTRAIT else 62)
+        active = t > .85 and i == 0
+        panel(image, (x + 26, row_y - 8, x + width - 26, row_y + (57 if PORTRAIT else 39)), 11, (26, 58, 42) if active else (16, 29, 23), (82, 157, 113) if active else (39, 59, 46))
+        text(image, (x + 43, row_y + 2), "● ● ● ● ● ●", 26 if PORTRAIT else 21, (178, 210, 190))
+        text(image, (x + width - 83, row_y + 6), "已验证" if active else "候选", 24 if PORTRAIT else 17, MINT if active else MUTED, anchor="ra")
+        if active:
+            checkmark(image, x + width - 68, row_y + 3)
+    footnote(image, "来自你保存、导入或提供的密码")
+    return image
+
+
+def volumes_scene(t):
+    image = background().copy()
+    header(image, "02", "分卷归位")
+    heading(image, "各有来路。一起归队。" if not PORTRAIT else "改过名，也能归队。", "识别分卷关系，必要时手工确认。")
+    if PORTRAIT:
+        for i, name in enumerate(["资料.7z.001", "课程文档.docx", "资料.7z.003"]):
+            enter = smooth((t - .18 - i * .26) / .65)
+            x, y, width = 52, 328 + i * 133, 616
+            layer = Image.new("RGBA", (616, 112))
+            panel(layer, (0, 0, 615, 111), 17, (20, 36, 29), (72, 110, 85))
+            text(layer, (27, 23), name, 29, WHITE)
+            text(layer, (27, 70), f"卷 {i + 1:03d}", 24, MINT if t > 1.3 + i * .35 else MUTED)
+            if t > 1.3 + i * .35:
+                checkmark(layer, 550, 39)
+            place(image, layer, (360, y + 56 + (1 - enter) * 20), alpha=enter)
+    else:
+        for i, name in enumerate(["资料.7z.001", "课程文档.docx", "资料.7z.003"]):
+            enter = smooth((t - .18 - i * .26) / .65)
+            layer = Image.new("RGBA", (320, 245))
+            panel(layer, (0, 0, 319, 244), 22, (20, 36, 29), (72, 110, 85))
+            text(layer, (27, 27), f"{i + 1:02d}", 55, MINT, mono=True)
+            text(layer, (27, 125), name, 25, WHITE)
+            text(layer, (27, 190), "已确认卷位" if t > 1.3 + i * .35 else "等待确认", 17, MUTED)
+            if t > 1.3 + i * .35:
+                checkmark(layer, 262, 186)
+            place(image, layer, (264 + i * 376, 440 + 24 * (1 - enter)), alpha=enter)
+            if i < 2 and enter > .6:
+                line(image, [(438 + i * 376, 440), (464 + i * 376, 440)], (98, 165, 123), 2)
+    footnote(image, "缺卷或有歧义时，明确提示，不盲目拼接")
     return image
 
 
@@ -216,28 +255,37 @@ def folder_icon(image, x, y, scale=1):
 def result_scene(t):
     image = background().copy()
     header(image, "03", "逐层展开")
-    text(image, (84, 137), "解开一层。再下一层。", 47, WHITE, True)
-    text(image, (87, 211), "嵌套自动展开，结果留在你选的位置。", 18, MUTED)
-    # A single flowing archive hierarchy, no unrelated UI card wall.
-    xs = [118, 478, 838]
-    for i, x in enumerate(xs):
-        enter = smooth((t - i * .75) / .9)
-        node = Image.new("RGBA", (280, 260))
-        panel(node, (0, 0, 279, 258), 22, (19, 34, 28), (77, 107, 86))
-        if i < 2:
-            icon = file_face("ZIP" if i == 0 else "7Z", True)
-            place(node, icon, (140, 103), -5, .35, shadow=False)
+    heading(image, "解开一层。再下一层。" if not PORTRAIT else "一层，再下一层。", "每一层内容，都有自己的位置。")
+    expansion = smooth(t / 2.1)
+    for i in [2, 1, 0]:
+        focus = smooth((t - i * .65) / .75)
+        width, height = (600, 134) if PORTRAIT else (280, 262)
+        node = Image.new("RGBA", (width, height))
+        panel(node, (0, 0, width - 1, height - 1), 22, (20, 36, 29), (73, 115, 89))
+        if PORTRAIT:
+            if i < 2:
+                place(node, file_face("ZIP" if i == 0 else "7Z", True), (65, 66), -5, .25, shadow=False)
+            else:
+                folder_icon(node, 30, 38, .8)
+            text(node, (133, 27), ["外层.zip", "内层.7z", "文件已就位"][i], 30, WHITE)
+            text(node, (135, 79), ["保留外层处理记录", "自动展开嵌套", "同名结果使用新名称"][i], 23, MUTED)
+            cx = lerp(360 + i * 18, 360, expansion)
+            cy = lerp(470 - i * 19, 350 + i * 169, expansion)
+            place(image, node, (cx, cy), alpha=1)
         else:
-            folder_icon(node, 96, 72)
-        text(node, (140, 190), ["外层.zip", "内层.7z", "文件已就位"][i], 21, WHITE, anchor="ma")
-        text(node, (140, 224), ["原包旁 · 或指定目录", "自动处理嵌套", "同名结果使用新名称"][i], 13, MUTED, anchor="ma")
-        place(image, node, (x + 140, 425 + 25 * (1 - enter)), alpha=enter)
-        if i < 2 and t > (i + 1) * .75:
-            line(image, [(x + 298, 420), (x + 339, 420)], (103, 167, 129), 2)
-            line(image, [(x + 332, 414), (x + 339, 420), (x + 332, 426)], (103, 167, 129), 2)
-    if t > 3.3:
-        text(image, (84, 605), "内层遇到问题？单独准备重试，不必重解外层。", 19, MINT)
-    text(image, (84, 656), "原任务保留未完成记录 · 已解内容保留 · 不重复覆盖", 14, MUTED)
+            if i < 2:
+                place(node, file_face("ZIP" if i == 0 else "7Z", True), (140, 103), -5, .35, shadow=False)
+            else:
+                folder_icon(node, 96, 72)
+            text(node, (140, 190), ["外层.zip", "内层.7z", "文件已就位"][i], 23, WHITE, anchor="ma")
+            text(node, (140, 229), ["原包旁 · 或指定目录", "自动处理嵌套", "同名结果使用新名称"][i], 14, MUTED, anchor="ma")
+            cx = lerp(640 + i * 38, 258 + i * 382, expansion)
+            cy = lerp(425 - i * 22, 425, expansion)
+            place(image, node, (cx, cy), scale=lerp(.88 - i * .07, 1, expansion), alpha=1)
+    if t > 3.1:
+        label = "内层失败？单独重试。" if PORTRAIT else "内层遇到问题？单独准备重试，不必重解外层。"
+        text(image, (W / 2, H - 126), label, 28 if PORTRAIT else 21, MINT, anchor="ma")
+    footnote(image, "原任务仍保留未完成记录，已有内容保留")
     return image
 
 
@@ -248,23 +296,23 @@ def logo():
 
 def final_scene(t):
     image = background().copy()
-    place(image, logo(), (640, 235 - 12 * smooth(t / 3)), scale=162 / logo().width)
-    text(image, (640, 356), "T解压", 59, WHITE, True, anchor="ma")
-    text(image, (640, 458), "把复杂，解开。", 35, MINT, anchor="ma")
-    text(image, (640, 568), "WINDOWS  /  原生轻量  /  免安装", 15, MUTED, anchor="ma")
+    place(image, logo(), (W / 2, (315 if PORTRAIT else 235) - 12 * smooth(t / 3)), scale=(190 if PORTRAIT else 162) / logo().width)
+    text(image, (W / 2, 470 if PORTRAIT else 356), "T解压", 65 if PORTRAIT else 59, WHITE, True, anchor="ma")
+    text(image, (W / 2, 590 if PORTRAIT else 458), "把复杂，解开。", 42 if PORTRAIT else 35, MINT, anchor="ma")
+    text(image, (W / 2, 746 if PORTRAIT else 568), "WINDOWS / 原生轻量 / 免安装", 24 if PORTRAIT else 15, MUTED, anchor="ma")
     return image
 
 
-SCENES = [(0, reveal_scene), (7.5, logic_scene), (15, result_scene), (21, final_scene)]
+SCENES = [(0, reveal_scene), (7.5, password_scene), (11, volumes_scene), (15, result_scene), (21, final_scene)]
 
 
 def frame(t):
     index = max(i for i, (start, _) in enumerate(SCENES) if t >= start)
     start, render = SCENES[index]
     image = render(t - start)
-    if index and t - start < .35:
+    if index and t - start < .18:
         prev_start, prev = SCENES[index - 1]
-        image = Image.blend(prev(start - prev_start - .001), image, smooth((t - start) / .35))
+        image = Image.blend(prev(start - prev_start - .001), image, smooth((t - start) / .18))
     return image.convert("RGB")
 
 
@@ -295,33 +343,48 @@ def soundtrack():
     return target
 
 
-def main():
-    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    poster = frame(5.7)
-    poster.save(OUT / "hero-poster.webp", quality=88)
-    cover = poster.copy().resize((1200, 675), Image.Resampling.LANCZOS).crop((0, 22, 1200, 652))
-    cover.save(OUT / "cover.jpg", quality=91)
-    moments = [1, 4.0, 6.9, 13.5, 16.2, 19.2, 21.8, 23.5]
-    sheet = Image.new("RGB", (960, 4 * 297), (7, 9, 10))
+def render(format_name, stills_only=False):
+    global W, H, PORTRAIT
+    PORTRAIT = format_name == "portrait"
+    W, H = (720, 900) if PORTRAIT else (1280, 720)
+    background.cache_clear()
+    stem = MEDIA + ("-portrait" if PORTRAIT else "-wide")
+    poster = frame(6.8)
+    poster.save(OUT / (stem + ".webp"), quality=88)
+    if not PORTRAIT:
+        poster.resize((1200, 675), Image.Resampling.LANCZOS).crop((0, 22, 1200, 652)).save(OUT / (MEDIA + "-cover.jpg"), quality=91)
+    moments = [1, 3.8, 6.9, 9.3, 13.7, 15.2, 18.7, 23]
+    tw, th = (288, 360) if PORTRAIT else (480, 270)
+    sheet = Image.new("RGB", (tw * 2, (th + 27) * 4), (7, 9, 10))
     for index, moment in enumerate(moments):
         sample = frame(moment)
-        sample.save(SCRATCH / f"frame-{moment:04.1f}.png")
-        thumb = sample.resize((480, 270), Image.Resampling.LANCZOS)
-        x, y = index % 2 * 480, index // 2 * 297
-        sheet.paste(thumb, (x, y))
-        text(sheet, (x + 10, y + 274), f"{moment:.1f}s", 13, MUTED)
-    sheet.save(SCRATCH / "storyboard.jpg", quality=94)
+        sample.save(SCRATCH / f"{format_name}-{moment:04.1f}.png")
+        x, y = index % 2 * tw, index // 2 * (th + 27)
+        sheet.paste(sample.resize((tw, th), Image.Resampling.LANCZOS), (x, y))
+        text(sheet, (x + 10, y + th + 4), f"{moment:.1f}s", 13, MUTED)
+    sheet.save(SCRATCH / (format_name + "-storyboard.jpg"), quality=94)
+    if stills_only:
+        return
     audio = soundtrack()
-    command = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "pipe:0", "-i", str(audio), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-t", str(DURATION), str(OUT / "tunpack-film.mp4")]
+    command = [imageio_ffmpeg.get_ffmpeg_exe(), "-hide_banner", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "pipe:0", "-i", str(audio), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-t", str(DURATION), str(OUT / (stem + ".mp4"))]
     process = subprocess.Popen(command, stdin=subprocess.PIPE)
     for index in range(DURATION * FPS):
         process.stdin.write(frame(index / FPS).tobytes())
         if index % (FPS * 6) == 0:
-            print(f"Rendered {index // FPS}/{DURATION}s", flush=True)
+            print(f"{format_name}: {index // FPS}/{DURATION}s", flush=True)
     process.stdin.close()
     if process.wait():
         raise SystemExit("ffmpeg failed")
-    print(f"Original {DURATION}s film: {(OUT / 'tunpack-film.mp4').stat().st_size:,} bytes", flush=True)
+    print(f"{stem}: {(OUT / (stem + '.mp4')).stat().st_size:,} bytes", flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--format", choices=["wide", "portrait", "all"], default="all")
+    parser.add_argument("--stills-only", action="store_true")
+    args = parser.parse_args()
+    for format_name in (["wide", "portrait"] if args.format == "all" else [args.format]):
+        render(format_name, args.stills_only)
 
 
 if __name__ == "__main__":

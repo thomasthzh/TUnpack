@@ -4,10 +4,16 @@
 
 参考本机 SyncAction 公开官网的黑底留白、单一影片及“广角 → 特写 → 拉回”节奏，原创 T解压文件、密码和分卷视觉；未复制其山景、音乐、品牌或私密资料。影片明确标注功能演绎，不是实际软件录屏。
 
-`scripts/render_site_film.py` 用 Pillow / numpy 离线按时间渲染 1280×720、30fps、24秒影片，并合成原创器乐音轨；Windows字体只用于栅格化，不随包分发。需要 `pip install Pillow numpy imageio-ffmpeg`，然后 `python scripts/render_site_film.py`。源码与成片一起维护，不在网页运行渲染器。
+`scripts/render_site_film.py` 是唯一离线按时间渲染实现，用Pillow / numpy绘制1280×720横幅与720×900竖幅，两支均30fps、24秒、H264/AAC，配原创合成器音轨。使用 `pip install Pillow numpy imageio-ffmpeg`，再运行 `python scripts/render_site_film.py`；`--stills-only`只出静帧，`--format wide|portrait`可单独重建。Windows字体只用于栅格化，不分发字体文件。线上无需Python/渲染库。
+
+同一时间轴：0–7.5内容识别的广角/特写/拉回；7.5–11候选命中；11–15分卷归位；15–21层叠视差展开；21–24品牌收束。竖幅重新排列文字和层级，非裁切横片。前景不透明、独立柔影，标题与操作目标保持固定。新影片/静帧以日期命名，CSS/JS带版本查询；旧影片URL保留以兼容已缓存页面。
+
+首次挂载前按700px断点选择横/竖源、尺寸和静帧；减少动态/省流量时尚未加载可随方向改静帧。加载后冻结所选构图和比例，不因旋转重新下载、重置时间或改变手动暂停。picture提供无JS的手机静帧，正文、字幕、两种MP4与下载路径均可用。
 
 首页采用原生视频控件。页面控制支持播放/暂停、静音/声音、全屏与章节定位。离屏/后台暂停，手动暂停会保留；减少动态或省流量时不挂载视频/字幕，先显示小体积 WebP 静帧，主动播放才加载。无JS有MP4、字幕、下载和使用说明。没有滚动劫持。章节按钮在无JS时禁用，避免无效操作。
 
-验证：`node --test tests/site_player.test.cjs` 检查媒体状态流；`python tests/check_site.py` 检查公开链接/相对路径/资源/语义结构。离线生成的分镜与成片帧可直接审查，FFmpeg完整解码检查音视频。遵照本项目禁止CU/浏览器自动操作的约束，未运行浏览器，不将静态检查称为真实浏览器或手机验收。
+验证：`node --test tests/site_player.test.cjs tests/site_download.test.cjs` 检查媒体状态流；`python tests/check_site.py` 检查公开链接/相对路径/资源/语义结构。离线生成的分镜与成片帧可直接审查，FFmpeg完整解码检查音视频。遵照本项目禁止CU/浏览器自动操作的约束，未运行浏览器，不将静态检查称为真实浏览器或手机验收。
 
 `.github/workflows/site.yml` 只上传 `site/` 为Pages，不包含源码、测试输入、构建目录或密码本。原下载直接指向固定版本GitHub Release，不需要外部API。官网可通过恢复之前站点提交并重新运行同一Pages工作流回滚；本轮新增Release，不覆盖其他版本资产。
+
+下载保持固定v0.13.0，不因网站更新改包/tag。主下载旁给出同版本GitHub备用页与校验文件直达；明确每个任务及嵌套成功后的默认回收、可关闭和用户状态目录。手机/其他OS仅建议转到Windows，不阻断下载。复制仅在主动点击后写入公共URL，不读剪贴板；不可用/拒绝时选中只读输入框供手工复制。点击下载仅说明打开链接，不声称下载成功，不fetch探测或记录访问。

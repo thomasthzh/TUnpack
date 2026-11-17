@@ -12,6 +12,9 @@
   if (!video || !controls || !toggle || !sound || !fullscreen || !status) return;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const connection = navigator.connection;
+  const framing = window.matchMedia("(max-width: 700px)");
+  const screen = document.querySelector("#film-screen");
+  const poster = document.querySelector("#film-poster");
   let loaded = false;
   let visible = false;
   let pageActive = true;
@@ -27,14 +30,29 @@
   video.controls = false;
   video.tabIndex = 0;
 
+  function chooseFraming() {
+    if (loaded) return;
+    const portrait = framing.matches && Boolean(video.dataset.srcPortrait);
+    video.dataset.framing = portrait ? "portrait" : "wide";
+    video.width = portrait ? 720 : 1280;
+    video.height = portrait ? 900 : 720;
+    const selectedPoster = portrait ? video.dataset.posterPortrait : video.dataset.posterWide;
+    if (selectedPoster) video.poster = selectedPoster;
+    if (screen) screen.dataset.framing = video.dataset.framing;
+  }
   function load() {
     if (loaded) return;
+    chooseFraming();
+    loaded = true;
     video.controls = true;
-    video.src = video.dataset.src;
+    video.src = video.dataset.framing === "portrait" ? video.dataset.srcPortrait : video.dataset.src;
     const track = video.querySelector("track");
     if (track) track.src = track.dataset.src;
-    loaded = true;
   }
+  chooseFraming();
+  video.hidden = false;
+  if (poster) poster.hidden = true;
+  framing.addEventListener("change", chooseFraming);
   function syncControls() {
     const playing = !video.paused && !video.ended;
     toggle.querySelector("[data-play-icon]").textContent = playing ? "Ⅱ" : "▷";

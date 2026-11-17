@@ -2,7 +2,7 @@ name: Publish website
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/site_player.test.cjs', 'tests/check_site.py', '.github/workflows/site.yml']
+    paths: ['site/**', 'tests/site_player.test.cjs', 'tests/site_download.test.cjs', 'tests/check_site.py', '.github/workflows/site.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Check media behavior and site links
         run: |
-          node --test tests/site_player.test.cjs
+          node --test tests/site_player.test.cjs tests/site_download.test.cjs
           python3 tests/check_site.py
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
