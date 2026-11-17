@@ -1,4 +1,4 @@
-T解压 0.13.0 — Windows x64 便携版
+T解压 0.13.1 — Windows x64 便携版
 
 开始使用
 1. 将 ZIP 完整展开到普通文件夹，保留全部文件。
@@ -8,6 +8,7 @@ T解压 0.13.0 — Windows x64 便携版
 默认行为
 - 原包旁创建同名结果目录；也可指定输出。重名使用新名称，不覆盖已有内容。
 - 自动处理嵌套包，按内容识别格式及受支持的伪装方式。
+- 标准ZIP分卷拖目录或任一卷自动归组；手工排序时.z01在前、末卷.zip在最后。
 - 成功后按设置将原包移入回收站；开始前可取消“成功后回收原包”。
 - 失败保留原包与已解结果。缺卷可补齐顺序，内层失败可单独准备重试。
 - 内层单独成功不会将整个父任务标为全部完成，也不自动接续其他内层包。
@@ -22,8 +23,10 @@ T解压 0.13.0 — Windows x64 便携版
 版本与下载
 仅支持 Windows 10/11 x64；本版本尚未数字签名。
 请从官方 GitHub Release 下载，可用同页 SHA256SUMS.txt 核对文件。
-官网：https://thomasthzh.github.io/TUnpack/
-发布：https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0
+官网：https://tunpack.thomasthzh.top/
+公开发行：https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.1
+0.13.1修复标准ZIP .z01…zip分卷入口和整组识别。
+升级前请正常退出旧版工作台，再运行新版，避免文件占用或旧窗口接收任务。
 说明：https://github.com/thomasthzh/TUnpack#readme
 反馈：https://github.com/thomasthzh/TUnpack/issues
 

@@ -1,0 +1,42 @@
+{
+  "entry_checks": [
+    {
+      "zip64": false,
+      "entry": "sample.zip",
+      "verified": true
+    },
+    {
+      "zip64": false,
+      "entry": "sample.z01",
+      "verified": true
+    },
+    {
+      "zip64": false,
+      "entry": "sample.z02",
+      "verified": true
+    },
+    {
+      "zip64": true,
+      "entry": "sample.zip",
+      "verified": true
+    },
+    {
+      "zip64": true,
+      "entry": "sample.z01",
+      "verified": true
+    },
+    {
+      "zip64": true,
+      "entry": "sample.z02",
+      "verified": true
+    }
+  ],
+  "encrypted": true,
+  "restore_preserves_disks": true,
+  "scan_single_group": true,
+  "missing_parts": true,
+  "rar_collision": true,
+  "production_queue_mixed_drop_merges_one_task": true,
+  "original_sources_compared": 41,
+  "all_generated_sources_retained": true
+}

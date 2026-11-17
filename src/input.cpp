@@ -60,6 +60,7 @@ MappedFile::~MappedFile() {
     if (mapping_) CloseHandle(mapping_);
     if (file_!=INVALID_HANDLE_VALUE) CloseHandle(file_);
 }
+static std::optional<uint32_t> splitZipDisks(const MappedFile& file);
 Input::Input(const std::vector<fs::path>& paths) {
     if (paths.empty()) throw std::runtime_error("No input volumes");
     path=fs::absolute(paths.front());
@@ -70,6 +71,14 @@ Input::Input(const std::vector<fs::path>& paths) {
         files.push_back(std::move(m));
     }
     size=physicalSize;
+    if(files.size()>1){
+        auto disks=splitZipDisks(*files.back());
+        if(disks&&*disks==files.size()){
+            // Native ZIP offsets are relative to a disk. Open the directory
+            // volume, while retaining physical order for the actual source set.
+            nativeVolumes=true;formatHint=L"zip";path=files.back()->path;
+        }
+    }
 }
 size_t Input::physicalRead(uint64_t pos,void* out,size_t count) const {
     if (pos>=physicalSize) return 0;
@@ -135,7 +144,7 @@ Input Input::slice(uint64_t start) const {
     return result;
 }
 std::vector<fs::path> Input::paths() const { std::vector<fs::path> p; for(const auto& f:files) p.push_back(f->path); return p; }
-bool Input::canUseNative() const { return !apate && !offset && !recoveryPrefix && !headerPatched && files.size()==1; }
+bool Input::canUseNative() const { return !apate && !offset && !recoveryPrefix && !headerPatched && (files.size()==1||nativeVolumes); }
 std::streamsize InputBuffer::xsgetn(char* s,std::streamsize n) {
     if(n<=0) return 0;
     auto count=input_.read(position_,s,size_t(n)); position_+=count; return std::streamsize(count);
@@ -151,6 +160,23 @@ InputBuffer::pos_type InputBuffer::seekoff(off_type off,std::ios_base::seekdir d
 InputBuffer::pos_type InputBuffer::seekpos(pos_type pos,std::ios_base::openmode mode) { return seekoff(off_type(pos),std::ios_base::beg,mode); }
 
 static uint32_t u32(const unsigned char* p) { return uint32_t(p[0])|(uint32_t(p[1])<<8)|(uint32_t(p[2])<<16)|(uint32_t(p[3])<<24); }
+static std::optional<uint32_t> splitZipDisks(const MappedFile& file){
+    if(file.size<22)return {};
+    auto length=size_t(std::min<uint64_t>(file.size,65557+20));
+    auto tail=file.data+file.size-length;
+    auto u16=[](const unsigned char* p){return unsigned(p[0])|(unsigned(p[1])<<8);};
+    for(size_t at=length-22+1;at-->0;){
+        const auto* end=tail+at;
+        if(u32(end)!=0x06054b50||at+22+u16(end+20)!=length)continue;
+        auto disk=u16(end+4),directoryDisk=u16(end+6);
+        if(!disk||directoryDisk>disk)continue;
+        if(at>=20&&u32(end-20)==0x07064b50){
+            auto count=u32(end-4),recordDisk=u32(end-16);
+            if(count>1&&recordDisk<count&&(disk==0xffff||disk==count-1))return count;
+        }else if(disk!=0xffff)return disk+1;
+    }
+    return {};
+}
 static uint32_t crcUpdate(uint32_t crc,const unsigned char* data,size_t size) {
     for(size_t i=0;i<size;++i){crc^=data[i];for(unsigned bit=0;bit<8;++bit)crc=(crc>>1)^(0xedb88320u&uint32_t(-int32_t(crc&1)));}
     return crc;
@@ -421,6 +447,30 @@ std::vector<fs::path> VolumeResolver::resolve(const fs::path& file,const Progres
     volumeProgress(progress,L"分析分卷",0);
     auto path=fs::absolute(file);
     auto ext=path.extension().wstring();
+    bool numberedZip=std::regex_match(lower(ext),std::wregex(L"\\.z[0-9]+"));
+    if(lower(ext)==L".zip"||numberedZip){
+        auto last=path;last.replace_extension(L".zip");
+        if(fs::is_regular_file(last)){
+            Input end({last});auto disks=splitZipDisks(*end.files.front());
+            if(disks){
+                std::vector<fs::path> parts;
+                for(uint32_t disk=1;disk<*disks;++disk){
+                    volumeProgress(progress,L"核对 ZIP 分卷",disk-1,*disks);
+                    auto suffix=std::to_wstring(disk);if(suffix.size()<2)suffix.insert(0,2-suffix.size(),L'0');
+                    auto part=last;part.replace_extension(L".z"+suffix);
+                    if(!fs::is_regular_file(part))throw std::runtime_error("Missing ZIP volume ("+utf8(part.filename().wstring())+")");
+                    parts.push_back(part);
+                }
+                parts.push_back(last);
+                if(std::none_of(parts.begin(),parts.end(),[&](const auto& p){return pathKey(p)==pathKey(path);}))throw std::runtime_error("Selected file is outside the available volume group");
+                return parts;
+            }
+        }else if(numberedZip){
+            auto firstPath=path;firstPath.replace_extension(L".z01");
+            Input first({fs::is_regular_file(firstPath)?firstPath:path});
+            if(first.size>=4&&!std::memcmp(first.files.front()->data,"PK\x07\x08",4))throw std::runtime_error("Missing ZIP volume ("+utf8(last.filename().wstring())+")");
+        }
+    }
     {Input raw({path});if(auto layout=sevenZipLayout(raw)){if(layout->end<=raw.size)return {path};if(auto group=completeSevenZipGroup(path,path,directory(path.parent_path(),progress),progress))return *group;}}
     if (ext.size()==4 && std::all_of(ext.begin()+1,ext.end(),iswdigit)) {
         auto first=path; first.replace_extension(L".001");
@@ -560,6 +610,7 @@ static std::optional<Input> zipFromTail(const Input& raw) {
     return {};
 }
 std::vector<Input> identifyInputs(const Input& raw,const Progress& progress,bool deep) {
+    if(raw.nativeVolumes)return {raw};
     std::vector<Input> inputs;
     if(auto recovered=recoverReversedSevenZip(raw))inputs.push_back(std::move(*recovered));
     // Cheap apate footer probe. The engine must still validate the recovered archive.

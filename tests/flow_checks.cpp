@@ -45,6 +45,23 @@ int wmain(int argc,wchar_t** argv){
     if(argc<3)return 2;auto root=uniquePath(fs::path(argv[1])/L"full-flows");fs::create_directories(root);const fs::path fixtures=argv[2];
     if(FAILED(CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED)))return 2;struct Uninitialize{~Uninitialize(){CoUninitialize();}} uninitialize;
     unsigned passed=0,total=0;auto check=[&](const char* name,const auto& test){++total;try{test();++passed;std::cout<<"PASS "<<name<<'\n';}catch(const std::exception& e){std::cout<<"FAIL "<<name<<": "<<e.what()<<'\n';}};
+    if(argc>3){
+        check("Native ZIP folder and mixed individual volumes form one complete queue task",[&]{
+            Fixture f(root,L"native-zip-queue");auto inbox=fs::absolute(argv[3]);
+            std::vector<fs::path> parts;for(auto name:{L"sample.z01",L"sample.z02",L"sample.z03",L"sample.zip"})parts.push_back(inbox/name);
+            Queue q;auto scan=q.add(task(inbox,Action::Scan));std::vector<uint64_t> added;
+            for(auto i:{1,3,0,2})added.push_back(q.add(task(parts[size_t(i)])));
+            f.run(q);auto tasks=q.snapshot();
+            require(tasks.size()==2&&q.get(scan)->state==State::Done,"folder and member drops were not combined");
+            auto extracted=std::find_if(tasks.begin(),tasks.end(),[](const auto& t){return t.action==Action::Extract;});
+            require(extracted!=tasks.end()&&extracted->state==State::Done&&extracted->files==parts&&extracted->result.sources==parts,"complete physical ZIP source set lost");
+            require(std::all_of(added.begin(),added.end(),[&](auto id){return id&&(id==extracted->id||std::find(extracted->mergedFrom.begin(),extracted->mergedFrom.end(),id)!=extracted->mergedFrom.end());}),"pending member task identities were not merged");
+            require(read(extracted->result.output/L"data.bin")==read(inbox.parent_path()/L"expected-data.bin"),"queue output bytes differ");
+            require(extracted->result.output.parent_path()==f.options.output,"queue output parent changed");
+            for(const auto& p:parts)require(fs::exists(p),"queue removed a generated source");
+        });
+        std::cout<<passed<<'/'<<total<<" generated native ZIP queue flow passed; no windows or recycling.\n";return passed==total?0:1;
+    }
     check("One wrong body password -> import -> retry -> verified output",[&]{
         Fixture f(root,L"body-password");auto archive=f.folder/L"body-only.7z";
         bit7z::Bit7zLibrary library((executableDir()/L"7z.dll").wstring());bit7z::BitFileCompressor compressor(library,bit7z::BitFormat::SevenZip);

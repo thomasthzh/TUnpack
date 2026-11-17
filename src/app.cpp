@@ -329,7 +329,7 @@ void orderedVolumes(){
  else if(volumeEditor.active){if(volumeEditor.taskId&&!queue.get(volumeEditor.taskId))volumeEditor.taskId=0;}
  else volumeEditor.open(0,{});
  showPage(Page::Volumes);refreshVolumes(volumeEditor.files.empty()?std::vector<fs::path>{}:std::vector<fs::path>{volumeEditor.files.front()},true);
- SetWindowTextW(GetDlgItem(window,VolumeFeedback),inner?L"正在补充失败内层文件的分卷；保存为单独任务，外层结果和原包保留。":L"可拖入补充分卷；首卷放在第一行，多选后可整组调整。返回队列会保留草稿。");
+ SetWindowTextW(GetDlgItem(window,VolumeFeedback),inner?L"正在补充失败内层文件的分卷；保存为单独任务，外层结果和原包保留。":L"按实际卷序排列；ZIP 的 .z01 在前、.zip 在最后，程序自动选择入口。返回队列会保留草稿。");
  if(volumeEditor.files.empty())addVolumes(chooseFiles(L"选择全部分卷"));
 }
 void acceptVolumes(){
@@ -412,7 +412,7 @@ void paint(){
  std::wstring hint=!workspaceError.empty()?L"工作台尚未保存":running?L"处理中 · 仍可添加文件":L"工作台自动保存 · 本机处理";if(dragCount){if(dragHover)hint=currentPage==Page::Volumes?L"松开补充分卷":currentPage==Page::Passwords?L"松开导入密码文本":L"松开加入 "+std::to_wstring(dragCount)+L" 项";else if(currentPage==Page::Passwords)hint=running?L"本轮结束后可导入密码":L"密码本接收 UTF-8 TXT";}write(w-290,27,266,34,hint,font,RGB(16,118,108),DT_RIGHT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
  if(currentPage==Page::Queue){auto counts=queue.counts();auto total=counts.total();write(24,l.showDrop?252:184,w-48,24,L"显示 "+std::to_wstring(rows.size())+L" / "+std::to_wstring(total)+L" 项  ·  "+countSummary(counts),smallFont,RGB(70,91,96));write(388,h-100,w-412,28,L"留空时，自动使用密码本及同目录提示",smallFont,RGB(85,103,109));}
  else if(currentPage==Page::Passwords){write(24,98,w-48,28,L"密码本 · 已保存 "+std::to_wstring(book->count())+L" 条  /  当前显示 "+std::to_wstring(passwordRows.size())+L" 条",font,RGB(24,40,43));write(24,h-56,w-48,28,running?L"队列运行中，可查看与编辑草稿；本轮结束后保存或导入。":L"成功密码自动记住 · Windows 账户加密保存 · 未保存的密码输入不在工作台恢复范围",smallFont,RGB(85,103,109));}
- else if(currentPage==Page::Volumes){write(24,98,w-48,28,L"分卷顺序 · "+std::to_wstring(volumeEditor.files.size())+L" 卷",font,RGB(24,40,43));write(24,135,w-48,24,L"首卷必须在第一行。可多选整组移动；拖入、粘贴只补充文件，排序需明确操作。",smallFont,RGB(85,103,109));write(420,h-126,w-444,34,L"已选 "+std::to_wstring(selectedVolumes().size())+L" 卷",smallFont,RGB(85,103,109));}
+ else if(currentPage==Page::Volumes){write(24,98,w-48,28,L"分卷顺序 · "+std::to_wstring(volumeEditor.files.size())+L" 卷",font,RGB(24,40,43));write(24,135,w-48,24,L"按卷序排列：ZIP 的 .z01 在前、.zip 最后。可多选移动；拖入和粘贴只补充文件。",smallFont,RGB(85,103,109));write(420,h-126,w-444,34,L"已选 "+std::to_wstring(selectedVolumes().size())+L" 卷",smallFont,RGB(85,103,109));}
  else {write(24,98,w-48,28,L"任务设置 · "+std::to_wstring(taskEditor.ids.size())+L" 项",font,RGB(24,40,43));write(24,138,w-48,40,L"同一队列可使用不同处理方式。“保存设置”保留当前状态；“保存并待开始”准备所选任务，仍需手动开始。",smallFont,RGB(85,103,109),DT_LEFT|DT_WORDBREAK);}
  EndPaint(window,&ps);
 }
@@ -492,7 +492,7 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   if(notification->code==LVN_GETEMPTYMARKUP){auto empty=reinterpret_cast<NMLVEMPTYMARKUP*>(lp);const wchar_t* hint=L"";
    if(notification->idFrom==List)hint=taskView.unfiltered()?L"拖入文件或文件夹，或点击上方添加文件。\n任意后缀都会按内容识别；加入后由你开始队列。":L"当前查找或筛选没有任务。\n点击重置可查看全部队列。";
    else if(notification->idFrom==PasswordList)hint=book->count()?L"没有匹配的密码。清空查找可查看密码本。":L"密码本还是空的。\n可在下方每行添加一个密码，或导入 UTF-8 文本。";
-   else if(notification->idFrom==VolumeList)hint=L"拖入或粘贴全部分卷，首卷放在第一行。\n调整的只是读取顺序，源文件保留原名。";
+   else if(notification->idFrom==VolumeList)hint=L"拖入或粘贴全部分卷，按卷序排列；ZIP 的 .zip 放在最后，程序自动选择入口。\n调整的只是读取顺序，源文件保留原名。";
    empty->dwFlags=EMF_CENTERED;lstrcpynW(empty->szMarkup,hint,int(std::size(empty->szMarkup)));return TRUE;
   }
   if(notification->code==LVN_ODFINDITEMW){auto info=reinterpret_cast<NMLVFINDITEMW*>(lp);auto flags=info->lvfi.flags;if(!(flags&UINT(LVFI_STRING|LVFI_PARTIAL|LVFI_SUBSTRING|LVFI_WRAP))||(flags&~UINT(LVFI_STRING|LVFI_PARTIAL|LVFI_SUBSTRING|LVFI_WRAP)))return -1;

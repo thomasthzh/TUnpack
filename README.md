@@ -1,8 +1,8 @@
 # T解压
 
-[官网与产品短片](https://tunpack.thomasthzh.top/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0)
+[官网与产品短片](https://tunpack.thomasthzh.top/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.1)
 
-Windows x64 原生轻量解压工具，当前版本 0.13.0。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
+Windows x64 原生轻量解压工具，当前版本 0.13.1。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
 
 ## 构建
 
@@ -12,14 +12,18 @@ Windows x64 原生轻量解压工具，当前版本 0.13.0。运行解压目录�
 python scripts/fetch_deps.py --seven-zip "C:/Program Files/7-Zip/7z.exe"
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel 8
+python tests/download_fixtures.py
+ctest --test-dir build --output-on-failure
 python scripts/package.py
 ```
 
-生成 `dist/TUnpack-0.13.0-windows-x64.zip` 和 `SHA256SUMS.txt`，保留解压目录 `dist/T解压/`。MSVC 可在开发者终端使用 `cmake -S . -B build -A x64` 与 `cmake --build build --config Release`；打包脚本支持可执行文件在 `bin/Release`、附属引擎在 `bin` 的布局；本轮未对 MSVC 实际编译验收。首次 CMake 配置会联网获取固定版本 CPM / 7-Zip 接口头 / ghc::filesystem，不应关闭 TLS 校验。
+生成 `dist/TUnpack-0.13.1-windows-x64.zip` 和 `SHA256SUMS.txt`，保留解压目录 `dist/T解压/`。MSVC 可在开发者终端使用 `cmake -S . -B build -A x64` 与 `cmake --build build --config Release`；打包脚本支持可执行文件在 `bin/Release`、附属引擎在 `bin` 的布局；本轮未对 MSVC 实际编译验收。首次 CMake 配置会联网获取固定版本 CPM / 7-Zip 接口头 / ghc::filesystem，不应关闭 TLS 校验。
 
 `tools/` 不入库。bit7z 固定 [v4.0.10 源码](https://github.com/rikyoz/bit7z/tree/0f03717920442abcdba80183534931c867feb9c0)（MPL-2.0）并应用本项目卷路径补丁；引擎来自 [7-Zip ZS 26.05 官方发布](https://github.com/mcmilk/7-Zip-zstd/releases/tag/v26.05-v1.5.7-R1)，核对官方校验值后用 7-Zip 展开，不运行安装器。脚本保留下载，重复执行会核对版本与补丁，不删除文件。第三方完整许可与对应源码见 `THIRD-PARTY-NOTICES.txt`，便携包同时附带 MIT、依赖许可和使用说明。
 
 拖入文件/文件夹，或点击“添加文件”。检查输出目录和选项后，点击“开始队列”。默认在原包目录创建同名文件夹；已有同名内容时使用新名称。运行中仍可添加任务。
+
+0.13.1修复标准ZIP原生分卷（`.z01`、`.z02`…末卷`.zip`）：拖目录或任一卷自动归为同一组；手工按物理卷序排列，`.zip`放最后，程序自动选入口。升级前请退出旧版工作台，再运行新版。
 
 选择一个或多个任务，点击“任务设置”可指定各自的输出目录、是否展开嵌套、是否回收源包及深度识别；没有专用设置的任务在开始时跟随本批设置。“保存设置”只保存，“保存并待开始”准备下一次处理，均不会立即执行。待开始项可暂缓或继续，暂缓项仍保护源文件，开始全部会跳过它们。
 
@@ -52,7 +56,7 @@ python scripts/package.py
 - 自动解压新产生的嵌套包；正常 DOCX/APK/EPUB 等容器默认保留。明确需要拆容器时，右键任务选择“明确按压缩容器解压”。
 - 标准分卷自动归组；旧式 RAR 的 `.rar/.r00/.r01` 全部加入时，也会按引擎确认的根包卷组归为一次解压，保留合并前的选择。不同操作及不同手工顺序继续保留。`.part1.jpg / .part2.txt` 等 RAR 按内容配组。7z 支持编号 MP4、混合后缀和改名的末卷/中间卷，只有长度、元数据校验与候选归属唯一时才自动配对。缺卷显示缺失字节；有多种可能时打开“分卷顺序”，列表显示首卷、文件名、大小和目录，可多选整组移动/移除，也可拖入或粘贴补充。仅点击“按文件名排序”才执行自然排序，之后需核对首卷。返回后保留未保存草稿，保存后才更新队列，源文件保留原名。
 - 所有嵌套解压成功、输出完成后，按选项将实际参与的原包移入回收站。后续队列任务仍需读取同一源时先保留，并显示原因；检查名单来自引擎实际读取的卷和嵌套源。失败/取消不启动清理；已完成任务的处理结果单独显示。
-- “仅识别”读取元数据；添加文件夹使用同一套内容识别与分卷归组。扫描中单个文件变化或属性不可读会跳过并显示首个问题路径，继续检查其他文件；根目录或遍历错误、取消不会被当作完整成功。“另存原包”输出恢复格式后的新文件（RAR 原生多卷另存为完整卷组）；“新建压缩包”支持 ZIP/7z。
+- “仅识别”读取元数据；添加文件夹使用同一套内容识别与分卷归组。扫描中单个文件变化或属性不可读会跳过并显示首个问题路径，继续检查其他文件；根目录或遍历错误、取消不会被当作完整成功。“另存原包”输出恢复格式后的新文件（RAR、ZIP 原生多卷另存为完整卷组）；“新建压缩包”支持 ZIP/7z。
 - Ctrl+O 在当前页添加文件、分卷、导入密码或选择任务目录；Ctrl+Enter 开始队列、保存分卷顺序、保存新增密码或保存任务设置并待开始；Ctrl+F 查找队列/密码；Ctrl+A 全选当前队列视图或分卷，Ctrl+↑/↓ 移动选中任务/分卷，Delete 只移除列表项。两个列表支持 Ctrl+V 粘贴资源管理器复制的文件或逐行“复制为路径”，编辑框仍正常粘贴文本。Tab 导航；小屏或高 DPI 下内容可以用原生滚动条查看，焦点会滚入视野。
 
 当前边界：缺失的正文、首卷或未知密码需要补充；完全改名且缺少足够关联信息的切片需手工排序。头部恢复后仍必须通过正文校验。自动嵌套深度上限 32。Brotli 原始流缺少稳定 magic，未自动猜测。创建加密 ZIP 的密码限 ASCII（可含空格与特殊符号），中文密码请创建 7z。未做签名安装包、右键菜单注册或对外发布。

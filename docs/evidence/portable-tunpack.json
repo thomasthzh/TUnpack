@@ -1,9 +1,9 @@
 {
-  "version": "0.13.0",
+  "version": "0.13.1",
   "files": [
     {
       "name": "T解压.exe",
-      "bytes": 3026944
+      "bytes": 3037696
     },
     {
       "name": "7z.dll",
@@ -15,7 +15,7 @@
     },
     {
       "name": "bit7z-LICENSE.txt",
-      "bytes": 16727
+      "bytes": 17100
     },
     {
       "name": "LICENSE.txt",
@@ -23,21 +23,18 @@
     },
     {
       "name": "README.txt",
-      "bytes": 2019
+      "bytes": 2332
     },
     {
       "name": "THIRD-PARTY-NOTICES.txt",
       "bytes": 46106
     }
   ],
-  "total_bytes": 8284963,
-  "zip_name": "TUnpack-0.13.0-windows-x64.zip",
-  "zip_bytes": 3626656,
-  "sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
+  "total_bytes": 8296401,
+  "zip_name": "TUnpack-0.13.1-windows-x64.zip",
+  "zip_bytes": 3632864,
+  "sha256": "f978497347b81e3d83825ef9bfeb8c2f21e291878ae82a792dbbb621dc9d56b6",
   "resource_check": "PASS TUnpack brand metadata and nine native ICO sizes; no window created",
   "zip_crc_check": true,
-  "published": true,
-  "release_url": "https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0",
-  "download_verified": true,
-  "source_commit": "1d3dfedab7fc3a0f51d9d9daeb1080da08101267"
+  "published": false
 }

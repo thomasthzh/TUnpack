@@ -23,6 +23,7 @@ std::wstring errorText(const std::exception& error){
     if(message.starts_with("Cannot open archive:"))return L"未能打开：密码未匹配、分卷不完整，或文件损坏。改名的分卷请用“手工分卷”指定顺序。";
     if(message.starts_with("Missing first"))return L"找不到首卷，请补齐首卷，或用“手工分卷”按顺序加入全部文件。";
     if(message.starts_with("Missing RAR volume"))return L"RAR 分卷中间有缺卷，请补齐后再解压。";
+    if(message.starts_with("Missing ZIP volume"))return L"ZIP 分卷不完整，请补齐 "+wide(message.substr(19))+L"；.z01 起的各卷与末卷 .zip 应放在同一目录，原文件保留。";
     if(message.starts_with("Missing middle volume"))return L"分卷不连续，请补齐缺失卷，或用“手工分卷”确认文件和顺序。";
     if(message.starts_with("Ambiguous RAR volumes"))return L"同一卷号存在多个 RAR 文件，请用“手工分卷”确认文件和顺序。";
     if(message.starts_with("Ambiguous split volume"))return L"找到多个可能的分卷，请用“手工分卷”确认顺序；原文件保留。";
@@ -74,6 +75,16 @@ struct Opened {
                 }
                 return paths[index].wstring();
             },L"archive.part1.rar");
+        }
+        if(source.nativeVolumes){
+            auto paths=source.paths();
+            library.setVolumeResolver([paths](const std::wstring& name)->std::wstring{
+                if(name.empty()||lower(name)==L"archive.zip")return paths.back().wstring();
+                std::wsmatch match;
+                if(!std::regex_match(name,match,std::wregex(L"archive\\.z([0-9]+)",std::regex::icase)))return {};
+                auto number=std::stoull(match[1]);
+                return number&&number<paths.size()?paths[size_t(number-1)].wstring():std::wstring{};
+            },L"archive.zip");
         }
         try {
             if(source.canUseNative()||manualRar)reader=std::make_unique<BitArchiveReader>(lib,source.path.wstring(),format,password);
@@ -287,6 +298,7 @@ static std::vector<fs::path> participatingVolumes(const Opened& opened);
 static void archiveFailure(Result& result,const std::exception& error){
     const std::string message=error.what();result.note=errorText(error);if(isCancelled(error)){result.status=L"cancelled";return;}
     if(message.starts_with("Missing first")||message.starts_with("Missing middle")||message.starts_with("Missing RAR"))result.status=L"missing_volume";
+    if(message.starts_with("Missing ZIP")){result.type=L"zip";result.status=L"missing_volume";}
     if(message.starts_with("Ambiguous split")){result.type=L"7z";result.status=L"ambiguous_volume";}
     if(message.starts_with("Ambiguous RAR")){result.type=L"rar";result.status=L"ambiguous_volume";}
     if(auto engine=dynamic_cast<const BitException*>(&error)){
@@ -326,6 +338,7 @@ Result Engine::inspectInput(const std::vector<fs::path>& files,const Options& op
         if(message.starts_with("Ambiguous split volume")){result.type=L"7z";result.status=L"ambiguous_volume";}
         if(message.starts_with("Ambiguous RAR")){result.type=L"rar";result.status=L"ambiguous_volume";}
         if(message.starts_with("Missing RAR")){result.type=L"rar";result.status=L"missing_volume";}
+        if(message.starts_with("Missing ZIP")){result.type=L"zip";result.status=L"missing_volume";}
         if(message.starts_with("Missing middle volume"))result.status=L"missing_volume";
         if(options.verifyData&&!result.type.empty()&&result.status!=L"password_required"&&result.status!=L"missing_volume"&&result.status!=L"ambiguous_volume"){
             result.status=L"verification_failed";result.note=L"完整校验未通过，原文件保留。";
@@ -374,6 +387,11 @@ Result Engine::scan(const fs::path& directory,const Options& options,const Progr
 static std::vector<fs::path> participatingVolumes(const Opened& opened) {
     const auto& raw=opened.source;
     const auto& reader=*opened.reader;
+    if(raw.nativeVolumes){
+        auto paths=raw.paths();
+        if(reader.volumesCount()!=paths.size()||std::any_of(paths.begin(),paths.end(),[&](const auto& path){return std::find(opened.usedVolumes->begin(),opened.usedVolumes->end(),path)==opened.usedVolumes->end();}))throw std::runtime_error("Cannot confirm all participating volumes; original set kept");
+        return paths;
+    }
     if(raw.files.size()>1&&!opened.manualRar){
         auto offset=propertyUInt(reader.archiveProperty(BitProperty::Offset));
         if(offset>raw.size)throw std::runtime_error("Cannot confirm all participating volumes");
@@ -505,14 +523,15 @@ Result Engine::restore(const std::vector<fs::path>& files,const Options& options
             }
             out.close();if(!out)throw std::runtime_error("Cannot finish restored archive");result.bytes+=input.size;
         };
-        if(opened->reader->isMultiVolume()&&result.type==L"rar"){
+        if(opened->source.nativeVolumes||(opened->reader->isMultiVolume()&&result.type==L"rar")){
             auto parts=participatingVolumes(*opened);
             result.output=uniquePath(parent/(raw.path.stem().wstring()+L".restored"));fs::create_directories(result.output);
             if(options.outputReady)options.outputReady(result.output);
             unsigned char head[12]{};raw.read(0,head,12);bool legacy=head[6]==0&&!(head[10]&0x10);
             for(size_t i=0;i<parts.size();++i){
                 std::wstring name=L"archive.part"+std::to_wstring(i+1)+L".rar";
-                if(legacy){wchar_t ext[12];if(i==0)name=L"archive.rar";else{swprintf(ext,12,L".%lc%02u",wchar_t(L'r'+(i-1)/100),unsigned((i-1)%100));name=L"archive"+std::wstring(ext);}}
+                if(opened->source.nativeVolumes){auto number=std::to_wstring(i+1);if(number.size()<2)number.insert(0,2-number.size(),L'0');name=i+1==parts.size()?L"archive.zip":L"archive.z"+number;}
+                else if(legacy){wchar_t ext[12];if(i==0)name=L"archive.rar";else{swprintf(ext,12,L".%lc%02u",wchar_t(L'r'+(i-1)/100),unsigned((i-1)%100));name=L"archive"+std::wstring(ext);}}
                 copy(Input({parts[i]}),result.output/name);
             }
         }else{
