@@ -1,9 +1,9 @@
 :root {
   color-scheme: dark;
-  --bg: #050607;
+  --bg: #071019;
   --text: #f2f1eb;
   --muted: #929d98;
-  --accent: #ceff68;
+  --accent: #7cddc6;
   --line: #ffffff23;
   font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
   font-synthesis: none;
@@ -41,7 +41,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible,i
 .hero h1>span { color: #a9bbae; }
 .hero-copy>p { font-size: 14px; line-height: 1.95; color: #abb7ae; padding-bottom: 5px; }
 .hero-meta { display: block; margin-top: 15px; font-size: 11px; color: #8b9d91; }
-.screen { width: min(1600px,calc(100% - 48px)); position: relative; margin: auto; background: #050607; }
+.screen { width: min(1600px,calc(100% - 48px)); position: relative; margin: auto; background: #071019; }
 .screen picture,.screen picture img,.screen video { height: auto; width: 100%; display: block; object-fit: contain; }
 .screen[data-framing="portrait"] { width: min(100%,660px); }
 .film-caption { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 20px; }

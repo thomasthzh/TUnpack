@@ -1,269 +1,301 @@
-"""Deterministic vector motion film. Skia paths/type, no Blender or browser."""
+"""Pictorial layered hero animation: illustrated assets, paths and one clock.
+No Blender, GUI, browser recording or text-slide renderer.
+"""
 import argparse
 from functools import lru_cache
 import math
 from pathlib import Path
 import time
 
-import numpy as np
 from PIL import Image
 import skia
 
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'docs/evidence/hero-motion'
-FPS,DURATION=60,22
+OUT=ROOT/'docs/evidence/hero-art'
+ART=ROOT/'brand/film-art'
+FPS,DURATION=60,24
 SIZES={'wide':(1600,900),'portrait':(900,1200)}
-BG='#080d0b';INK='#f4f5eb';LIME='#ceff68';DIM='#91a998';LINE='#344a3d'
-FONTDIR=Path('C:/Windows/Fonts')
+BG='#071019';INK='#f2efe7';JADE='#7cddc6';DIM='#9aaeb5';COPPER='#cba176'
 
 
 def clamp(x):return max(0.,min(1.,x))
 def ease(x):
-    x=clamp(x);return x*x*(3-2*x)
+ x=clamp(x);return x*x*(3-2*x)
 def out(x):return 1-(1-clamp(x))**3
 def lerp(a,b,t):return a+(b-a)*t
-def between(t,a,b):return ease((t-a)/(b-a))
-def color(value,alpha=1):
-    rgb=tuple(int(value[i:i+2],16) for i in (1,3,5));return skia.ColorSetARGB(round(255*clamp(alpha)),*rgb)
-def mix(a,b,t):
-    return '#'+''.join(f'{round(lerp(int(a[i:i+2],16),int(b[i:i+2],16),t)):02x}' for i in (1,3,5))
-def paint(c=INK,alpha=1,stroke=0):
-    p=skia.Paint(Color=color(c,alpha),AntiAlias=True)
-    if stroke:p.setStyle(skia.Paint.kStroke_Style);p.setStrokeWidth(stroke);p.setStrokeCap(skia.Paint.kRound_Cap)
-    return p
-@lru_cache(maxsize=160)
-def font(size,bold=False,latin=False):
-    name='bahnschrift.ttf' if latin else 'msyhbd.ttc' if bold else 'msyh.ttc'
-    f=skia.Font(skia.Typeface.MakeFromFile(str(FONTDIR/name)),size)
-    f.setSubpixel(True);return f
+def at(t,a,b):return ease((t-a)/(b-a))
+def color(s,a=1):return skia.ColorSetARGB(round(clamp(a)*255),*[int(s[i:i+2],16) for i in (1,3,5)])
+def paint(s=INK,a=1,stroke=0):
+ p=skia.Paint(Color=color(s,a),AntiAlias=True)
+ if stroke:p.setStyle(skia.Paint.kStroke_Style);p.setStrokeWidth(stroke);p.setStrokeCap(skia.Paint.kRound_Cap)
+ return p
+@lru_cache(maxsize=100)
+def font(n,bold=False):return skia.Font(skia.Typeface.MakeFromFile('C:/Windows/Fonts/'+('msyhbd.ttc' if bold else 'msyh.ttc')),n)
+def text(c,s,x,y,size=26,fill=INK,a=1,align='center',bold=False):
+ f=font(round(size),bold);w=f.measureText(s)
+ if align=='center':x-=w/2
+ elif align=='right':x-=w
+ c.drawString(s,x,y,f,paint(fill,a))
+def line(c,x1,y1,x2,y2,fill=JADE,w=2,a=1):c.drawLine(x1,y1,x2,y2,paint(fill,a,w))
+def path(c,points,fill=JADE,w=2,a=1,close=False):
+ p=skia.Path();p.moveTo(*points[0])
+ for xy in points[1:]:p.lineTo(*xy)
+ if close:p.close()
+ c.drawPath(p,paint(fill,a,w))
+def curve(c,pts,fill=JADE,w=2,a=1):
+ p=skia.Path();p.moveTo(*pts[:2]);p.cubicTo(*pts[2:]);c.drawPath(p,paint(fill,a,w))
+def rect(c,x,y,w,h,fill=INK,a=1,stroke=0):c.drawRect(skia.Rect.MakeXYWH(x,y,w,h),paint(fill,a,stroke))
+def check(c,x,y,s=1,a=1):path(c,[(x-16*s,y),(x-3*s,y+13*s),(x+25*s,y-20*s)],JADE,4*s,a)
+def glow(c,x,y,r,fill=JADE,a=.25):
+ p=skia.Paint(AntiAlias=True);p.setShader(skia.GradientShader.MakeRadial((x,y),r,[color(fill,a),color(fill,0)]));c.drawCircle(x,y,r,p)
 
-def text(c,s,x,y,size=30,fill=INK,alpha=1,align='left',bold=False,latin=False):
-    f=font(round(size),bold,latin);w=f.measureText(s)
-    if align=='center':x-=w/2
-    if align=='right':x-=w
-    c.drawString(s,x,y,f,paint(fill,alpha))
-def line(c,x1,y1,x2,y2,fill=LINE,width=2,alpha=1):
-    c.drawLine(x1,y1,x2,y2,paint(fill,alpha,width))
-def rect(c,x,y,w,h,fill=LINE,stroke=0,alpha=1):
-    c.drawRect(skia.Rect.MakeXYWH(x,y,w,h),paint(fill,alpha,stroke))
-def circle(c,x,y,r,fill=LIME,stroke=0,alpha=1):c.drawCircle(x,y,r,paint(fill,alpha,stroke))
-def curve(c,coords,fill=LINE,width=2,alpha=1):
-    p=skia.Path();p.moveTo(*coords[:2]);p.cubicTo(*coords[2:]);c.drawPath(p,paint(fill,alpha,width))
-def check(c,x,y,scale=1,alpha=1):
-    line(c,x-16*scale,y,x-3*scale,y+13*scale,LIME,5*scale,alpha)
-    line(c,x-3*scale,y+13*scale,x+25*scale,y-20*scale,LIME,5*scale,alpha)
-def partial_line(c,x1,y1,x2,y2,p,fill=LIME,width=3):line(c,x1,y1,lerp(x1,x2,p),lerp(y1,y2,p),fill,width)
+@lru_cache(maxsize=2)
+def bitmap(name):return skia.Image.MakeFromEncoded(skia.Data.MakeFromFileName(str(ART/name)))
+SAMPLING=skia.SamplingOptions(skia.FilterMode.kLinear,skia.MipmapMode.kLinear)
 
 
-def camera(t,portrait):
-    # One world and clock. Fast reveal, slower settle, lateral/vertical handoffs.
-    phase=0
-    for a,b,src,dst in [(4.05,4.7,0,1),(7.55,8.15,1,2),(10.75,11.45,2,3),(15.4,16.1,3,4)]:
-        if t>=a:phase=lerp(src,dst,between(t,a,b))
-    spacing=1650 if portrait else 1800
-    zoom=1+.24*between(t,1.8,2.7)+.90*between(t,3.0,3.36)-1.14*between(t,3.6,4.08)
-    if 11.5<t<15.4:zoom=1+.22*between(t,11.5,11.9)-.22*between(t,12.7,13.7)
-    end=between(t,19.0,20.05)
-    focus=lerp(phase*spacing,2*spacing,end)
-    zoom=lerp(zoom,.135 if portrait else .17,end)
-    return (0,focus,zoom) if portrait else (focus,0,zoom)
+def sprite(c,item,x,y,w,angle=0,a=1):
+ """Sample the original atlas at draw time; no edited derivative image files."""
+ if a<=0:return
+ im=bitmap('contents-atlas.png');half=im.width()/2
+ col,row=item%2,item//2
+ src=skia.Rect.MakeXYWH(col*half,row*half,half,half)
+ c.save();c.translate(x,y);c.rotate(angle)
+ c.drawImageRect(im,src,skia.Rect.MakeXYWH(-w/2,-w/2,w,w),SAMPLING,paint(INK,a));c.restore()
 
 
-def ribbon(c,t,portrait):
-    # The content stream is the cross-scene anchor, not an unrelated particle field.
-    spacing=1650 if portrait else 1800
-    for i in range(4):
-        pos=i*spacing
-        for j in range(5):
-            offset=(j-2)*14
-            if portrait:
-                curve(c,(offset,pos+330,offset+80,pos+700,offset-80,pos+1000,offset,pos+spacing-330),LINE,1.5,.7)
-            else:
-                curve(c,(pos+480,offset,pos+850,offset+100,pos+1050,offset-100,pos+spacing-480,offset),LINE,1.5,.7)
-        for j in range(14):
-            travel=((t*.48+j/14)%1)
-            distance=lerp(420,spacing-420,travel)
-            fade=math.sin(math.pi*travel)*.7
-            if portrait:line(c,0,pos+distance-12,0,pos+distance+12,LIME,3,fade)
-            else:line(c,pos+distance-12,0,pos+distance+12,0,LIME,3,fade)
+def sleeve(c,x,y,w,angle=0,a=1,split=0,label=None):
+ if a<=0:return
+ im=bitmap('media-sleeve.png');h=w*im.height()/im.width()
+ c.save();c.translate(x,y);c.rotate(angle)
+ for side in [-1,1]:
+  c.save();c.translate(side*split*w*.53,split*20);c.rotate(side*split*15)
+  c.clipRect(skia.Rect.MakeXYWH(-w if side<0 else 0,-h,w,h*2))
+  c.drawImageRect(im,skia.Rect.MakeWH(im.width(),im.height()),skia.Rect.MakeXYWH(-w/2,-h/2,w,h),SAMPLING,paint(INK,a))
+  if label:
+   # Provenance belongs to the right shell, and never morphs into a ZIP suffix.
+   if side>0:
+    rect(c,w*.025,h*.31,w*.40,32,'#111f28',a*.85)
+    text(c,label,w*.22,h*.31+23,max(14,w*.047),INK,a)
+  c.restore()
+ c.restore()
 
 
-def facade(c,t,p):
-    split=between(t,1.6,2.7);peak=between(t,2.55,2.85)*(1-between(t,3.35,3.75))
-    size=210 if p else 300
-    dark=mix(INK,BG,peak)
-    # Compressed stripes behind the extension shell, readable only as content.
-    for j in range(9):
-        yy=-165+j*40
-        xx=math.sin(j*.7+t*.9)*50
-        line(c,-500+xx,yy,500+xx,yy,LIME,1,.10*split)
-    text(c,'ZIP',0,85,size+15,mix(LIME,BG,peak),split,'center',True,True)
-    for top in [True,False]:
-        c.save();dy=(-1 if top else 1)*150*out(split)
-        c.translate((-1 if top else 1)*60*split,dy)
-        c.clipRect(skia.Rect.MakeXYWH(-900,-500 if top else 0,1800,500))
-        text(c,'.MP4',0,85,size,dark,1-split,'center',True,True);c.restore()
-    text(c,'旅途.mp4',0,-210 if p else -230,36 if p else 40,dark,1,'center')
-    line(c,-80,-172,80,-172,mix(DIM,BG,peak),2)
-    if split>.15:
-        reading=1-between(t,3.0,3.25)
-        text(c,'看内容，不看后缀。',0,225,42 if p else 50,dark,out((split-.15)/.7)*reading,'center',True)
-        text(c,'识别为 ZIP · 原文件名保留',0,280,24 if p else 27,mix(DIM,BG,peak),split*reading,'center')
-    # Small zip teeth create a graphic aperture which the first hero push enters.
-    for i in range(12):
-        xx=-210+i*38;yy=140
-        rect(c,xx,yy,21,7,mix(LIME,BG,peak),alpha=split*.65)
+def paper(c,x,y,w,angle=0,a=1):
+ c.save();c.translate(x,y);c.rotate(angle)
+ rect(c,-w/2,-w*.35,w,w*.70,'#c7d3cc',a)
+ line(c,-w/2,-w*.35,w/2,-w*.35,INK,1,a)
+ c.restore()
+
+
+def fan(c,t,x,y,size,spread=1,a=1):
+ # Individual content objects move at different speeds and occlude one another.
+ for i in range(6):
+  paper(c,x+(i-2.5)*size*.055*spread,y+size*.22+i*5,size*.73,(-15+i*6)*spread,a*.7)
+ sprite(c,2,x-size*.29*spread,y+size*.06,size*.82,-13*spread,a)
+ sprite(c,1,x+size*.25*spread,y-size*.11,size*.90,12*spread,a)
+ sprite(c,0,x-size*.06*spread,y-size*.01,size,-5*spread,a)
+
+
+def lock(c,x,y,s=1,opened=0,a=1):
+ c.save();c.translate(x,y);c.scale(s,s)
+ p=skia.Paint(AntiAlias=True);p.setShader(skia.GradientShader.MakeLinear([(-40,-20),(40,60)],[color('#e4d3ac',a),color('#9d7350',a)]))
+ c.drawRoundRect(skia.Rect.MakeXYWH(-38,-16,76,65),12,12,p)
+ # The shackle opens only after the verification mark has appeared.
+ c.save();c.translate(0,-32*opened);c.rotate(-24*opened)
+ q=skia.Path();q.moveTo(-24,-16);q.lineTo(-24,-38);q.cubicTo(-24,-76,24,-76,24,-38);q.lineTo(24,-16)
+ c.drawPath(q,paint('#d9e4df',a,9));c.restore()
+ c.drawCircle(0,10,7,paint('#4e493d',a));rect(c,-3,11,6,16,'#4e493d',a)
+ c.restore()
+
+
+def key(c,x,y,angle=0,s=1,a=1):
+ c.save();c.translate(x,y);c.rotate(angle);c.scale(s,s)
+ c.drawCircle(-28,0,19,paint(COPPER,a,8));line(c,-9,0,51,0,COPPER,8,a)
+ line(c,30,0,30,16,COPPER,7,a);line(c,47,0,47,13,COPPER,7,a)
+ line(c,-8,-3,50,-3,INK,1,a*.7);c.restore()
+
+
+def book(c,x,y,w,a=1):
+ c.save();c.translate(x,y)
+ # Two drawn paper wings, distinct from a file card or UI rectangle.
+ for side in [-1,1]:
+  p=skia.Path();p.moveTo(0,w*.25);p.cubicTo(side*w*.18,w*.05,side*w*.42,w*.08,side*w*.48,w*.02);p.lineTo(side*w*.48,-w*.50);p.cubicTo(side*w*.30,-w*.57,side*w*.12,-w*.48,0,-w*.36);p.close()
+  c.drawPath(p,paint('#d7ddd2' if side<0 else '#eef0e4',a))
+  for i in range(5):line(c,side*w*.10,-w*.26+i*w*.066,side*w*.39,-w*.30+i*w*.065,'#729187',1.5,a*.65)
+ line(c,0,-w*.36,0,w*.25,'#3c695e',2,a)
+ for i in range(4):c.drawCircle((i-1.5)*14,-w*.08,3.8,paint('#244c46',a))
+ c.restore()
+
+
+def bezier(points,q):
+ x1,y1,x2,y2,x3,y3,x4,y4=points;v=1-q
+ return (v**3*x1+3*v*v*q*x2+3*v*q*q*x3+q**3*x4,v**3*y1+3*v*v*q*y2+3*v*q*q*y3+q**3*y4)
+
+
+def camera(t,p):
+ phase=0
+ for a,b,i in [(5.7,6.35,0),(9.45,10.1,1),(12.8,13.45,2),(18.0,18.65,3)]:
+  if t>=a:phase=lerp(i,i+1,at(t,a,b))
+ spacing=1500 if p else 1900
+ # Macro seam shot, rapid release into separated material, then a readable fan.
+ z=1+.24*at(t,0,1.9)+.78*at(t,2.15,2.55)-1.02*at(t,3.8,5.25)
+ if 13.5<t<18:z=1+.18*at(t,13.5,14.0)-.18*at(t,15.4,16.7)
+ if t>21.2:z=lerp(1,.9,at(t,21.2,22.1))
+ return (0,phase*spacing,z) if p else (phase*spacing,0,z)
+
+
+def backdrop(c,t,w,h):
+ c.clear(color(BG))
+ glow(c,w*.53,h*.48,min(w,h)*.72,'#306771',.40)
+ glow(c,w*.82,h*.24,min(w,h)*.5,'#1c4e63',.25)
+ # Broad paper-ribbon curves suggest continuous unwrapping, not a particle field.
+ for i in range(6):
+  yy=h*.84+i*17
+  curve(c,(-200,yy,w*.30,yy-h*.55,w*.77,yy+h*.1,w+150,yy-h*.43),'#32586c',1,.10)
+
+
+def bridge(c,t,p):
+ step=1500 if p else 1900
+ for i in range(4):
+  for j in range(4):
+   d=(j-1.5)*13
+   if p:curve(c,(d,i*step+400,d+130,i*step+650,d-130,(i+1)*step-650,d,(i+1)*step-400),'#6da7a1',1.5,.22)
+   else:curve(c,(i*step+620,d,i*step+850,d+100,(i+1)*step-850,d-100,(i+1)*step-620,d),'#6da7a1',1.5,.22)
+
+
+def opening(c,t,p):
+ split=at(t,2.65,4.0);reveal=at(t,3.0,4.7)
+ size=425 if p else 470
+ c.save()
+ opening_width=lerp(0,1100,reveal)
+ c.clipRect(skia.Rect.MakeXYWH(-opening_width/2,-600,opening_width,1200))
+ # The outer ZIP contains encrypted volumes; do not preview their plaintext.
+ sprite(c,3,0,35,420 if p else 500,0,1)
+ for i in [0,2,1]:
+  x=(i-1)*lerp(8,120,reveal);y=lerp(10,-20,reveal)+abs(i-1)*30
+  sleeve(c,x,y,lerp(220,235,reveal),(i-1)*lerp(2,14,reveal),1,label=['001','002','DOCX'][i])
+ c.restore()
+ sleeve(c,0,0,size,-3+3*at(t,0,2),1,split,label='旅途.mp4')
+ # A moving seam light triggers the physical peel rather than a text change.
+ sweep=at(t,1.45,2.75);glow(c,0,lerp(-210,250,sweep),70,JADE,(1-split)*.9)
+ if reveal>.75:
+  text(c,'ZIP 内容',0,310,24,JADE,reveal)
+  text(c,'原文件名保留',0,345,21,DIM,reveal)
 
 
 def volumes(c,t,p):
-    arrival=out((t-4.55)/.55);match=between(t,5.7,6.75);verified=t>=6.9
-    left=-355 if p else -580;right=260 if p else 495
-    title='ZIP 内，发现三卷。'
-    text(c,title,0,-350 if p else -310,42 if p else 48,INK,arrival,'center',True)
-    rows=[-195,-35,125] if p else [-140,20,180]
-    for i,(name,yy) in enumerate(zip(['项目.7z.001','项目.7z.002','附件.docx'],rows)):
-        alpha=arrival if i<2 else out((t-5.2)/.5)
-        dx=(1-arrival)*420 if i<2 else (1-match)*520
-        dy=0 if i<2 else (1-match)*110
-        text(c,f'{i+1:02}',left,yy,45 if p else 66,LIME,arrival,latin=True)
-        line(c,left+82,yy+26,right,yy+26,LINE,2,arrival)
-        for j in range(24):
-            xx=left+86+j*(19 if p else 33)
-            line(c,xx,yy+26,xx,yy+34+(j%3)*4,LIME if verified else DIM,1,alpha*.5)
-        if i==2 and match<1:
-            text(c,'等待匹配',left+92,yy-15,25,DIM,arrival*(1-match))
-        text(c,name,left+92+dx,yy-14+dy,31 if p else 43,INK,alpha)
-        if i==2 and verified:
-            text(c,'卷003',right-10,yy-17,23,LIME,1,'right')
-    if p:
-        for yy in rows:curve(c,(right+5,yy+26,right+100,yy+26,right+75,320,70,320),LIME if verified else LINE,2,arrival)
-        text(c,'7Z',0,350,78,LIME if verified else DIM,arrival,'center',True,True)
-        if verified:check(c,108,325,.7)
-    else:
-        for yy in rows:curve(c,(right+5,yy+26,right+100,yy+26,right+100,20,right+180,20),LIME if verified else LINE,2,arrival)
-        text(c,'7Z',right+225,48,94,LIME if verified else DIM,arrival,'center',True,True)
-        if verified:check(c,right+225,115,.8)
-    text(c,'唯一匹配，自动归组。' if verified else '先找到关联，再确定卷序。',0,435 if p else 355,28 if p else 32,LIME if verified else DIM,arrival,'center')
+ spread=at(t,6.2,7.15);fit=at(t,7.45,8.65);verified=t>=8.75
+ gap=190 if p else 300
+ for i in [0,2,1]:
+  x=(i-1)*lerp(gap,85,fit)
+  y=(abs(i-1)*40)+(1-fit)*(80 if i==2 else 0)
+  tilt=(i-1)*lerp(14,2,fit)
+  sleeve(c,x,y,235 if p else 280,tilt,spread,label=['001','002','DOCX'][i])
+  text(c,['项目.7z.001','项目.7z.002','附件.docx'][i],x,y-205 if p else y-235,22,DIM,spread*(1-fit))
+  if i==2 and not verified:
+   # The third piece exists from the start; it is never synthesized from a gap.
+   glow(c,x,y,160,'#599eae',.1)
+ if verified:
+  check(c,0,275,.9)
+  text(c,'附件.docx → 卷003 · 唯一匹配',0,335,24,JADE)
+ else:text(c,'ZIP 内的三卷',0,345,25,DIM,spread)
 
 
 def password(c,t,p):
-    enter=out((t-7.9)/.55);move=between(t,8.5,9.3);verified=t>=9.45;unlock=between(t,9.62,10.35)
-    text(c,'记住的密码，',0,-330 if p else -310,44 if p else 51,INK,enter,'center',True)
-    text(c,'自动接着用。',0,-268 if p else -242,44 if p else 51,INK,enter,'center',True)
-    text(c,'7Z',0,70,210 if p else 260,INK,enter,'center',True,True)
-    # A mask candidate travels through verification; the lock moves afterwards.
-    origin_y=285;yy=lerp(origin_y,108,move)
-    text(c,'已存候选',0,origin_y+75,25,DIM,enter,'center')
-    line(c,-110,origin_y+30,110,origin_y+30,LINE,2,enter)
-    if not verified:
-        for i in range(4):circle(c,(i-1.5)*22,yy,5,LIME,alpha=enter)
-    circle(c,0,108,38,LINE,2,enter)
-    if verified:check(c,0,105,1,1-unlock*.5)
-    for side in [-1,1]:
-        x=side*(110+230*unlock)
-        line(c,x,-130,x,130,LIME,5,enter*(1-unlock*.65))
-        line(c,x,-130,x-side*28,-130,LIME,5,enter*(1-unlock*.65))
-        line(c,x,130,x-side*28,130,LIME,5,enter*(1-unlock*.65))
-    if verified:
-        text(c,'验证通过',0,210,30,LIME,1,'center')
-        circle(c,0,0,170+300*unlock,LIME,2,(1-unlock)*.5)
-
-
-def file_result(c,name,mime,x,y,amount,p):
-    text(c,mime,x,y,72 if p else 88,INK,amount,'center',True,True)
-    line(c,x-105,y+28,x+105,y+28,LIME,3,amount)
-    text(c,name,x,y+80,27 if p else 32,INK,amount,'center')
+ enter=at(t,9.9,10.4);verified=t>=12.05;unlock=at(t,12.22,12.75)
+ ax=0 if p else 150;ay=-80 if p else -15
+ sleeve(c,ax,ay,360 if p else 410,-3,enter,label='7Z 卷组')
+ lock(c,ax,ay+15,1.0,unlock,enter)
+ bx=-220 if p else -440;by=270 if p else 150
+ book(c,bx,by,165 if p else 200,enter)
+ text(c,'已存候选',bx,by+92,23,DIM,enter)
+ points=(bx,by-15,bx+100,by-230,ax-160,ay-180,ax,ay+15)
+ q=at(t,10.6,12.05)
+ if q>0:
+  curve(c,points,JADE,1.3,.26)
+  kx,ky=bezier(points,q*.82 if not verified else lerp(.82,1,at(t,12.05,12.3)))
+  key(c,kx,ky,-10,1.0,1-unlock*.75)
+ if verified:
+  check(c,ax+150,ay-140,.8)
+  text(c,'验证通过',ax,ay+310 if p else ay+340,27,JADE)
 
 
 def nested(c,t,p):
-    reveal=between(t,11.45,12.3);opened=between(t,12.6,14.4);settle=between(t,14.4,15.1)
-    text(c,'这组 7Z → 内层.zip',0,-370 if p else -330,32,DIM,1,'center')
-    if p:
-        oy=-170;ox=0;w=650;h=330
-    else:oy=-25;ox=-230;w=760;h=470
-    scale=1+1.4*reveal
-    alpha=1-reveal
-    rect(c,ox-w*scale/2,oy-h*scale/2,w*scale,h*scale,LIME,3,alpha)
-    text(c,'7Z',ox-w*scale/2+30,oy-h*scale/2+65,46,LIME,alpha,latin=True)
-    inner_w=w*.62;inner_h=h*.64
-    rect(c,ox-inner_w/2,oy-inner_h/2,inner_w,inner_h,INK,2,1-opened*.75)
-    text(c,'ZIP',ox,oy+lerp(45,20,opened),lerp(128 if p else 170,58,opened),LIME,1,'center',True,True)
-    # The nested aperture splits into two output routes, not another card cut.
-    for i,(name,mime) in enumerate([('照片.jpg','JPG'),('说明.txt','TXT')]):
-        if p:tx=(i-.5)*330;ty=220
-        else:tx=420;ty=-100+i*270
-        x=lerp(ox,tx,opened);y=lerp(oy,ty,opened)
-        if opened>.05:
-            curve(c,(ox,oy+55,ox+70,oy+95,tx-70,ty-95,tx,ty-95),LIME,2,opened*.6)
-            file_result(c,name,mime,x,y,opened,p)
-    if settle:text(c,'里面还有一层，就继续解开。',0,420 if p else 365,30,INK,settle,'center')
+ inner=at(t,13.35,14.55);flight=at(t,14.7,16.5);settled=at(t,16.5,17.7)
+ if p:ox,oy=-100,-100;ix,iy=115,100
+ else:ox,oy=-300,10;ix,iy=100,15
+ sprite(c,3,ox,oy,520 if not p else 430,-10,1)
+ sweep=at(t,14.55,15.45)
+ # Same mountain photograph is exposed, extracted and then kept in the result fan.
+ for i,item in enumerate([2,1,0]):
+  if p:tx=(i-1)*220;ty=-190+(i%2)*75
+  else:tx=390+(i-1)*130;ty=(i-1)*150
+  q=at(t,14.7+i*.17,16.4+i*.12)
+  x=lerp(ix,tx,q);y=lerp(iy,ty,q)-math.sin(q*math.pi)*100
+  if q>0:
+   sprite(c,item,x,y,lerp(90,295 if p else 340,q),(i-1)*lerp(0,12,q),1)
+ # The same inner sleeve grows into the foreground and passes the lens. Content
+ # is revealed by its trailing edge, so this is an occlusion change, not a zoom
+ # applied to a complete still illustration.
+ fx=lerp(lerp(ox,ix,inner),ix if p else -1700,sweep)
+ fy=lerp(lerp(oy,iy,inner),-1850 if p else -160,sweep)
+ fw=lerp(lerp(170,390 if p else 430,inner),1650,sweep)
+ sprite(c,3,fx,fy,fw,lerp(8,-18,sweep),1)
+ if inner>.8 and sweep<.25:text(c,'内层.zip',ix,iy+190,23,JADE,inner*(1-sweep*4))
+ text(c,'7Z 卷组',ox,oy-270 if not p else oy-255,22,DIM)
+ if settled:text(c,'继续解开，直到文件。',0,420 if p else 360,28,INK,settled)
 
 
-def recycle(c,x,y,alpha=1):
-    line(c,x-29,y-26,x+29,y-26,DIM,3,alpha)
-    line(c,x-22,y-19,x-17,y+31,DIM,3,alpha);line(c,x+22,y-19,x+17,y+31,DIM,3,alpha)
-    line(c,x-17,y+31,x+17,y+31,DIM,3,alpha)
-    line(c,x-10,y-36,x+10,y-36,DIM,3,alpha)
+def bin_icon(c,x,y,s=1):
+ path(c,[(x-24*s,y-20*s),(x-18*s,y+34*s),(x+18*s,y+34*s),(x+24*s,y-20*s)],DIM,3)
+ line(c,x-30*s,y-28*s,x+30*s,y-28*s,DIM,3);line(c,x-11*s,y-38*s,x+11*s,y-38*s,DIM,3)
 
 
 def result(c,t,p):
-    enter=out((t-15.8)/.6);verified=t>=16.8;cleanup=between(t,17.65,18.8)
-    text(c,'文件，已经就位。',0,-315 if p else -285,48 if p else 64,INK,enter,'center',True)
-    text(c,'旅途 /',-290 if p else -490,-180,30,DIM,enter)
-    for i,(name,mime) in enumerate([('照片.jpg','JPG'),('说明.txt','TXT')]):
-        x=(i-.5)*(300 if p else 430);file_result(c,name,mime,x,-30,enter,p)
-    if verified:
-        check(c,0,155,1.2)
-        text(c,'全部校验通过',0,220,30,LIME,1,'center')
-    rx=250 if p else 520;ry=340 if p else 240
-    recycle(c,rx,ry,enter)
-    if cleanup<.98:text(c,'旅途.mp4',rx,lerp(ry-125,ry-5,cleanup),24,DIM,enter*(1-cleanup),'center')
-    text(c,'回收站',rx,ry+70,23,DIM,enter,'center')
-    text(c,'回收已开启 · 没有后续任务依赖' if cleanup else '校验期间，原包保留。',0,455 if p else 370,24,DIM,enter,'center')
+ enter=at(t,18.4,19.05);done=t>=19.3;cleanup=at(t,20.05,21.05);ending=at(t,21.3,22.15)
+ if p:cx,cy=0,0
+ else:cx,cy=lerp(0,300,ending),15
+ sprite(c,3,cx,cy+175,580 if p else 650,2,enter)
+ fan(c,t,cx,cy-20,470 if p else 570,lerp(.7,1.1,ending),enter)
+ if done:
+  check(c,cx,cy+370 if p else cy+330,1.05)
+  if not ending:text(c,'全部校验通过',cx,cy+425 if p else cy+380,24,JADE,1-ending)
+ # Source alone moves into recycling after success. Output remains in place.
+ rx=310 if p else 650;ry=340 if p else 210
+ if ending<.98:
+  bin_icon(c,rx,ry,.7)
+  if cleanup<.98:sleeve(c,rx,lerp(ry-200,ry,cleanup),lerp(88,30,cleanup),-8,1-cleanup,label='旅途.mp4')
+ if cleanup>0 and not ending:text(c,'按设置回收 · 无后续依赖',0,490 if p else 425,21,DIM,1-ending)
+ if ending:
+  if p:
+   text(c,'T解压',0,-365,86,INK,ending,bold=True)
+   text(c,'看内容，不看后缀。',0,-290,33,JADE,ending)
+  else:
+   text(c,'T解压',-520,-80,112,INK,ending,align='left',bold=True)
+   text(c,'看内容，',-510,10,38,JADE,ending,align='left')
+   text(c,'不看后缀。',-510,65,38,JADE,ending,align='left')
+   text(c,'Windows 原生 · 3.63 MB',-510,145,24,DIM,ending,align='left')
 
 
 def render_frame(t,kind='wide'):
-    p=kind=='portrait';w,h=SIZES[kind]
-    surface=skia.Surface(w,h);c=surface.getCanvas()
-    flash=between(t,2.55,2.85)*(1-between(t,3.35,3.75))
-    c.clear(color(mix(BG,LIME,flash)))
-    # Letterbox opens into a full-bleed hero on the reveal beat.
-    aperture=between(t,2.45,2.95)
-    c.save();margin=lerp(50,0,aperture)
-    c.clipRect(skia.Rect.MakeXYWH(0,margin,w,h-margin*2))
-    cam_x,cam_y,zoom=camera(t,p)
-    c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-cam_x,-cam_y)
-    end=between(t,19.25,20.1)
-    # Dim the route map only as the final brand arrives. Scene identities persist.
-    c.saveLayerAlpha(None,round(255*(1-.82*end)))
-    ribbon(c,t,p)
-    spacing=1650 if p else 1800
-    for i,fn in enumerate([facade,volumes,password,nested,result]):
-        # Cull only out-of-view nodes, never restart their clocks at a cut.
-        center=i*spacing
-        if abs(center-(cam_y if p else cam_x))*zoom>max(w,h)+1100*zoom:continue
-        c.save();c.translate(0 if p else center,center if p else 0);fn(c,t,p);c.restore()
-    c.restore();c.restore();c.restore()
-    # Screen typography has its own timing; it does not zoom with the content.
-    overlay=mix(INK,BG,flash);subtle=mix(DIM,BG,flash)
-    text(c,'T解压',38,56,27,overlay,bold=True)
-    chapter=0 if t<4.1 else 1 if t<7.8 else 2 if t<11.1 else 3 if t<15.8 else 4
-    text(c,['识别伪装','改名分卷','密码复用','自动嵌套','结果与善后'][chapter],w-38,55,22,subtle,1,'right')
-    text(c,'源：旅途.mp4',38,h-45,22,subtle,1-end)
-    text(c,'功能动画 · 非软件录屏',w-38,h-45,18,subtle,1,'right')
-    brand=out((t-20.0)/.55)
-    if brand:
-        text(c,'T解压',w/2,h*.45,lerp(145 if p else 190,158 if p else 210,brand),INK,brand,'center',True)
-        text(c,'看内容，不看后缀。',w/2,h*.57,42 if p else 50,LIME,brand,'center',True)
-        text(c,'Windows 原生 · 3.63 MB · 免费开源',w/2,h*.66,25 if p else 29,DIM,brand,'center')
-    return surface.toarray(colorType=skia.ColorType.kRGBA_8888_ColorType)
+ p=kind=='portrait';w,h=SIZES[kind];surface=skia.Surface(w,h);c=surface.getCanvas();backdrop(c,t,w,h)
+ x,y,z=camera(t,p);c.save();c.translate(w/2,h/2);c.scale(z,z);c.translate(-x,-y)
+ bridge(c,t,p);spacing=1500 if p else 1900
+ for i,fn in enumerate([opening,volumes,password,nested,result]):
+  center=i*spacing
+  if abs(center-(y if p else x))*z>(h/2 if p else w/2)+800*z:continue
+  c.save();c.translate(0 if p else center,center if p else 0);fn(c,t,p);c.restore()
+ c.restore()
+ text(c,'T解压',38,54,25,INK,align='left',bold=True)
+ text(c,'功能动画 · 非软件录屏',w-38,h-38,17,DIM,align='right')
+ return surface.toarray(colorType=skia.ColorType.kRGBA_8888_ColorType)
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--format',choices=['wide','portrait','all'],default='all');args=parser.parse_args()
-    OUT.mkdir(parents=True,exist_ok=True)
-    for kind in (['wide','portrait'] if args.format=='all' else [args.format]):
-        for t in [0,2.9,3.3,6.9,9.9,14.8,18.8,21.5]:
-            started=time.perf_counter();Image.fromarray(render_frame(t,kind)).save(OUT/f'{kind}-{t:.1f}.png');print(kind,t,round(time.perf_counter()-started,3),flush=True)
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--format',choices=['wide','portrait','all'],default='all');args=parser.parse_args();OUT.mkdir(parents=True,exist_ok=True)
+ for kind in (['wide','portrait'] if args.format=='all' else [args.format]):
+  for t in [0.7,2.45,3.5,4.8,8.8,12.4,16.8,20.5,23.2]:
+   start=time.perf_counter();Image.fromarray(render_frame(t,kind)).save(OUT/f'{kind}-{t:.2f}.png');print(kind,t,round(time.perf_counter()-start,3),flush=True)
 
 if __name__=='__main__':main()

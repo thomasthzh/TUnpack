@@ -72,7 +72,7 @@ if phase=='stage':
                 target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
     for name in ['app.js','manifest.webmanifest','robots.txt','sitemap.xml']:
         if (old/name).is_file() and not (new/name).exists():shutil.copyfile(old/name,new/name)
-    assert (new/'index.html').is_file() and (new/'assets/hero-motion-20261117-wide.mp4').stat().st_size>100000
+    assert (new/'index.html').is_file() and (new/'assets/hero-art-20261117-wide.mp4').stat().st_size>100000
     desired=copy.deepcopy(before)
     desired['handle'][0]['routes'][1]['handle'][1]['root']=str(new)
     headers=desired['handle'][0]['routes'][0]['handle'][0]['response']['set']
@@ -108,7 +108,7 @@ def main():
     assert args.release.replace("-", "").isalnum(), "Use a plain release identifier"
     ssh = ['ssh','-T','-o','BatchMode=yes','-o','ConnectTimeout=12',args.ssh_host]
     if args.phase=='stage':
-        target=ROOT/'docs/evidence/hero-motion'/(args.release+'.tar')
+        target=ROOT/'docs/evidence/hero-art'/(args.release+'.tar')
         target.parent.mkdir(parents=True,exist_ok=True)
         with tarfile.open(target,'w') as archive:
             for file in sorted((ROOT/'site').rglob('*')):
