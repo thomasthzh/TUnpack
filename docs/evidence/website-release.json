@@ -1,113 +1,157 @@
 {
-  "verified_at_utc": "2026-11-17T07:07:09.788266+00:00",
-  "site": "https://thomasthzh.github.io/TUnpack/",
-  "release": "https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0",
+  "verified_at_utc": "2026-11-17T08:27:06.802024+00:00",
+  "version": "0.13.0",
+  "site": "https://tunpack.thomasthzh.top/",
+  "source_commit": "36fe940cfca980debdc2af3512e64f555eb90e9e",
   "published": true,
-  "site_commit": "168a7b8816c460e378f7c5dfdc9de182ba55085e",
-  "pages_run": 44036043946,
-  "pages_success": true,
   "site_checks": [
     {
       "path": "",
       "status": 200,
-      "bytes": 10201,
-      "content_type": "text/html; charset=utf-8"
+      "bytes": 10477,
+      "mime": "text/html; charset=utf-8"
     },
     {
-      "path": "styles.css?v=20261117-2",
+      "path": "styles.css?v=20261117-3",
       "status": 200,
-      "bytes": 11129,
-      "content_type": "text/css; charset=utf-8"
+      "bytes": 15205,
+      "mime": "text/css; charset=utf-8"
     },
     {
-      "path": "player.js?v=20261117-2",
+      "path": "player.js?v=20261117-3",
       "status": 200,
-      "bytes": 7316,
-      "content_type": "application/javascript; charset=utf-8"
+      "bytes": 8153,
+      "mime": "text/javascript; charset=utf-8"
     },
     {
-      "path": "download.js?v=20261117-2",
+      "path": "download.js?v=20261117-3",
       "status": 200,
-      "bytes": 1313,
-      "content_type": "application/javascript; charset=utf-8"
+      "bytes": 1359,
+      "mime": "text/javascript; charset=utf-8"
     },
     {
       "path": "assets/mark.svg",
       "status": 200,
-      "bytes": 2152,
-      "content_type": "image/svg+xml"
+      "bytes": 2173,
+      "mime": "image/svg+xml"
     },
     {
-      "path": "assets/film.zh-CN.vtt",
+      "path": "assets/hero-3d-20261117.zh-CN.vtt",
       "status": 200,
-      "bytes": 834,
-      "content_type": "text/vtt; charset=utf-8"
+      "bytes": 344,
+      "mime": "text/vtt; charset=utf-8"
     },
     {
-      "path": "assets/tunpack-20261117-cover.jpg",
+      "path": "assets/hero-3d-20261117-cover.jpg",
       "status": 200,
-      "bytes": 62359,
-      "content_type": "image/jpeg"
+      "bytes": 50954,
+      "mime": "image/jpeg"
     },
     {
-      "path": "assets/tunpack-20261117-wide.webp",
+      "path": "assets/hero-3d-20261117-wide.webp",
       "status": 200,
-      "bytes": 28674,
-      "content_type": "image/webp"
+      "bytes": 24304,
+      "mime": "image/webp"
     },
     {
-      "path": "assets/tunpack-20261117-portrait.webp",
+      "path": "assets/hero-3d-20261117-portrait.webp",
       "status": 200,
-      "bytes": 26610,
-      "content_type": "image/webp"
+      "bytes": 22488,
+      "mime": "image/webp"
     },
     {
-      "path": "assets/tunpack-20261117-wide.mp4",
+      "path": "assets/hero-3d-20261117-wide.mp4",
       "status": 200,
-      "bytes": 1416746,
-      "content_type": "video/mp4"
+      "bytes": 1598579,
+      "mime": "video/mp4"
     },
     {
-      "path": "assets/tunpack-20261117-portrait.mp4",
+      "path": "assets/hero-3d-20261117-portrait.mp4",
       "status": 200,
-      "bytes": 1215989,
-      "content_type": "video/mp4"
+      "bytes": 1397334,
+      "mime": "video/mp4"
     }
   ],
-  "range_requests_206": true,
-  "media": [
+  "media_ranges": [
     {
       "format": "wide",
-      "dimensions": "1280x720",
-      "fps": 30,
-      "frames": 720,
-      "duration": 24,
-      "full_h264_aac_decode": true,
-      "bytes": 1416746,
-      "poster_bytes": 28674
+      "status": 206,
+      "content_range": "bytes 0-1023/1598579"
     },
     {
       "format": "portrait",
-      "dimensions": "720x900",
-      "fps": 30,
-      "frames": 720,
-      "duration": 24,
-      "full_h264_aac_decode": true,
-      "bytes": 1215989,
-      "poster_bytes": 26610
+      "status": 206,
+      "content_range": "bytes 0-1023/1397334"
     }
   ],
-  "node_media_and_download_checks": 17,
-  "static_refs_checked": 34,
-  "review_unresolved_material_findings": 0,
-  "download": {
-    "zip_bytes": 3626656,
-    "sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
-    "native_tag_and_assets_unchanged": true,
-    "anonymous_download_ok": true,
-    "crc_ok": true,
-    "release_notes_updated": true
+  "csp_media_self": true,
+  "custom_domain_is_actual_deployment": true,
+  "deployment": {
+    "phase": "apply",
+    "host": "tunpack.thomasthzh.top",
+    "active_root": "/srv/tunpack-site/releases/hero-20261117-cinema",
+    "other_configuration_unchanged": true,
+    "autosave_persisted": true,
+    "previous_release_retained": true
   },
-  "visual_scope": "Offline authored wide and portrait storyboard plus actual encoded frames inspected. Node tests and static source/CSS checks are not browser/mobile-screen rendering. No CU, desktop/browser automation or GUI used.",
-  "native_scope": "Existing native 0.13.0 package/tag unchanged. Previous 292 native functional checks remain scoped to that release build; not rerun for this website-only change."
+  "media": [
+    {
+      "format": "wide",
+      "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
+      "render_frames": 288,
+      "render_fps": 24,
+      "duration_seconds": 12,
+      "render_size": [
+        1440,
+        900
+      ],
+      "delivery_size": [
+        1920,
+        900
+      ],
+      "mp4_bytes": 1598579,
+      "full_h264_aac_decode": true
+    },
+    {
+      "format": "portrait",
+      "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
+      "render_frames": 288,
+      "render_fps": 24,
+      "duration_seconds": 12,
+      "render_size": [
+        864,
+        1080
+      ],
+      "delivery_size": [
+        864,
+        1080
+      ],
+      "mp4_bytes": 1397334,
+      "full_h264_aac_decode": true
+    }
+  ],
+  "node_checks": 22,
+  "static_references": 35,
+  "official_backup_download_bytes": 3626656,
+  "official_backup_download_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
+  "official_backup_is_licensed_7_file_release": true,
+  "github_tag_and_assets_unchanged": true,
+  "design_reference": "User-specified Cangfeng: latest GitLab main read directly. Private source documents/credentials not redistributed.",
+  "validation_scope": "Original meshes, perspective cameras, PBR materials and lights rendered in Blender Cycles, 288 real frames per format. Authored and encoded frames inspected; no GUI/CU/browser automation or browser-screen acceptance. Aesthetic user approval not claimed.",
+  "native_scope": "Native application and seven-file 0.13.0 artifact unchanged; 292 earlier native checks remain scoped to that release, not rerun for website-only work.",
+  "github_pages_mirror": {
+    "run": 44046471549,
+    "success": true,
+    "verified_resources": [
+      "index.html",
+      "styles.css",
+      "player.js",
+      "download.js",
+      "assets/hero-3d-20261117-wide.mp4",
+      "assets/hero-3d-20261117-portrait.mp4",
+      "assets/hero-3d-20261117-wide.webp",
+      "assets/hero-3d-20261117-portrait.webp"
+    ]
+  },
+  "github_release_notes_and_homepage_updated": true
 }
