@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const script = fs.readFileSync(path.join(__dirname,'../site/download.js'),'utf8');
-const url = 'https://github.com/thomasthzh/TUnpack/releases/download/v0.13.0/TUnpack-0.13.0-windows-x64.zip';
+const url = 'https://github.com/thomasthzh/TUnpack/releases/download/v0.13.1/TUnpack-0.13.1-windows-x64.zip';
 function setup({agent='Windows NT 10.0', reject=false, clipboard=true}={}) {
   const elements = {};
   for(const id of ['download-primary','download-link','copy-download','download-status','platform-note']) elements[id]={handlers:{},dataset:{},hidden:true,href:url,value:url,addEventListener(name,fn){this.handlers[name]=fn;},focus(){this.focused=true;},select(){this.selected=true;}};

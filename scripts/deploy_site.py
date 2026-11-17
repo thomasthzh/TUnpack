@@ -108,13 +108,14 @@ def main():
     assert args.release.replace("-", "").isalnum(), "Use a plain release identifier"
     ssh = ['ssh','-T','-o','BatchMode=yes','-o','ConnectTimeout=12',args.ssh_host]
     if args.phase=='stage':
-        target=ROOT/'docs/evidence/hero-icons-polish'/(args.release+'.tar')
+        target=ROOT/'docs/evidence/native-0131-site'/(args.release+'.tar')
         target.parent.mkdir(parents=True,exist_ok=True)
         with tarfile.open(target,'w') as archive:
             for file in sorted((ROOT/'site').rglob('*')):
                 if file.is_file():archive.add(file,arcname=file.relative_to(ROOT/'site').as_posix(),recursive=False)
-            # Legacy official download URL now serves the same licensed release.
+            # Preserve the 0.13.0 legacy URL for cached pages; the current link is versioned.
             archive.add(ROOT/'dist/TUnpack-0.13.0-windows-x64.zip',arcname='downloads/T解压-portable.zip',recursive=False)
+            archive.add(ROOT/'dist/TUnpack-0.13.1-windows-x64.zip',arcname='downloads/TUnpack-0.13.1-windows-x64.zip',recursive=False)
         subprocess.run(ssh+['mkdir -p /srv/tunpack-site/incoming'],check=True)
         subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=12',str(target),args.ssh_host+':/srv/tunpack-site/incoming/'+args.release+'.tar'],check=True)
     command='python3 - '+shlex.quote(args.phase)+' '+shlex.quote(args.release)

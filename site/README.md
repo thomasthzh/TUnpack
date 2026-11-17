@@ -1,6 +1,6 @@
 # T解压官网
 
-正式官网：**https://tunpack.thomasthzh.top/**。GitHub Pages是镜像，不能代替正式域名发布。页面无需框架、外部字体、统计脚本或账号。应用版本仍为v0.13.0，官网修订不等于软件版本升级。
+正式官网：**https://tunpack.thomasthzh.top/**。GitHub Pages是镜像，不能代替正式域名发布。页面无需框架、外部字体、统计脚本或账号。应用版本仍为v0.13.1，官网修订不等于软件版本升级。
 
 ## 图标英雄动画
 
@@ -36,6 +36,6 @@ python scripts/encode_site_film.py
 
 Pages工作流只上传site目录。正式域名由已有Caddy独立版本目录承载。
 
-`python scripts/deploy_site.py --ssh-host <existing-alias> --phase inspect|stage|apply|rollback --release <name>`使用操作者已有SSH配置。stage需已验证的 `dist/TUnpack-0.13.0-windows-x64.zip`，只写新目录，保留历史资源与兼容下载URL。本轮apply只切指定host的文件root；检查现有CSP已允许self媒体，不修改策略。更新携带ETag/If-Match，保存精确旧route用于rollback；不改DNS、不重载全局配置、不删除旧目录。核对其他配置不变及autosave持久，最后验证正式域名资源字节、MP4范围206和下载包。
+`python scripts/deploy_site.py --ssh-host <existing-alias> --phase inspect|stage|apply|rollback --release <name>`使用操作者已有SSH配置。stage需已验证的 `dist/TUnpack-0.13.1-windows-x64.zip`，只写新目录，保留历史资源与兼容下载URL。本轮apply只切指定host的文件root；检查现有CSP已允许self媒体，不修改策略。更新携带ETag/If-Match，保存精确旧route用于rollback；不改DNS、不重载全局配置、不删除旧目录。核对其他配置不变及autosave持久，最后验证正式域名资源字节、MP4范围206和下载包。
 
 验证用 `node --test tests/site_player.test.cjs tests/site_download.test.cjs`、`python tests/check_site.py`，以及成片完整解码和抽帧检查。用户禁止CU/桌面/浏览器自动操作；静态检查、状态测试不等于浏览器实屏或用户审美验收。

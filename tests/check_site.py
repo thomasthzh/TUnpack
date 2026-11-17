@@ -52,7 +52,7 @@ def main():
     assert [float(item["data-time"]) for item in chapters] == [0, 7, 14]
     assert all("disabled" in item for item in chapters), "No-JS chapter buttons must not pretend to seek"
     assert "非软件录屏" in html and "尚未进行数字签名" in html
-    assert any("releases/download/v0.13.0/TUnpack-0.13.0-windows-x64.zip" in ref for ref in page.refs)
+    assert any("releases/download/v0.13.1/TUnpack-0.13.1-windows-x64.zip" in ref for ref in page.refs)
     css = (SITE / "styles.css").read_text(encoding="utf8")
     assert "max-width:700px" in css and "prefers-reduced-motion" in css and "focus-visible" in css
     assert not re.search(r"@import|https?://", css), "External font or CSS dependency"
@@ -63,10 +63,11 @@ def main():
     assert [videos[0][key] for key in ["data-wide-width", "data-wide-height", "data-portrait-width", "data-portrait-height"]] == ["1600", "900", "900", "1200"]
     assert "节奏不代表实际耗时" in html and "可唯一匹配" in html
     assert any(tag == "source" and attrs.get("media") == "(max-width: 700px)" and "portrait" in attrs.get("srcset", "") for tag, attrs in page.elements)
-    assert any(ref.endswith("/v0.13.0/SHA256SUMS.txt") for ref in page.refs)
+    assert any(ref.endswith("/v0.13.1/SHA256SUMS.txt") for ref in page.refs)
     assert any("tunpack.thomasthzh.top/downloads/" in ref for ref in page.refs)
+    assert "升级前请正常退出旧版窗口" in html
     assert "默认：每个任务及其嵌套包全部解压成功后" in html and "可在开始前关闭" in html and "当前 Windows 用户目录" in html
-    assert any(tag == "input" and "readonly" in attrs and attrs.get("value", "").endswith("/v0.13.0/TUnpack-0.13.0-windows-x64.zip") for tag, attrs in page.elements)
+    assert any(tag == "input" and "readonly" in attrs and attrs.get("value", "").endswith("/v0.13.1/TUnpack-0.13.1-windows-x64.zip") for tag, attrs in page.elements)
     captions = (SITE / "assets/hero-icons-polish-20261117.zh-CN.vtt").read_text(encoding="utf8")
     assert captions.startswith("WEBVTT") and "00:28.000" in captions
     print(f"Site static checks passed: {len(page.refs)} links/media paths, 3 chapter targets, accessibility/fallback and asset budgets. No browser run.")
