@@ -12,26 +12,33 @@ from PIL import Image
 from render_site_film import render_frame,SIZES,FPS,DURATION,OUT,ROOT
 
 ASSETS=ROOT/'site/assets'
-STEM='hero-icons-20261117'
+STEM='hero-icons-polish-20261117'
 
 
 def score():
     rate=48000;t=np.arange(rate*DURATION)/rate;mix=np.zeros_like(t)
-    # Original sound design: low impacts at reveals, a short air sweep at moves,
-    # and a resolved chord at the final pullback. No third-party music.
     rng=np.random.default_rng(20261117)
     noise=rng.standard_normal(t.size);noise=np.convolve(noise,np.ones(18)/18,mode='same')
-    for start in [0,3.6,4.2,7.0,10.6,14.0,18.5,22.0]:
-        local=t-start;env=np.where(local>=0,np.exp(-np.maximum(local,0)*5),0)
-        freq=48+60*np.exp(-np.maximum(local,0)*12)
-        mix+=.16*env*np.sin(2*np.pi*freq*local)
-        air=np.exp(-((local-.16)/.17)**2);air[local<0]=0
-        mix+=noise*air*.12
-    for start in [9.65,12.75,19.4,23.1]:
-        local=t-start;env=np.where(local>=0,np.minimum(np.maximum(local,0)*50,1)*np.exp(-np.maximum(local,0)*2.7),0)
-        for freq in [261.63,392,523.25]:mix+=.025*env*np.sin(2*np.pi*freq*local)
+    # Quiet original harmonic bed connects the action accents across the film.
+    bed=np.minimum(np.maximum((t-3.6)/1.2,0),1)*np.minimum(np.maximum((DURATION-t)/2,0),1)
+    for frequency in [110,164.81,220]:mix+=.007*bed*np.sin(2*np.pi*frequency*t)
+    for start in [3.6,4.3,7.2,10.15,15.05,19.6,22.1]:
+        local=np.maximum(t-start,0);active=t>=start;env=np.exp(-local*6)*active
+        phase=2*np.pi*(46*local+80/14*(1-np.exp(-14*local)))
+        mix+=.13*env*np.sin(phase)
+    for start in [4.15,6.6,10.0,13.5,15.38,18.0,22.0]:
+        local=t-start;air=np.exp(-((local-.22)/.18)**2);air[local<0]=0
+        mix+=noise*air*.085
+    # Click/drop cues occur on the same clock as visible pointer hits.
+    for start in [1.24,2.62,3.6,21.2]:
+        local=np.maximum(t-start,0);env=np.exp(-local*130)*(t>=start)
+        mix+=.045*env*np.sin(2*np.pi*1800*local)+.035*env*noise
+    for start in [9.65,12.75,19.6,23.2]:
+        local=np.maximum(t-start,0);env=np.minimum(local*65,1)*np.exp(-local*(1.8 if start==23.2 else 3.5))*(t>=start)
+        for freq in [261.63,392,523.25]:mix+=.03*env*np.sin(2*np.pi*freq*local)
     mix*=np.minimum(t/.08,1)*np.minimum((DURATION-t)/.7,1)
-    stereo=np.stack([mix,mix*.96],axis=1)
+    mix*=2.5
+    stereo=np.stack([mix,mix*.94+np.roll(mix,288)*.04],axis=1)
     path=OUT/'original-icons-score.wav'
     with wave.open(str(path),'wb') as stream:
         stream.setnchannels(2);stream.setsampwidth(2);stream.setframerate(rate);stream.writeframes((np.clip(stereo,-1,1)*32767).astype('<i2').tobytes())
@@ -68,7 +75,7 @@ def main():
         process.stdin.close();assert process.wait()==0
         decoded=subprocess.run([ffmpeg,'-hide_banner','-i',str(target),'-f','null','-'],capture_output=True,check=True).stderr.decode('utf8',errors='replace')
         assert '00:00:28.00' in decoded and 'h264' in decoded and 'aac' in decoded
-        report.append({'format':kind,'source':'Microsoft Fluent SVG icon paths and native T mark, independent icon actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser','sequence_frames':FPS*DURATION,'fps':FPS,'duration_seconds':DURATION,'delivery_size':[w,h],'mp4_bytes':target.stat().st_size,'full_h264_aac_decode':True,'hero_moves':'3.6s start click and workbench full-bleed; 4.2-4.56s icon-detail push with continuous focus; 14.6-14.96s nested detail; 21.2s visible result opening; 22-23.1s format/app/output icon convergence'})
+        report.append({'format':kind,'source':'Microsoft Fluent SVG icon paths and native T mark, continuous shared package and output actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser','sequence_frames':FPS*DURATION,'fps':FPS,'duration_seconds':DURATION,'delivery_size':[w,h],'mp4_bytes':target.stat().st_size,'full_h264_aac_decode':True,'hero_moves':'3.6s start/full-bleed; 6.6-8.65s ZIP emits volume actors; 10.15-14.4s one package gathers/unlocks/moves; 15.05-16.35s foreground ZIP reveal; output actors persist 15.45-28s through result and brand'})
     if report:
         file=OUT/'media.json';old=json.loads(file.read_text(encoding='utf8')) if file.exists() else [];combined={item['format']:item for item in old+report};file.write_text(json.dumps(list(combined.values()),ensure_ascii=False,indent=2),encoding='utf8');print(json.dumps(report,ensure_ascii=False,indent=2))
 
