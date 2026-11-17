@@ -1,26 +1,34 @@
 {
-  "verified_at_utc": "2026-11-17T06:32:39.878151+00:00",
-  "version": "0.13.0",
+  "verified_at_utc": "2026-11-17T07:07:09.788266+00:00",
   "site": "https://thomasthzh.github.io/TUnpack/",
   "release": "https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0",
   "published": true,
+  "site_commit": "168a7b8816c460e378f7c5dfdc9de182ba55085e",
+  "pages_run": 44036043946,
+  "pages_success": true,
   "site_checks": [
     {
-      "path": "index.html",
+      "path": "",
       "status": 200,
-      "bytes": 8316,
+      "bytes": 10201,
       "content_type": "text/html; charset=utf-8"
     },
     {
-      "path": "styles.css",
+      "path": "styles.css?v=20261117-2",
       "status": 200,
-      "bytes": 8619,
+      "bytes": 11129,
       "content_type": "text/css; charset=utf-8"
     },
     {
-      "path": "player.js",
+      "path": "player.js?v=20261117-2",
       "status": 200,
-      "bytes": 6434,
+      "bytes": 7316,
+      "content_type": "application/javascript; charset=utf-8"
+    },
+    {
+      "path": "download.js?v=20261117-2",
+      "status": 200,
+      "bytes": 1313,
       "content_type": "application/javascript; charset=utf-8"
     },
     {
@@ -30,50 +38,76 @@
       "content_type": "image/svg+xml"
     },
     {
-      "path": "assets/hero-poster.webp",
-      "status": 200,
-      "bytes": 34722,
-      "content_type": "image/webp"
-    },
-    {
-      "path": "assets/cover.jpg",
-      "status": 200,
-      "bytes": 71561,
-      "content_type": "image/jpeg"
-    },
-    {
       "path": "assets/film.zh-CN.vtt",
       "status": 200,
       "bytes": 834,
       "content_type": "text/vtt; charset=utf-8"
     },
     {
-      "path": "assets/tunpack-film.mp4",
+      "path": "assets/tunpack-20261117-cover.jpg",
       "status": 200,
-      "bytes": 1969689,
+      "bytes": 62359,
+      "content_type": "image/jpeg"
+    },
+    {
+      "path": "assets/tunpack-20261117-wide.webp",
+      "status": 200,
+      "bytes": 28674,
+      "content_type": "image/webp"
+    },
+    {
+      "path": "assets/tunpack-20261117-portrait.webp",
+      "status": 200,
+      "bytes": 26610,
+      "content_type": "image/webp"
+    },
+    {
+      "path": "assets/tunpack-20261117-wide.mp4",
+      "status": 200,
+      "bytes": 1416746,
+      "content_type": "video/mp4"
+    },
+    {
+      "path": "assets/tunpack-20261117-portrait.mp4",
+      "status": 200,
+      "bytes": 1215989,
       "content_type": "video/mp4"
     }
   ],
-  "homepage_root_200": true,
-  "source_commit": "1d3dfedab7fc3a0f51d9d9daeb1080da08101267",
-  "release_zip_bytes": 3626656,
-  "release_zip_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
-  "release_entries": [
-    "T解压/T解压.exe",
-    "T解压/7z.dll",
-    "T解压/7-Zip-License.txt",
-    "T解压/bit7z-LICENSE.txt",
-    "T解压/LICENSE.txt",
-    "T解压/README.txt",
-    "T解压/THIRD-PARTY-NOTICES.txt"
+  "range_requests_206": true,
+  "media": [
+    {
+      "format": "wide",
+      "dimensions": "1280x720",
+      "fps": 30,
+      "frames": 720,
+      "duration": 24,
+      "full_h264_aac_decode": true,
+      "bytes": 1416746,
+      "poster_bytes": 28674
+    },
+    {
+      "format": "portrait",
+      "dimensions": "720x900",
+      "fps": 30,
+      "frames": 720,
+      "duration": 24,
+      "full_h264_aac_decode": true,
+      "bytes": 1215989,
+      "poster_bytes": 26610
+    }
   ],
-  "anonymous_download_matches_local": true,
-  "zip_crc_check": true,
-  "native_function_checks": 292,
-  "native_suite_count": 8,
-  "player_node_checks": 9,
-  "site_static_refs": 25,
-  "film_full_decode": true,
-  "visual_scope": "Offline storyboard and encoded frames inspected; no browser, desktop automation, GUI or CU. Responsive CSS reviewed, actual browser/mobile interaction not exercised.",
-  "release_scope": "Fresh public-source checkout built with pinned dependencies; complete generated/public-fixture suites passed. Native business source unchanged. Package includes no user archive, password book, session, config or original OnlyUnzip."
+  "node_media_and_download_checks": 17,
+  "static_refs_checked": 34,
+  "review_unresolved_material_findings": 0,
+  "download": {
+    "zip_bytes": 3626656,
+    "sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
+    "native_tag_and_assets_unchanged": true,
+    "anonymous_download_ok": true,
+    "crc_ok": true,
+    "release_notes_updated": true
+  },
+  "visual_scope": "Offline authored wide and portrait storyboard plus actual encoded frames inspected. Node tests and static source/CSS checks are not browser/mobile-screen rendering. No CU, desktop/browser automation or GUI used.",
+  "native_scope": "Existing native 0.13.0 package/tag unchanged. Previous 292 native functional checks remain scoped to that release build; not rerun for this website-only change."
 }
