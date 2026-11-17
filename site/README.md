@@ -2,23 +2,23 @@
 
 正式官网：**https://tunpack.thomasthzh.top/**。GitHub Pages是镜像，不能代替正式域名发布。页面无需框架、外部字体、统计脚本或账号。应用版本仍为v0.13.0，官网修订不等于软件版本升级。
 
-## 原创产品故事
+## 原创矢量英雄动画
 
-主片为20秒原创3D功能演绎，非软件录屏，节奏不代表实际耗时。用同一个文件串起因果：旅途.mp4显露ZIP内容→ZIP内的三卷（末卷改名附件.docx）归组→从已存候选验证密码再开锁→这组7Z继续解出内层ZIP和文件→全部校验成功后按设置回收原MP4。自动配卷仅展示可唯一匹配的例子；回收还需设置已开启且没有后续任务依赖。
+主片22秒、60fps，单一矢量时间轴，非软件录屏，节奏不代表实际耗时。用同一个旅途.mp4串起内容识别、ZIP里的改名分卷、已存密码验证、内层ZIP、输出与按设置回收。自动配卷仅展示可唯一匹配的例子；回收需已开启且没有后续任务依赖。
 
-`tests/hero_story_check.py`用生成的MP4前缀ZIP、加密7z三卷/末卷改名及内层ZIP实际经过CLI/SDK解压，核对输出字节。使用隔离DPAPI书和公开测试密码，回收关闭，全部输入保留。它不证明任意改名裸切片或破损文件都能恢复，也不是新的回收测试。
+英雄镜头落在动作上：扩展名外表分开，ZIP内容以亮色满幅揭示；3.00–3.36秒快速推进，再缓退接入卷轨。后续镜头沿同一内容流移动；19.00–20.05秒拉回整条路径，品牌定格。字体、对象、内容流与镜头分别计时，说明字不会跟着特写放大出界。横版1600×900，竖版900×1200独立重排，不裁横片。
 
-`scripts/render_site_film.py`是唯一主片渲染器：Blender5.3/Cycles/OptiX、原创物理文件/钥匙/锁/回收站模型、独立灯光与摄影机。每版480帧序列、24fps；完全相同的静止姿态复用已渲染像素，渲染统计如实记录。横片源1152×720，合成1536×720；竖片独立取景720×900，合成720×1100，保留上方文字区，不裁横片。旧二维与抽象3D媒体只保留历史URL。
+`scripts/render_site_film.py`是唯一动画实现，使用Skia路径、字体、裁切与变换，不使用Blender、bpy、浏览器录制或桌面操作。`scripts/encode_site_film.py`直接逐帧调用同一个render_frame函数导出H264/AAC，另存WebP和分享图；不依赖旧PNG帧序列。旧影片只保留历史URL供缓存兼容，不是并行制作实现。
 
-渲染需Python3.13+bpy5.3，或对应Blender的background环境。编码另用装有numpy/Pillow/imageio-ffmpeg的Python环境，不要把cp313依赖通过PYTHONPATH注入其他版本Python。
+制作用Python3.12、skia-python144.1、numpy、Pillow、imageio-ffmpeg。依赖只供制作，不随网页或软件分发。Windows字体只栅格化为画面，不分发字体；声音为原创合成，没有第三方歌曲或录音。
 
 ```text
-python scripts/render_site_film.py --format wide
-python scripts/render_site_film.py --format portrait
+python -m pip install skia-python==144.1 numpy Pillow imageio-ffmpeg
+python scripts/render_site_film.py
 python scripts/encode_site_film.py
 ```
 
-编码器把动作说明直接合成进两版影片，再导出H264/AAC、WebP和分享图。配乐为原创合成，没有第三方歌曲、视频或录音。Windows字体仅用于模型文字和像素合成，不分发字体。浏览器只播放影片，不下载模型或渲染环境。
+`tests/hero_story_check.py`此前实际通过CLI/SDK解开同结构生成样本，输出字节正确；使用隔离DPAPI和公开测试密码、关闭回收、保留输入。本轮只替换动画与页面，没有重跑或扩大该引擎证据，不证明任意改名裸切片或破损文件均能恢复，也没有新增回收测试。
 
 ## 阅读与控制
 

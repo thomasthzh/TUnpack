@@ -22,12 +22,12 @@ function setup({ reduced = false, saveData = false, observer = true, narrow = fa
   const ids = ['product-film', 'film-actions', 'film-toggle', 'film-sound', 'film-fullscreen', 'film-status', 'film-screen', 'film-poster', 'hero-stage'];
   const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
   const video = elements['product-film'];
-  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4', srcPortrait: 'assets/portrait.mp4', posterWide: 'wide.webp', posterPortrait: 'portrait.webp' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 20, playCalls: 0 });
+  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4', srcPortrait: 'assets/portrait.mp4', posterWide: 'wide.webp', posterPortrait: 'portrait.webp' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 22, playCalls: 0 });
   if (legacy) { delete video.dataset.srcPortrait; delete video.dataset.posterPortrait; delete video.dataset.posterWide; video.poster = 'legacy.webp'; }
   video.querySelector('track').dataset.src = 'assets/film.zh-CN.vtt';
   video.play = () => { video.playCalls++; if (video.reject) return Promise.reject(Object.assign(new Error('blocked'), {name: 'NotAllowedError'})); video.paused = false; video.emit('play'); return Promise.resolve(); };
   video.pause = () => { if (!video.paused) { video.paused = true; video.emit('pause'); } };
-  const chapters = [0, 4.8, 11].map((time, i) => Object.assign(new Element(), { dataset: {time: String(time), end: String([4.8, 11, 20][i])} }));
+  const chapters = [0, 4.1, 11.1].map((time, i) => Object.assign(new Element(), { dataset: {time: String(time), end: String([4.1, 11.1, 22][i])} }));
   document.querySelector = name => elements[name.slice(1)]; document.querySelectorAll = () => chapters;
   window.matchMedia = query => query.includes("max-width") ? framing : motion;
   let onIntersection;
@@ -55,7 +55,7 @@ test('Reduced motion and save-data keep poster until explicit chapter playback',
   for (const option of [{ reduced: true }, { saveData: true }]) {
     const e = setup(option); e.intersect(true); await tick(); assert.equal(e.video.src, undefined); assert.equal(e.video.playCalls, 0);
     assert.equal(e.chapters[2].disabled, false); e.chapters[2].emit('click'); await tick(); assert.equal(e.video.paused, false); assert.equal(e.video.scrolled, true);
-    e.video.readyState = 1; e.video.emit('loadedmetadata'); assert.equal(e.video.currentTime, 11); e.video.emit('timeupdate'); assert.equal(e.chapters[2].attrs['aria-current'], 'true'); assert.equal(e.chapters[0].attrs['aria-current'], undefined);
+    e.video.readyState = 1; e.video.emit('loadedmetadata'); assert.equal(e.video.currentTime, 11.1); e.video.emit('timeupdate'); assert.equal(e.chapters[2].attrs['aria-current'], 'true'); assert.equal(e.chapters[0].attrs['aria-current'], undefined);
   }
 });
 
@@ -115,7 +115,7 @@ test('Cached prior homepage keeps its original poster when the new controller ar
 
 
 test('Product story uses declared delivery sizes and freezes after start', async () => {
-  const e=setup({reduced:true,narrow:true});Object.assign(e.video.dataset,{wideWidth:'1536',wideHeight:'720',portraitWidth:'720',portraitHeight:'1100'});e.framing.emit('change');assert.equal(e.video.width,720);assert.equal(e.video.height,1100);e.intersect(true);e['film-toggle'].emit('click');await tick();e.framing.matches=false;e.framing.emit('change');assert.equal(e.video.width,720);
+  const e=setup({reduced:true,narrow:true});Object.assign(e.video.dataset,{wideWidth:'1600',wideHeight:'900',portraitWidth:'900',portraitHeight:'1200'});e.framing.emit('change');assert.equal(e.video.width,900);assert.equal(e.video.height,1200);e.intersect(true);e['film-toggle'].emit('click');await tick();e.framing.matches=false;e.framing.emit('change');assert.equal(e.video.width,900);
 });
 
 

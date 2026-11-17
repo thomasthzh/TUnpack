@@ -3,7 +3,7 @@
   --bg: #050607;
   --text: #f2f1eb;
   --muted: #929d98;
-  --accent: #b2d2c5;
+  --accent: #ceff68;
   --line: #ffffff23;
   font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
   font-synthesis: none;
@@ -36,12 +36,12 @@ a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible,i
 .header .button { background: transparent; border-color: #ffffff50; color: var(--text); }
 .header .button:hover { background: var(--text); color: #080a0a; }
 .hero { position: relative; isolation: isolate; }
-.hero-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px; padding: 52px 0 42px; }
-.hero h1 { font-size: clamp(48px,5.4vw,80px); font-weight: 500; line-height: 1.16; letter-spacing: -.06em; }
+.hero-copy { display: flex; align-items: flex-end; justify-content: space-between; gap: 48px; padding: 32px 0 28px; }
+.hero h1 { font-size: clamp(42px,4.3vw,64px); font-weight: 500; line-height: 1.16; letter-spacing: -.06em; }
 .hero h1>span { color: #a9bbae; }
 .hero-copy>p { font-size: 14px; line-height: 1.95; color: #abb7ae; padding-bottom: 5px; }
 .hero-meta { display: block; margin-top: 15px; font-size: 11px; color: #8b9d91; }
-.screen { width: min(1536px,calc(100% - 48px)); position: relative; margin: auto; background: #050607; }
+.screen { width: min(1600px,calc(100% - 48px)); position: relative; margin: auto; background: #050607; }
 .screen picture,.screen picture img,.screen video { height: auto; width: 100%; display: block; object-fit: contain; }
 .screen[data-framing="portrait"] { width: min(100%,660px); }
 .film-caption { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 20px; }
@@ -109,6 +109,7 @@ details p { max-width: 780px; line-height: 2; margin-top: 8px; color: #98a69c; }
 .footer-bottom { display: flex; justify-content: space-between; gap: 25px; border-top: 1px solid var(--line); padding-top: 24px; width: 100%; font-size: 11px; color: #87968b; line-height: 1.9; }
 .footer-bottom>a { color: #c0d0c4; white-space: nowrap; }
 .footer-bottom>a:first-of-type { margin-left: auto; }
+@media (min-width:1001px) { .hero h1 br { display: none; } }
 @media (max-width:1000px) and (min-width:701px) {
   .wrap { width: calc(100% - 64px); }
   .hero-copy { gap: 30px; padding-top: 36px; }

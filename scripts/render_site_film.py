@@ -1,242 +1,269 @@
-"""Original physically rendered hero film: Blender/Cycles, no GUI or browser.
-Run with Python 3.13 + bpy (or Blender background), then --format wide|portrait.
-The old illustrative media URLs remain for cached pages, not as the hero.
-"""
+"""Deterministic vector motion film. Skia paths/type, no Blender or browser."""
 import argparse
+from functools import lru_cache
 import math
-import json
 from pathlib import Path
-import shutil
 import time
 
-import bpy
-from mathutils import Vector
+import numpy as np
+from PIL import Image
+import skia
 
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "docs/evidence/hero-product"
-FPS, SECONDS = 24, 20
-
-
-def smooth(v):
-    v = max(0, min(1, v))
-    return v * v * (3 - 2 * v)
-
-
-def material(name, color, metal=0, rough=.3):
-    mat = bpy.data.materials.new(name)
-    mat.use_nodes = True
-    node = mat.node_tree.nodes.get("Principled BSDF")
-    node.inputs["Base Color"].default_value = (*color, 1)
-    node.inputs["Metallic"].default_value = metal
-    node.inputs["Roughness"].default_value = rough
-    return mat
+ROOT=Path(__file__).resolve().parents[1]
+OUT=ROOT/'docs/evidence/hero-motion'
+FPS,DURATION=60,22
+SIZES={'wide':(1600,900),'portrait':(900,1200)}
+BG='#080d0b';INK='#f4f5eb';LIME='#ceff68';DIM='#91a998';LINE='#344a3d'
+FONTDIR=Path('C:/Windows/Fonts')
 
 
-def block(name, size, location, mat, radius=.08):
-    bpy.ops.mesh.primitive_cube_add(size=1, location=location)
-    obj = bpy.context.object
-    obj.name = name
-    obj.dimensions = size
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    bevel = obj.modifiers.new("Machined edge", "BEVEL")
-    bevel.width = radius
-    bevel.segments = 5
-    obj.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
-    obj.data.materials.append(mat)
-    return obj
+def clamp(x):return max(0.,min(1.,x))
+def ease(x):
+    x=clamp(x);return x*x*(3-2*x)
+def out(x):return 1-(1-clamp(x))**3
+def lerp(a,b,t):return a+(b-a)*t
+def between(t,a,b):return ease((t-a)/(b-a))
+def color(value,alpha=1):
+    rgb=tuple(int(value[i:i+2],16) for i in (1,3,5));return skia.ColorSetARGB(round(255*clamp(alpha)),*rgb)
+def mix(a,b,t):
+    return '#'+''.join(f'{round(lerp(int(a[i:i+2],16),int(b[i:i+2],16),t)):02x}' for i in (1,3,5))
+def paint(c=INK,alpha=1,stroke=0):
+    p=skia.Paint(Color=color(c,alpha),AntiAlias=True)
+    if stroke:p.setStyle(skia.Paint.kStroke_Style);p.setStrokeWidth(stroke);p.setStrokeCap(skia.Paint.kRound_Cap)
+    return p
+@lru_cache(maxsize=160)
+def font(size,bold=False,latin=False):
+    name='bahnschrift.ttf' if latin else 'msyhbd.ttc' if bold else 'msyh.ttc'
+    f=skia.Font(skia.Typeface.MakeFromFile(str(FONTDIR/name)),size)
+    f.setSubpixel(True);return f
+
+def text(c,s,x,y,size=30,fill=INK,alpha=1,align='left',bold=False,latin=False):
+    f=font(round(size),bold,latin);w=f.measureText(s)
+    if align=='center':x-=w/2
+    if align=='right':x-=w
+    c.drawString(s,x,y,f,paint(fill,alpha))
+def line(c,x1,y1,x2,y2,fill=LINE,width=2,alpha=1):
+    c.drawLine(x1,y1,x2,y2,paint(fill,alpha,width))
+def rect(c,x,y,w,h,fill=LINE,stroke=0,alpha=1):
+    c.drawRect(skia.Rect.MakeXYWH(x,y,w,h),paint(fill,alpha,stroke))
+def circle(c,x,y,r,fill=LIME,stroke=0,alpha=1):c.drawCircle(x,y,r,paint(fill,alpha,stroke))
+def curve(c,coords,fill=LINE,width=2,alpha=1):
+    p=skia.Path();p.moveTo(*coords[:2]);p.cubicTo(*coords[2:]);c.drawPath(p,paint(fill,alpha,width))
+def check(c,x,y,scale=1,alpha=1):
+    line(c,x-16*scale,y,x-3*scale,y+13*scale,LIME,5*scale,alpha)
+    line(c,x-3*scale,y+13*scale,x+25*scale,y-20*scale,LIME,5*scale,alpha)
+def partial_line(c,x1,y1,x2,y2,p,fill=LIME,width=3):line(c,x1,y1,lerp(x1,x2,p),lerp(y1,y2,p),fill,width)
 
 
-def area(name, location, energy, size, color, target=(0,0,0), shape="DISK"):
-    data = bpy.data.lights.new(name, "AREA")
-    data.energy = energy
-    data.color = color
-    data.shape = shape
-    data.size = size
-    obj = bpy.data.objects.new(name, data)
-    bpy.context.collection.objects.link(obj)
-    obj.location = location
-    obj.rotation_euler = (Vector(target)-obj.location).to_track_quat('-Z','Y').to_euler()
-    return obj
+def camera(t,portrait):
+    # One world and clock. Fast reveal, slower settle, lateral/vertical handoffs.
+    phase=0
+    for a,b,src,dst in [(4.05,4.7,0,1),(7.55,8.15,1,2),(10.75,11.45,2,3),(15.4,16.1,3,4)]:
+        if t>=a:phase=lerp(src,dst,between(t,a,b))
+    spacing=1650 if portrait else 1800
+    zoom=1+.24*between(t,1.8,2.7)+.90*between(t,3.0,3.36)-1.14*between(t,3.6,4.08)
+    if 11.5<t<15.4:zoom=1+.22*between(t,11.5,11.9)-.22*between(t,12.7,13.7)
+    end=between(t,19.0,20.05)
+    focus=lerp(phase*spacing,2*spacing,end)
+    zoom=lerp(zoom,.135 if portrait else .17,end)
+    return (0,focus,zoom) if portrait else (focus,0,zoom)
 
 
-def label(parent, body, xyz, size, mat, name="Label"):
-    curve=bpy.data.curves.new(name,'FONT')
-    curve.body=body;curve.size=size;curve.align_x='CENTER';curve.align_y='CENTER'
-    curve.font=bpy.data.fonts.load('C:/Windows/Fonts/msyh.ttc',check_existing=True)
-    curve.extrude=.001
-    obj=bpy.data.objects.new(name,curve);bpy.context.collection.objects.link(obj)
-    obj.parent=parent;obj.location=xyz;obj.rotation_euler=(math.pi/2,0,0)
-    obj.data.materials.append(mat)
-    return obj
-
-
-def group(name):
-    obj=bpy.data.objects.new(name,None);bpy.context.collection.objects.link(obj);return obj
-
-
-def file_card(parent,name,kind,mat,ink,width=2.4,height=2.8):
-    root=group(name);root.parent=parent
-    plate=block(name+' body',(width,.17,height),(0,0,0),mat,.12);plate.parent=root
-    label(root,kind,(0,-.10,.35),.50,ink)
-    label(root,name,(0,-.105,-height*.32),.20 if width<2 else .26,ink)
-    return root
-
-
-def visible(root,on):
-    for obj in [root,*root.children_recursive]:obj.hide_render=not on
-
-
-def check(parent,location,mat):
-    root=group('Verified check');root.parent=parent;root.location=location
-    for points in [[(-.18,0,0),(0,0,-.15)],[(0,0,-.15),(.30,0,.22)]]:
-        start,end=map(Vector,points);direction=end-start
-        obj=block('Check stroke',(.075,.045,direction.length),(0,0,0),mat,.025)
-        obj.parent=root;obj.location=(start+end)/2
-        obj.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
-    return root
-
-
-def scene_setup(portrait=False):
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.samples=8
-    scene.render.use_persistent_data=True;scene.cycles.use_denoising=True;scene.cycles.device='GPU'
-    scene.cycles.max_bounces=4;scene.cycles.diffuse_bounces=1;scene.cycles.glossy_bounces=2
-    prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='OPTIX';prefs.get_devices()
-    for device in prefs.devices:device.use=device.type=='OPTIX'
-    scene.render.resolution_x,scene.render.resolution_y=(720,900) if portrait else (1152,720)
-    scene.render.resolution_percentage=100;scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGB';scene.render.fps=FPS
-    scene.view_settings.view_transform='AgX'
-    scene.world=bpy.data.worlds.new('Product studio');scene.world.use_nodes=True
-    scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.001,.001,.001,1)
-    scene.world.node_tree.nodes['Background'].inputs[1].default_value=.25
-    navy=material('MP4 facade',(.035,.075,.105),.35,.29)
-    green=material('Archive content',(.035,.22,.14),.55,.27)
-    paper=material('Readable file face',(.70,.73,.64),.12,.38)
-    gold=material('Content signal',(.78,.48,.13),.6,.28)
-    ink=material('Ivory lettering',(.88,.93,.85),0,.7)
-    dark=material('Dark ink',(.025,.055,.045),0,.7)
-    metal=material('Key and lock',(.52,.59,.58),.85,.25)
-    ground=material('Studio ground',(.011,.017,.019),.25,.4)
-    block('Ground',(200,200,.1),(0,0,-2.25),ground,.02)
-    area('Large key',(-4,-5,7),1800,5,(.88,.95,1))
-    area('Warm rim',(4,3,5),2000,4,(1,.86,.66))
-    area('Front readability',(0,-6,3),650,4,(.9,1,.95))
-    roots={name:group(name) for name in ['identify','volumes','password','nested','result']}
-    # The name is retained on the displaced facade; content is recognised, not renamed.
-    inner=file_card(roots['identify'],'内容：ZIP','ZIP',green,ink,2.7,3.2)
-    inner.location=(.75,.15,0)
-    facade=file_card(roots['identify'],'旅途.mp4','.MP4',navy,ink,2.7,3.2)
-    facade.location=(.75,-.16,0)
-    parts=[]
-    for i,name in enumerate(['项目.7z.001','项目.7z.002','附件.docx']):
-        part=file_card(roots['volumes'],name,'7Z' if i<2 else '.DOCX',green if i<2 else navy,ink,1.75,1.3 if portrait else 2.25)
-        parts.append(part)
-    group_ok=check(roots['volumes'],(0,-.5,-1.48),green)
-    archive=file_card(roots['password'],'已加密的卷组','7Z',green,ink,2.5,3.0)
-    archive.location=(.9,.2,0)
-    book=file_card(roots['password'],'已保存候选','密码本',navy,ink,1.5,2.0);book.location=(-1.8,0,0)
-    lock=group('Lock');lock.parent=roots['password'];lock.location=(.9,-.30,0)
-    body=block('Lock body',(.68,.25,.53),(0,0,0),gold,.09);body.parent=lock
-    bpy.ops.mesh.primitive_torus_add(major_radius=.23,minor_radius=.045,location=(0,0,0))
-    shackle=bpy.context.object;shackle.parent=lock;shackle.location=(0,0,.38);shackle.rotation_euler.x=math.pi/2;shackle.data.materials.append(metal)
-    key=group('Remembered key');key.parent=roots['password']
-    bpy.ops.mesh.primitive_torus_add(major_radius=.16,minor_radius=.045)
-    ring=bpy.context.object;ring.parent=key;ring.rotation_euler.x=math.pi/2;ring.data.materials.append(gold)
-    shaft=block('Key shaft',(.7,.065,.075),(.45,0,0),gold,.025);shaft.parent=key
-    tooth=block('Key tooth',(.085,.065,.17),(.7,0,-.06),gold,.02);tooth.parent=key
-    password_ok=check(roots['password'],(.9,-.6,1.1),green)
-    outer=file_card(roots['nested'],'卷组：外层7Z','7Z',green,ink,2.7,3.2)
-    nested=file_card(roots['nested'],'内层.zip','ZIP',navy,ink,2.05,2.5);nested.location=(0,.2,0)
-    data_files=[]
-    for i,name in enumerate(['照片.jpg','说明.txt']):
-        obj=file_card(roots['nested'],name,'JPG' if i==0 else 'TXT',paper,dark,1.25,1.65);obj.location=(0,.4,0);data_files.append(obj)
-    # Output remains still while the source alone moves into recycling, after success.
-    folder=file_card(roots['result'],'输出目录','文件已就位',green,ink,2.7,2.35);folder.location=(-.55,.2,0)
-    output_files=[]
-    for i,name in enumerate(['照片.jpg','说明.txt']):
-        obj=file_card(roots['result'],name,'JPG' if i==0 else 'TXT',paper,dark,1.1,1.45);obj.location=(-1.05+i*.95,-.18,.18);output_files.append(obj)
-    source=file_card(roots['result'],'旅途.mp4','.MP4',navy,ink,1.05,1.4);source.location=(2.4,-.05,1.5)
-    bpy.ops.mesh.primitive_cylinder_add(vertices=48,radius=.53,depth=.9,end_fill_type='NOTHING')
-    bin=bpy.context.object;bin.name='Recycle bin';bin.parent=roots['result'];bin.location=(2.45,.1,-1.15);bin.data.materials.append(metal)
-    label(roots['result'],'回收站',(2.45,-.5,-1.85),.20,ink)
-    result_ok=check(roots['result'],(-.55,-.5,1.6),green)
-    bpy.ops.object.camera_add();camera=bpy.context.object;scene.camera=camera;camera.data.lens=46;camera.data.clip_start=.01
-    return dict(scene=scene,camera=camera,roots=roots,facade=facade,parts=parts,group_ok=group_ok,key=key,shackle=shackle,password_ok=password_ok,outer=outer,nested=nested,data_files=data_files,source=source,result_ok=result_ok)
-
-
-def pose(objects,seconds,portrait):
-    scene=objects['scene'];camera=objects['camera']
-    chapter=0 if seconds<4.8 else 1 if seconds<8 else 2 if seconds<11 else 3 if seconds<16 else 4
-    names=['identify','volumes','password','nested','result']
-    for name,root in objects['roots'].items():visible(root,name==names[chapter])
-    camera.location=(2.1,-11.4,3.1)
-    target=Vector((0,.15,0))
-    camera.data.lens=46
-    if chapter==0:
-        p=smooth((seconds-1.25)/2.1)
-        objects['facade'].location=(-2.1*p+.75,-.16-.12*p,-.12*p)
-        objects['facade'].rotation_euler.z=-.10*p
-        camera.location=(2.6-.7*p,-10.5-.7*p,2.6+.4*p)
-    elif chapter==1:
-        t=seconds-4.8;fan=smooth(t/.8);join=smooth((t-1.65)/1.4)
-        for i,obj in enumerate(objects['parts']):
+def ribbon(c,t,portrait):
+    # The content stream is the cross-scene anchor, not an unrelated particle field.
+    spacing=1650 if portrait else 1800
+    for i in range(4):
+        pos=i*spacing
+        for j in range(5):
+            offset=(j-2)*14
             if portrait:
-                obj.location=((i-1)*.08*join, i*.08*join, (1-i)*(1.6-.1*join)*fan)
+                curve(c,(offset,pos+330,offset+80,pos+700,offset-80,pos+1000,offset,pos+spacing-330),LINE,1.5,.7)
             else:
-                obj.location=((i-1)*(2.12-.17*join)*fan,i*.08*join,0)
-            obj.rotation_euler.z=(i-1)*.035*(1-join)
-        visible(objects['group_ok'],t>2.15)
-    elif chapter==2:
-        t=seconds-8;verified=smooth((t-.8)/1.1)
-        objects['key'].location=(-1.65+2.05*verified,-.65,.35)
-        objects['shackle'].location.z=.38+.24*smooth((t-1.75)/.55)
-        visible(objects['password_ok'],t>1.7)
-    elif chapter==3:
-        t=seconds-11;first=smooth(t/1.4);second=smooth((t-1.9)/1.3)
-        objects['outer'].location=(-2.65*first,0,-.1*first);objects['outer'].rotation_euler.z=-.12*first
-        objects['nested'].location=(2.55*second,.2,0);objects['nested'].rotation_euler.z=.1*second
-        for i,obj in enumerate(objects['data_files']):
-            p=smooth((t-2.5)/1.3);obj.location=((i-.5)*1.42*p,-.15,.02);obj.scale=(p,p,p)
+                curve(c,(pos+480,offset,pos+850,offset+100,pos+1050,offset-100,pos+spacing-480,offset),LINE,1.5,.7)
+        for j in range(14):
+            travel=((t*.48+j/14)%1)
+            distance=lerp(420,spacing-420,travel)
+            fade=math.sin(math.pi*travel)*.7
+            if portrait:line(c,0,pos+distance-12,0,pos+distance+12,LIME,3,fade)
+            else:line(c,pos+distance-12,0,pos+distance+12,0,LIME,3,fade)
+
+
+def facade(c,t,p):
+    split=between(t,1.6,2.7);peak=between(t,2.55,2.85)*(1-between(t,3.35,3.75))
+    size=210 if p else 300
+    dark=mix(INK,BG,peak)
+    # Compressed stripes behind the extension shell, readable only as content.
+    for j in range(9):
+        yy=-165+j*40
+        xx=math.sin(j*.7+t*.9)*50
+        line(c,-500+xx,yy,500+xx,yy,LIME,1,.10*split)
+    text(c,'ZIP',0,85,size+15,mix(LIME,BG,peak),split,'center',True,True)
+    for top in [True,False]:
+        c.save();dy=(-1 if top else 1)*150*out(split)
+        c.translate((-1 if top else 1)*60*split,dy)
+        c.clipRect(skia.Rect.MakeXYWH(-900,-500 if top else 0,1800,500))
+        text(c,'.MP4',0,85,size,dark,1-split,'center',True,True);c.restore()
+    text(c,'旅途.mp4',0,-210 if p else -230,36 if p else 40,dark,1,'center')
+    line(c,-80,-172,80,-172,mix(DIM,BG,peak),2)
+    if split>.15:
+        reading=1-between(t,3.0,3.25)
+        text(c,'看内容，不看后缀。',0,225,42 if p else 50,dark,out((split-.15)/.7)*reading,'center',True)
+        text(c,'识别为 ZIP · 原文件名保留',0,280,24 if p else 27,mix(DIM,BG,peak),split*reading,'center')
+    # Small zip teeth create a graphic aperture which the first hero push enters.
+    for i in range(12):
+        xx=-210+i*38;yy=140
+        rect(c,xx,yy,21,7,mix(LIME,BG,peak),alpha=split*.65)
+
+
+def volumes(c,t,p):
+    arrival=out((t-4.55)/.55);match=between(t,5.7,6.75);verified=t>=6.9
+    left=-355 if p else -580;right=260 if p else 495
+    title='ZIP 内，发现三卷。'
+    text(c,title,0,-350 if p else -310,42 if p else 48,INK,arrival,'center',True)
+    rows=[-195,-35,125] if p else [-140,20,180]
+    for i,(name,yy) in enumerate(zip(['项目.7z.001','项目.7z.002','附件.docx'],rows)):
+        alpha=arrival if i<2 else out((t-5.2)/.5)
+        dx=(1-arrival)*420 if i<2 else (1-match)*520
+        dy=0 if i<2 else (1-match)*110
+        text(c,f'{i+1:02}',left,yy,45 if p else 66,LIME,arrival,latin=True)
+        line(c,left+82,yy+26,right,yy+26,LINE,2,arrival)
+        for j in range(24):
+            xx=left+86+j*(19 if p else 33)
+            line(c,xx,yy+26,xx,yy+34+(j%3)*4,LIME if verified else DIM,1,alpha*.5)
+        if i==2 and match<1:
+            text(c,'等待匹配',left+92,yy-15,25,DIM,arrival*(1-match))
+        text(c,name,left+92+dx,yy-14+dy,31 if p else 43,INK,alpha)
+        if i==2 and verified:
+            text(c,'卷003',right-10,yy-17,23,LIME,1,'right')
+    if p:
+        for yy in rows:curve(c,(right+5,yy+26,right+100,yy+26,right+75,320,70,320),LIME if verified else LINE,2,arrival)
+        text(c,'7Z',0,350,78,LIME if verified else DIM,arrival,'center',True,True)
+        if verified:check(c,108,325,.7)
     else:
-        t=seconds-16;done=t>.5;recycle=smooth((t-1.4)/1.7)
-        visible(objects['result_ok'],done)
-        source=objects['source'];source.location=(2.4,.05,1.5-2.6*recycle)
-        source.rotation_euler.y=.16*recycle
-        source.scale=(1-.62*recycle,)*3
-        if recycle>.96:visible(source,False)
-    if portrait:
-        camera.location.x=.7
-        camera.location.z=2.6
-    camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
-    scene.frame_set(int(seconds*FPS)+1)
+        for yy in rows:curve(c,(right+5,yy+26,right+100,yy+26,right+100,20,right+180,20),LIME if verified else LINE,2,arrival)
+        text(c,'7Z',right+225,48,94,LIME if verified else DIM,arrival,'center',True,True)
+        if verified:check(c,right+225,115,.8)
+    text(c,'唯一匹配，自动归组。' if verified else '先找到关联，再确定卷序。',0,435 if p else 355,28 if p else 32,LIME if verified else DIM,arrival,'center')
+
+
+def password(c,t,p):
+    enter=out((t-7.9)/.55);move=between(t,8.5,9.3);verified=t>=9.45;unlock=between(t,9.62,10.35)
+    text(c,'记住的密码，',0,-330 if p else -310,44 if p else 51,INK,enter,'center',True)
+    text(c,'自动接着用。',0,-268 if p else -242,44 if p else 51,INK,enter,'center',True)
+    text(c,'7Z',0,70,210 if p else 260,INK,enter,'center',True,True)
+    # A mask candidate travels through verification; the lock moves afterwards.
+    origin_y=285;yy=lerp(origin_y,108,move)
+    text(c,'已存候选',0,origin_y+75,25,DIM,enter,'center')
+    line(c,-110,origin_y+30,110,origin_y+30,LINE,2,enter)
+    if not verified:
+        for i in range(4):circle(c,(i-1.5)*22,yy,5,LIME,alpha=enter)
+    circle(c,0,108,38,LINE,2,enter)
+    if verified:check(c,0,105,1,1-unlock*.5)
+    for side in [-1,1]:
+        x=side*(110+230*unlock)
+        line(c,x,-130,x,130,LIME,5,enter*(1-unlock*.65))
+        line(c,x,-130,x-side*28,-130,LIME,5,enter*(1-unlock*.65))
+        line(c,x,130,x-side*28,130,LIME,5,enter*(1-unlock*.65))
+    if verified:
+        text(c,'验证通过',0,210,30,LIME,1,'center')
+        circle(c,0,0,170+300*unlock,LIME,2,(1-unlock)*.5)
+
+
+def file_result(c,name,mime,x,y,amount,p):
+    text(c,mime,x,y,72 if p else 88,INK,amount,'center',True,True)
+    line(c,x-105,y+28,x+105,y+28,LIME,3,amount)
+    text(c,name,x,y+80,27 if p else 32,INK,amount,'center')
+
+
+def nested(c,t,p):
+    reveal=between(t,11.45,12.3);opened=between(t,12.6,14.4);settle=between(t,14.4,15.1)
+    text(c,'这组 7Z → 内层.zip',0,-370 if p else -330,32,DIM,1,'center')
+    if p:
+        oy=-170;ox=0;w=650;h=330
+    else:oy=-25;ox=-230;w=760;h=470
+    scale=1+1.4*reveal
+    alpha=1-reveal
+    rect(c,ox-w*scale/2,oy-h*scale/2,w*scale,h*scale,LIME,3,alpha)
+    text(c,'7Z',ox-w*scale/2+30,oy-h*scale/2+65,46,LIME,alpha,latin=True)
+    inner_w=w*.62;inner_h=h*.64
+    rect(c,ox-inner_w/2,oy-inner_h/2,inner_w,inner_h,INK,2,1-opened*.75)
+    text(c,'ZIP',ox,oy+lerp(45,20,opened),lerp(128 if p else 170,58,opened),LIME,1,'center',True,True)
+    # The nested aperture splits into two output routes, not another card cut.
+    for i,(name,mime) in enumerate([('照片.jpg','JPG'),('说明.txt','TXT')]):
+        if p:tx=(i-.5)*330;ty=220
+        else:tx=420;ty=-100+i*270
+        x=lerp(ox,tx,opened);y=lerp(oy,ty,opened)
+        if opened>.05:
+            curve(c,(ox,oy+55,ox+70,oy+95,tx-70,ty-95,tx,ty-95),LIME,2,opened*.6)
+            file_result(c,name,mime,x,y,opened,p)
+    if settle:text(c,'里面还有一层，就继续解开。',0,420 if p else 365,30,INK,settle,'center')
+
+
+def recycle(c,x,y,alpha=1):
+    line(c,x-29,y-26,x+29,y-26,DIM,3,alpha)
+    line(c,x-22,y-19,x-17,y+31,DIM,3,alpha);line(c,x+22,y-19,x+17,y+31,DIM,3,alpha)
+    line(c,x-17,y+31,x+17,y+31,DIM,3,alpha)
+    line(c,x-10,y-36,x+10,y-36,DIM,3,alpha)
+
+
+def result(c,t,p):
+    enter=out((t-15.8)/.6);verified=t>=16.8;cleanup=between(t,17.65,18.8)
+    text(c,'文件，已经就位。',0,-315 if p else -285,48 if p else 64,INK,enter,'center',True)
+    text(c,'旅途 /',-290 if p else -490,-180,30,DIM,enter)
+    for i,(name,mime) in enumerate([('照片.jpg','JPG'),('说明.txt','TXT')]):
+        x=(i-.5)*(300 if p else 430);file_result(c,name,mime,x,-30,enter,p)
+    if verified:
+        check(c,0,155,1.2)
+        text(c,'全部校验通过',0,220,30,LIME,1,'center')
+    rx=250 if p else 520;ry=340 if p else 240
+    recycle(c,rx,ry,enter)
+    if cleanup<.98:text(c,'旅途.mp4',rx,lerp(ry-125,ry-5,cleanup),24,DIM,enter*(1-cleanup),'center')
+    text(c,'回收站',rx,ry+70,23,DIM,enter,'center')
+    text(c,'回收已开启 · 没有后续任务依赖' if cleanup else '校验期间，原包保留。',0,455 if p else 370,24,DIM,enter,'center')
+
+
+def render_frame(t,kind='wide'):
+    p=kind=='portrait';w,h=SIZES[kind]
+    surface=skia.Surface(w,h);c=surface.getCanvas()
+    flash=between(t,2.55,2.85)*(1-between(t,3.35,3.75))
+    c.clear(color(mix(BG,LIME,flash)))
+    # Letterbox opens into a full-bleed hero on the reveal beat.
+    aperture=between(t,2.45,2.95)
+    c.save();margin=lerp(50,0,aperture)
+    c.clipRect(skia.Rect.MakeXYWH(0,margin,w,h-margin*2))
+    cam_x,cam_y,zoom=camera(t,p)
+    c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-cam_x,-cam_y)
+    end=between(t,19.25,20.1)
+    # Dim the route map only as the final brand arrives. Scene identities persist.
+    c.saveLayerAlpha(None,round(255*(1-.82*end)))
+    ribbon(c,t,p)
+    spacing=1650 if p else 1800
+    for i,fn in enumerate([facade,volumes,password,nested,result]):
+        # Cull only out-of-view nodes, never restart their clocks at a cut.
+        center=i*spacing
+        if abs(center-(cam_y if p else cam_x))*zoom>max(w,h)+1100*zoom:continue
+        c.save();c.translate(0 if p else center,center if p else 0);fn(c,t,p);c.restore()
+    c.restore();c.restore();c.restore()
+    # Screen typography has its own timing; it does not zoom with the content.
+    overlay=mix(INK,BG,flash);subtle=mix(DIM,BG,flash)
+    text(c,'T解压',38,56,27,overlay,bold=True)
+    chapter=0 if t<4.1 else 1 if t<7.8 else 2 if t<11.1 else 3 if t<15.8 else 4
+    text(c,['识别伪装','改名分卷','密码复用','自动嵌套','结果与善后'][chapter],w-38,55,22,subtle,1,'right')
+    text(c,'源：旅途.mp4',38,h-45,22,subtle,1-end)
+    text(c,'功能动画 · 非软件录屏',w-38,h-45,18,subtle,1,'right')
+    brand=out((t-20.0)/.55)
+    if brand:
+        text(c,'T解压',w/2,h*.45,lerp(145 if p else 190,158 if p else 210,brand),INK,brand,'center',True)
+        text(c,'看内容，不看后缀。',w/2,h*.57,42 if p else 50,LIME,brand,'center',True)
+        text(c,'Windows 原生 · 3.63 MB · 免费开源',w/2,h*.66,25 if p else 29,DIM,brand,'center')
+    return surface.toarray(colorType=skia.ColorType.kRGBA_8888_ColorType)
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--format',choices=['wide','portrait'],default='wide')
-    parser.add_argument('--stills',action='store_true')
-    parser.add_argument('--start',type=int,default=1)
-    parser.add_argument('--end',type=int,default=FPS*SECONDS)
-    args=parser.parse_args();portrait=args.format=='portrait'
-    directory=OUT/args.format;directory.mkdir(parents=True,exist_ok=True)
-    objects=scene_setup(portrait)
-    frames=[24,84,159,234,331,453] if args.stills else range(args.start,args.end+1)
-    poses={};rendered=reused=0
-    for frame in frames:
-        pose(objects,(frame-1)/FPS,portrait);objects['scene'].render.filepath=str(directory/f'{frame:04d}.png')
-        # Holds share exactly the same camera/object state. Reuse their identical
-        # rendered pixels instead of spending GPU time on the same still pose.
-        state=tuple((obj.name,tuple(obj.location),tuple(obj.rotation_euler),tuple(obj.scale),obj.hide_render) for obj in bpy.context.scene.objects)
-        target=directory/f'{frame:04d}.png'
-        if state in poses:
-            shutil.copyfile(poses[state],target);reused+=1
-            print(f'STORY {args.format} {frame} held pose',flush=True)
-            continue
-        start=time.perf_counter();bpy.ops.render.render(write_still=True)
-        poses[state]=target;rendered+=1
-        print(f'STORY {args.format} {frame} {time.perf_counter()-start:.2f}s',flush=True)
-    if not args.stills:
-        (OUT/f'{args.format}-render-stats.json').write_text(json.dumps({'start':args.start,'end':args.end,'unique_rendered_poses':rendered,'held_frames_reused':reused}),encoding='utf8')
-
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--format',choices=['wide','portrait','all'],default='all');args=parser.parse_args()
+    OUT.mkdir(parents=True,exist_ok=True)
+    for kind in (['wide','portrait'] if args.format=='all' else [args.format]):
+        for t in [0,2.9,3.3,6.9,9.9,14.8,18.8,21.5]:
+            started=time.perf_counter();Image.fromarray(render_frame(t,kind)).save(OUT/f'{kind}-{t:.1f}.png');print(kind,t,round(time.perf_counter()-started,3),flush=True)
 
 if __name__=='__main__':main()
