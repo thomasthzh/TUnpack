@@ -1,87 +1,98 @@
 {
-  "verified_at_utc": "2026-11-17T08:27:06.802024+00:00",
+  "verified_at_utc": "2026-11-17T09:28:06.723487+00:00",
   "version": "0.13.0",
   "site": "https://tunpack.thomasthzh.top/",
-  "source_commit": "36fe940cfca980debdc2af3512e64f555eb90e9e",
+  "source_commit": "768ff268e01fbe529bb73bced2f3bc754f8d664d",
   "published": true,
   "site_checks": [
     {
       "path": "",
       "status": 200,
-      "bytes": 10477,
-      "mime": "text/html; charset=utf-8"
+      "bytes": 10994,
+      "mime": "text/html; charset=utf-8",
+      "bytes_match_published_source": true
     },
     {
-      "path": "styles.css?v=20261117-3",
+      "path": "styles.css?v=20261117-4",
       "status": 200,
-      "bytes": 15205,
-      "mime": "text/css; charset=utf-8"
+      "bytes": 13037,
+      "mime": "text/css; charset=utf-8",
+      "bytes_match_published_source": true
     },
     {
-      "path": "player.js?v=20261117-3",
+      "path": "player.js?v=20261117-4",
       "status": 200,
-      "bytes": 8153,
-      "mime": "text/javascript; charset=utf-8"
+      "bytes": 7923,
+      "mime": "text/javascript; charset=utf-8",
+      "bytes_match_published_source": true
     },
     {
-      "path": "download.js?v=20261117-3",
+      "path": "download.js?v=20261117-4",
       "status": 200,
       "bytes": 1359,
-      "mime": "text/javascript; charset=utf-8"
+      "mime": "text/javascript; charset=utf-8",
+      "bytes_match_published_source": true
     },
     {
       "path": "assets/mark.svg",
       "status": 200,
       "bytes": 2173,
-      "mime": "image/svg+xml"
+      "mime": "image/svg+xml",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117.zh-CN.vtt",
+      "path": "assets/hero-story-20261117.zh-CN.vtt",
       "status": 200,
-      "bytes": 344,
-      "mime": "text/vtt; charset=utf-8"
+      "bytes": 942,
+      "mime": "text/vtt; charset=utf-8",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117-cover.jpg",
+      "path": "assets/hero-story-20261117-cover.jpg",
       "status": 200,
-      "bytes": 50954,
-      "mime": "image/jpeg"
+      "bytes": 55411,
+      "mime": "image/jpeg",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117-wide.webp",
+      "path": "assets/hero-story-20261117-wide.webp",
       "status": 200,
-      "bytes": 24304,
-      "mime": "image/webp"
+      "bytes": 26782,
+      "mime": "image/webp",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117-portrait.webp",
+      "path": "assets/hero-story-20261117-portrait.webp",
       "status": 200,
-      "bytes": 22488,
-      "mime": "image/webp"
+      "bytes": 24550,
+      "mime": "image/webp",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117-wide.mp4",
+      "path": "assets/hero-story-20261117-wide.mp4",
       "status": 200,
-      "bytes": 1598579,
-      "mime": "video/mp4"
+      "bytes": 1375036,
+      "mime": "video/mp4",
+      "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-3d-20261117-portrait.mp4",
+      "path": "assets/hero-story-20261117-portrait.mp4",
       "status": 200,
-      "bytes": 1397334,
-      "mime": "video/mp4"
+      "bytes": 1140266,
+      "mime": "video/mp4",
+      "bytes_match_published_source": true
     }
   ],
   "media_ranges": [
     {
       "format": "wide",
       "status": 206,
-      "content_range": "bytes 0-1023/1598579"
+      "content_range": "bytes 0-1023/1375036"
     },
     {
       "format": "portrait",
       "status": 206,
-      "content_range": "bytes 0-1023/1397334"
+      "content_range": "bytes 0-1023/1140266"
     }
   ],
   "csp_media_self": true,
@@ -89,7 +100,7 @@
   "deployment": {
     "phase": "apply",
     "host": "tunpack.thomasthzh.top",
-    "active_root": "/srv/tunpack-site/releases/hero-20261117-cinema",
+    "active_root": "/srv/tunpack-site/releases/hero-20261117-product",
     "other_configuration_unchanged": true,
     "autosave_persisted": true,
     "previous_release_retained": true
@@ -98,60 +109,154 @@
     {
       "format": "wide",
       "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
-      "render_frames": 288,
+      "sequence_frames": 480,
       "render_fps": 24,
-      "duration_seconds": 12,
+      "duration_seconds": 20,
+      "cycles_frames_rendered": 301,
+      "held_frames_reused": 179,
       "render_size": [
-        1440,
-        900
+        1152,
+        720
       ],
       "delivery_size": [
-        1920,
-        900
+        1536,
+        720
       ],
-      "mp4_bytes": 1598579,
+      "mp4_bytes": 1375036,
       "full_h264_aac_decode": true
     },
     {
       "format": "portrait",
       "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
-      "render_frames": 288,
+      "sequence_frames": 480,
       "render_fps": 24,
-      "duration_seconds": 12,
+      "duration_seconds": 20,
+      "cycles_frames_rendered": 271,
+      "held_frames_reused": 209,
       "render_size": [
-        864,
-        1080
+        720,
+        900
       ],
       "delivery_size": [
-        864,
-        1080
+        720,
+        1100
       ],
-      "mp4_bytes": 1397334,
+      "mp4_bytes": 1140266,
       "full_h264_aac_decode": true
     }
   ],
-  "node_checks": 22,
+  "node_checks": 20,
   "static_references": 35,
+  "engine_story": {
+    "example": "generated MP4 prefix + ZIP containing encrypted 7z volumes (third renamed .docx) containing inner.zip",
+    "engine_ok": true,
+    "decoded_archives": 3,
+    "payload_matches": true,
+    "source_retained": true,
+    "saved_public_candidate_used": true,
+    "recycle_tested": false,
+    "scope": "One synthetic, uniquely resolvable three-part example. Does not imply all arbitrary renamed volumes or corrupt files can be recovered. Recycling is off; the film presents existing settings-controlled cleanup semantics, not an additional recycle test."
+  },
   "official_backup_download_bytes": 3626656,
   "official_backup_download_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
   "official_backup_is_licensed_7_file_release": true,
   "github_tag_and_assets_unchanged": true,
-  "design_reference": "User-specified Cangfeng: latest GitLab main read directly. Private source documents/credentials not redistributed.",
-  "validation_scope": "Original meshes, perspective cameras, PBR materials and lights rendered in Blender Cycles, 288 real frames per format. Authored and encoded frames inspected; no GUI/CU/browser automation or browser-screen acceptance. Aesthetic user approval not claimed.",
-  "native_scope": "Native application and seven-file 0.13.0 artifact unchanged; 292 earlier native checks remain scoped to that release, not rerun for website-only work.",
+  "validation_scope": "Original physical scenes, explanatory text and score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. Static holds reuse identical rendered pixels.",
+  "native_scope": "Native release and its seven-file artifact unchanged. Earlier 292 native checks not relabeled as rerun. One additional generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
   "github_pages_mirror": {
-    "run": 44046471549,
+    "run": 44055671013,
     "success": true,
     "verified_resources": [
-      "index.html",
-      "styles.css",
-      "player.js",
-      "download.js",
-      "assets/hero-3d-20261117-wide.mp4",
-      "assets/hero-3d-20261117-portrait.mp4",
-      "assets/hero-3d-20261117-wide.webp",
-      "assets/hero-3d-20261117-portrait.webp"
+      {
+        "path": "",
+        "status": 200,
+        "bytes": 10905,
+        "mime": "text/html; charset=utf-8",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "styles.css?v=20261117-4",
+        "status": 200,
+        "bytes": 12850,
+        "mime": "text/css; charset=utf-8",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "player.js?v=20261117-4",
+        "status": 200,
+        "bytes": 7716,
+        "mime": "application/javascript; charset=utf-8",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "download.js?v=20261117-4",
+        "status": 200,
+        "bytes": 1331,
+        "mime": "application/javascript; charset=utf-8",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/mark.svg",
+        "status": 200,
+        "bytes": 2152,
+        "mime": "image/svg+xml",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117.zh-CN.vtt",
+        "status": 200,
+        "bytes": 942,
+        "mime": "text/vtt; charset=utf-8",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117-cover.jpg",
+        "status": 200,
+        "bytes": 55411,
+        "mime": "image/jpeg",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117-wide.webp",
+        "status": 200,
+        "bytes": 26782,
+        "mime": "image/webp",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117-portrait.webp",
+        "status": 200,
+        "bytes": 24550,
+        "mime": "image/webp",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117-wide.mp4",
+        "status": 200,
+        "bytes": 1375036,
+        "mime": "video/mp4",
+        "bytes_match_published_source": true
+      },
+      {
+        "path": "assets/hero-story-20261117-portrait.mp4",
+        "status": 200,
+        "bytes": 1140266,
+        "mime": "video/mp4",
+        "bytes_match_published_source": true
+      }
+    ],
+    "media_ranges": [
+      {
+        "format": "wide",
+        "status": 206,
+        "content_range": "bytes 0-1023/1375036"
+      },
+      {
+        "format": "portrait",
+        "status": 206,
+        "content_range": "bytes 0-1023/1140266"
+      }
     ]
   },
-  "github_release_notes_and_homepage_updated": true
+  "github_release_notes_updated": true
 }
