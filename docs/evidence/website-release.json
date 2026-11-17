@@ -1,40 +1,40 @@
 {
-  "verified_at_utc": "2026-11-17T15:11:20.018450+00:00",
-  "version": "0.13.0",
+  "verified_at_utc": "2026-11-17T16:07:36.874312+00:00",
+  "version": "0.13.1",
   "site": "https://tunpack.thomasthzh.top/",
-  "source_commit": "8c4398d4b63aac03fa4024a4531543f2ee22b2ee",
+  "source_commit": "5147f9ca4e6e0908bdf53331890b9df8f013e7ab",
   "published": true,
   "site_checks": [
     {
       "path": "assets/Fluent-Icons-LICENSE.txt",
       "status": 200,
-      "bytes": 1078,
+      "bytes": 1099,
       "mime": "text/plain; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
       "path": "",
       "status": 200,
-      "bytes": 11199,
+      "bytes": 11326,
       "mime": "text/html; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "styles.css?v=20261117-8",
+      "path": "styles.css?v=20261118-1",
       "status": 200,
       "bytes": 13099,
       "mime": "text/css; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "player.js?v=20261117-8",
+      "path": "player.js?v=20261118-1",
       "status": 200,
       "bytes": 7923,
       "mime": "text/javascript; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "download.js?v=20261117-8",
+      "path": "download.js?v=20261118-1",
       "status": 200,
       "bytes": 1359,
       "mime": "text/javascript; charset=utf-8",
@@ -50,7 +50,7 @@
     {
       "path": "assets/hero-icons-polish-20261117.zh-CN.vtt",
       "status": 200,
-      "bytes": 1054,
+      "bytes": 1089,
       "mime": "text/vtt; charset=utf-8",
       "bytes_match_published_source": true
     },
@@ -107,7 +107,7 @@
   "deployment": {
     "phase": "apply",
     "host": "tunpack.thomasthzh.top",
-    "active_root": "/srv/tunpack-site/releases/hero-20261117-icons-polish",
+    "active_root": "/srv/tunpack-site/releases/native-0131-20261118",
     "other_configuration_unchanged": true,
     "autosave_persisted": true,
     "previous_release_retained": true
@@ -154,14 +154,14 @@
     "recycle_tested": false,
     "scope": "One synthetic, uniquely resolvable three-part example. Does not imply all arbitrary renamed volumes or corrupt files can be recovered. Recycling is off; the film presents existing settings-controlled cleanup semantics, not an additional recycle test."
   },
-  "official_backup_download_bytes": 3626656,
-  "official_backup_download_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
+  "official_backup_download_bytes": 3632864,
+  "official_backup_download_sha256": "f978497347b81e3d83825ef9bfeb8c2f21e291878ae82a792dbbb621dc9d56b6",
   "official_backup_is_licensed_7_file_release": true,
   "github_tag_and_assets_unchanged": true,
   "validation_scope": "Continuous shared package/output icon actors, pointer actions, a foreground ZIP reveal, camera timing and synchronized original score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. 60fps film from pinned Microsoft Fluent SVG paths and the native T brand; no raster illustration, Blender or CU.",
-  "native_scope": "Native release and its seven-file artifact unchanged. This film-only edit leaves the public native release untouched and does not relabel earlier native checks as rerun. The previously generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
+  "native_scope": "Native 0.13.1 rebuilt in an isolated public source checkout and passed all nine CTest groups, including actual SDK ZIP disk-relative volume tests and production queue flow. Earlier real 16-volume read-only body verification is reused; the latest real disk-writing diagnostic reached 22.98 GB before its 1500-second wrapper limit, so full real disk extraction is not claimed. No GUI automation or recycling.",
   "github_pages_mirror": {
-    "run": 44111209448,
+    "run": 44121462873,
     "success": true,
     "verified_resources": [
       {
@@ -174,26 +174,26 @@
       {
         "path": "",
         "status": 200,
-        "bytes": 11110,
+        "bytes": 11236,
         "mime": "text/html; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "styles.css?v=20261117-8",
+        "path": "styles.css?v=20261118-1",
         "status": 200,
         "bytes": 12911,
         "mime": "text/css; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "player.js?v=20261117-8",
+        "path": "player.js?v=20261118-1",
         "status": 200,
         "bytes": 7716,
         "mime": "application/javascript; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "download.js?v=20261117-8",
+        "path": "download.js?v=20261118-1",
         "status": 200,
         "bytes": 1331,
         "mime": "application/javascript; charset=utf-8",
@@ -263,13 +263,17 @@
     ]
   },
   "github_release_notes_updated": true,
+  "previous_0130_tag_assets_and_legacy_download_preserved": true,
+  "github_primary_download_matches_0131_backup": true,
   "github_api_verification": {
-    "method": "Connected GitHub tool, actual repository release/tag/workflow REST GET responses",
-    "fetched_at_utc": "2026-11-17T15:11:14.840Z",
+    "method": "Actual GitHub REST GET responses via the connected GitHub tool",
+    "fetched_at_utc": "2026-11-17T16:06:35.936Z",
     "source_urls": {
+      "releases/tags/v0.13.1": "https://api.github.com/repos/thomasthzh/TUnpack/releases/tags/v0.13.1",
+      "git/ref/tags/v0.13.1": "https://api.github.com/repos/thomasthzh/TUnpack/git/ref/tags/v0.13.1",
       "releases/tags/v0.13.0": "https://api.github.com/repos/thomasthzh/TUnpack/releases/tags/v0.13.0",
       "git/ref/tags/v0.13.0": "https://api.github.com/repos/thomasthzh/TUnpack/git/ref/tags/v0.13.0",
-      "actions/workflows/site.yml/runs?head_sha=8c4398d4b63aac03fa4024a4531543f2ee22b2ee": "https://api.github.com/repos/thomasthzh/TUnpack/actions/runs?head_sha=8c4398d4b63aac03fa4024a4531543f2ee22b2ee&per_page=5"
+      "actions/workflows/site.yml/runs?head_sha=5147f9ca4e6e0908bdf53331890b9df8f013e7ab": "https://api.github.com/repos/thomasthzh/TUnpack/actions/runs?head_sha=5147f9ca4e6e0908bdf53331890b9df8f013e7ab&per_page=5"
     }
   }
 }

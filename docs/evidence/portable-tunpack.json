@@ -36,5 +36,7 @@
   "sha256": "f978497347b81e3d83825ef9bfeb8c2f21e291878ae82a792dbbb621dc9d56b6",
   "resource_check": "PASS TUnpack brand metadata and nine native ICO sizes; no window created",
   "zip_crc_check": true,
-  "published": false
+  "published": true,
+  "release_url": "https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.1",
+  "source_commit": "4ca8ea0c23fd743176e94af25f931ae44772ff8a"
 }
