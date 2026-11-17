@@ -15,6 +15,7 @@
   const framing = window.matchMedia("(max-width: 700px)");
   const screen = document.querySelector("#film-screen");
   const poster = document.querySelector("#film-poster");
+  const hero = document.querySelector("#hero-stage");
   let loaded = false;
   let visible = false;
   let pageActive = true;
@@ -34,11 +35,12 @@
     if (loaded) return;
     const portrait = framing.matches && Boolean(video.dataset.srcPortrait);
     video.dataset.framing = portrait ? "portrait" : "wide";
-    video.width = portrait ? 720 : 1280;
-    video.height = portrait ? 900 : 720;
+    video.width = portrait ? Number(video.dataset.portraitWidth || 720) : Number(video.dataset.wideWidth || 1280);
+    video.height = portrait ? Number(video.dataset.portraitHeight || 900) : Number(video.dataset.wideHeight || 720);
     const selectedPoster = portrait ? video.dataset.posterPortrait : video.dataset.posterWide;
     if (selectedPoster) video.poster = selectedPoster;
     if (screen) screen.dataset.framing = video.dataset.framing;
+    if (hero) hero.dataset.framing = video.dataset.framing;
   }
   function load() {
     if (loaded) return;
@@ -53,7 +55,11 @@
   video.hidden = false;
   if (poster) poster.hidden = true;
   framing.addEventListener("change", chooseFraming);
+  function syncHero() {
+    if (hero) hero.dataset.detail = String(!video.paused && !video.ended && video.currentTime < 3.2);
+  }
   function syncControls() {
+    syncHero();
     const playing = !video.paused && !video.ended;
     toggle.querySelector("[data-play-icon]").textContent = playing ? "Ⅱ" : "▷";
     toggle.querySelector("[data-play-label]").textContent = playing ? "暂停" : "播放";
@@ -115,6 +121,7 @@
     if (!video.muted) userPlay();
   });
   fullscreen.addEventListener("click", async () => {
+    load(); // Fullscreen must expose native play controls even before first playback.
     try {
       if (video.requestFullscreen) await video.requestFullscreen();
       else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
@@ -124,6 +131,7 @@
     }
   });
   video.addEventListener("play", () => {
+    syncHero();
     suspending = false;
     if (!wantsPlayback) {
       userChoice = true;
@@ -146,7 +154,9 @@
       pendingSeek = null;
     }
   });
+  video.addEventListener("ended", syncControls);
   video.addEventListener("error", () => {
+    if (hero) hero.dataset.detail = "false";
     status.textContent = "影片暂时无法载入，可以使用页尾的下载链接。";
   });
   chapters.forEach((button) => {
@@ -162,6 +172,7 @@
     });
   });
   video.addEventListener("timeupdate", () => {
+    syncHero();
     for (const button of chapters) {
       const active =
         video.currentTime >= Number(button.dataset.time) &&

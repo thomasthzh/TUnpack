@@ -19,15 +19,15 @@ class Element {
 function setup({ reduced = false, saveData = false, observer = true, narrow = false, legacy = false } = {}) {
   const document = new Element(), window = new Element(), motion = new Element(), connection = new Element(), framing = new Element();
   framing.matches = narrow; motion.matches = reduced; connection.saveData = saveData; document.hidden = false;
-  const ids = ['product-film', 'film-actions', 'film-toggle', 'film-sound', 'film-fullscreen', 'film-status', 'film-screen', 'film-poster'];
+  const ids = ['product-film', 'film-actions', 'film-toggle', 'film-sound', 'film-fullscreen', 'film-status', 'film-screen', 'film-poster', 'hero-stage'];
   const elements = Object.fromEntries(ids.map(id => [id, new Element()]));
   const video = elements['product-film'];
-  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4', srcPortrait: 'assets/portrait.mp4', posterWide: 'wide.webp', posterPortrait: 'portrait.webp' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 24, playCalls: 0 });
+  Object.assign(video, { dataset: { src: 'assets/tunpack-film.mp4', srcPortrait: 'assets/portrait.mp4', posterWide: 'wide.webp', posterPortrait: 'portrait.webp' }, paused: true, muted: true, ended: false, readyState: 0, currentTime: 0, duration: 12, playCalls: 0 });
   if (legacy) { delete video.dataset.srcPortrait; delete video.dataset.posterPortrait; delete video.dataset.posterWide; video.poster = 'legacy.webp'; }
   video.querySelector('track').dataset.src = 'assets/film.zh-CN.vtt';
   video.play = () => { video.playCalls++; if (video.reject) return Promise.reject(Object.assign(new Error('blocked'), {name: 'NotAllowedError'})); video.paused = false; video.emit('play'); return Promise.resolve(); };
   video.pause = () => { if (!video.paused) { video.paused = true; video.emit('pause'); } };
-  const chapters = [0, 7.5, 15].map((time, i) => Object.assign(new Element(), { dataset: {time: String(time), end: String([7.5, 15, 24][i])} }));
+  const chapters = [0, 3.2, 8.2].map((time, i) => Object.assign(new Element(), { dataset: {time: String(time), end: String([3.2, 8.2, 12][i])} }));
   document.querySelector = name => elements[name.slice(1)]; document.querySelectorAll = () => chapters;
   window.matchMedia = query => query.includes("max-width") ? framing : motion;
   let onIntersection;
@@ -55,7 +55,7 @@ test('Reduced motion and save-data keep poster until explicit chapter playback',
   for (const option of [{ reduced: true }, { saveData: true }]) {
     const e = setup(option); e.intersect(true); await tick(); assert.equal(e.video.src, undefined); assert.equal(e.video.playCalls, 0);
     assert.equal(e.chapters[2].disabled, false); e.chapters[2].emit('click'); await tick(); assert.equal(e.video.paused, false); assert.equal(e.video.scrolled, true);
-    e.video.readyState = 1; e.video.emit('loadedmetadata'); assert.equal(e.video.currentTime, 15); e.video.emit('timeupdate'); assert.equal(e.chapters[2].attrs['aria-current'], 'true'); assert.equal(e.chapters[0].attrs['aria-current'], undefined);
+    e.video.readyState = 1; e.video.emit('loadedmetadata'); assert.equal(e.video.currentTime, 8.2); e.video.emit('timeupdate'); assert.equal(e.chapters[2].attrs['aria-current'], 'true'); assert.equal(e.chapters[0].attrs['aria-current'], undefined);
   }
 });
 
@@ -111,4 +111,24 @@ test('Wide film also keeps position and framing across rotation after loading', 
 
 test('Cached prior homepage keeps its original poster when the new controller arrives', async () => {
   const e=setup({legacy:true,reduced:true,narrow:true});e.intersect(true);assert.equal(e.video.poster,'legacy.webp');assert.equal(e.video.src,undefined);e['film-toggle'].emit('click');await tick();assert.equal(e.video.src,'assets/tunpack-film.mp4');assert.equal(e.video.width,1280);
+});
+
+test('Macro shot yields the title field; the full reveal brings it back', async () => {
+  const e=setup();e.intersect(true);await tick();assert.equal(e['hero-stage'].dataset.detail,'true');e.video.currentTime=4;e.video.emit('timeupdate');assert.equal(e['hero-stage'].dataset.detail,'false');
+});
+
+test('New 3D delivery uses declared physical-film framing and freezes after start', async () => {
+  const e=setup({reduced:true,narrow:true});Object.assign(e.video.dataset,{wideWidth:'1920',wideHeight:'900',portraitWidth:'864',portraitHeight:'1080'});e.framing.emit('change');assert.equal(e.video.width,864);assert.equal(e.video.height,1080);e.intersect(true);e['film-toggle'].emit('click');await tick();e.framing.matches=false;e.framing.emit('change');assert.equal(e.video.width,864);
+});
+
+test('Pausing, media error and ending restore a readable hero title', async () => {
+  const e=setup();e.intersect(true);await tick();assert.equal(e['hero-stage'].dataset.detail,'true');e['film-toggle'].emit('click');assert.equal(e['hero-stage'].dataset.detail,'false');e['film-toggle'].emit('click');await tick();assert.equal(e['hero-stage'].dataset.detail,'true');e.video.emit('error');assert.equal(e['hero-stage'].dataset.detail,'false');e.video.ended=true;e.video.emit('ended');assert.equal(e['hero-stage'].dataset.detail,'false');
+});
+
+test('Frozen portrait media also freezes the stacked hero layout marker across rotation', async () => {
+  const e=setup({narrow:true});e.intersect(true);await tick();e.framing.matches=false;e.framing.emit('change');assert.equal(e['hero-stage'].dataset.framing,'portrait');assert.equal(e['film-screen'].dataset.framing,'portrait');
+});
+
+test('Explicit fullscreen from a reduced-motion poster prepares native controls without forcing play', async () => {
+  const e=setup({reduced:true,narrow:true});e.intersect(true);assert.equal(e.video.src,undefined);e['film-fullscreen'].emit('click');await tick();assert.equal(e.video.src,'assets/portrait.mp4');assert.equal(e.video.controls,true);assert.equal(e.video.paused,true);assert.equal(e.video.playCalls,0);
 });

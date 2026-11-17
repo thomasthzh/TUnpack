@@ -1,6 +1,6 @@
 # T解压
 
-[官网与产品短片](https://thomasthzh.github.io/TUnpack/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0)
+[官网与产品短片](https://tunpack.thomasthzh.top/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0)
 
 Windows x64 原生轻量解压工具，当前版本 0.13.0。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
 

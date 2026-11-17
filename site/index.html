@@ -6,18 +6,18 @@
   <meta name="theme-color" content="#07090a">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="description" content="T解压，原生轻量的 Windows 解压工具。按内容识别伪装压缩包，理顺密码、分卷与嵌套。免费开源，下载即用。">
-  <meta property="og:title" content="T解压 · 把复杂，解开。">
+  <meta property="og:title" content="T解压 · 解开，不止一层。">
   <meta property="og:description" content="伪装后缀、加密分卷、层层嵌套。让解压回到一件简单的事。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:url" content="https://thomasthzh.github.io/TUnpack/">
-  <meta property="og:image" content="https://thomasthzh.github.io/TUnpack/assets/tunpack-20261117-cover.jpg">
-  <link rel="canonical" href="https://thomasthzh.github.io/TUnpack/">
+  <meta property="og:url" content="https://tunpack.thomasthzh.top/">
+  <meta property="og:image" content="https://tunpack.thomasthzh.top/assets/hero-3d-20261117-cover.jpg">
+  <link rel="canonical" href="https://tunpack.thomasthzh.top/">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261117-2">
-  <script src="player.js?v=20261117-2" defer></script>
-  <script src="download.js?v=20261117-2" defer></script>
-  <title>T解压 · 把复杂，解开。</title>
+  <link rel="stylesheet" href="styles.css?v=20261117-3">
+  <script src="player.js?v=20261117-3" defer></script>
+  <script src="download.js?v=20261117-3" defer></script>
+  <title>T解压 · 解开，不止一层。</title>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -27,21 +27,21 @@
     <a class="button small" href="#download">免费下载 <span aria-hidden="true">↓</span></a>
   </header>
   <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero" id="hero-stage" aria-labelledby="hero-title">
       <div class="hero-copy wrap">
-        <h1 id="hero-title">把复杂，解开。</h1>
-        <p>伪装后缀、加密分卷、层层嵌套。<br class="mobile-break">让解压回到一件简单的事。</p>
+        <h1 id="hero-title">解开，<br><span>不止一层。</span></h1>
+        <p>看内容，识格式。<br>密码、分卷、嵌套，一次交给队列。</p>
       </div>
       <figure id="film" class="film">
         <div class="screen" id="film-screen">
-          <picture id="film-poster"><source media="(max-width: 700px)" srcset="assets/tunpack-20261117-portrait.webp"><img src="assets/tunpack-20261117-wide.webp" width="1280" height="720" alt="T解压产品演绎：识别改名压缩包，逐层展开内容。"></picture>
-          <video id="product-film" hidden width="1280" height="720" controls playsinline muted loop preload="none" data-src="assets/tunpack-20261117-wide.mp4" data-src-portrait="assets/tunpack-20261117-portrait.mp4" data-poster-wide="assets/tunpack-20261117-wide.webp" data-poster-portrait="assets/tunpack-20261117-portrait.webp" aria-label="T解压 24 秒产品演绎" aria-describedby="film-description">
-            <track kind="captions" srclang="zh-CN" label="中文动作说明" data-src="assets/film.zh-CN.vtt">
-            <p>浏览器无法播放：<a href="assets/tunpack-20261117-wide.mp4">下载 MP4</a>或阅读下方文字说明。</p>
+          <picture id="film-poster"><source media="(max-width: 700px)" srcset="assets/hero-3d-20261117-portrait.webp"><img src="assets/hero-3d-20261117-wide.webp" width="1920" height="900" alt="T解压原创3D概念影片：金属T主体与层叠压缩结构。"></picture>
+          <video id="product-film" hidden width="1920" height="900" controls playsinline muted loop preload="none" data-src="assets/hero-3d-20261117-wide.mp4" data-src-portrait="assets/hero-3d-20261117-portrait.mp4" data-wide-width="1920" data-wide-height="900" data-portrait-width="864" data-portrait-height="1080" data-poster-wide="assets/hero-3d-20261117-wide.webp" data-poster-portrait="assets/hero-3d-20261117-portrait.webp" aria-label="T解压 12 秒原创3D英雄视频" aria-describedby="film-description">
+            <track kind="captions" srclang="zh-CN" label="中文动作说明" data-src="assets/hero-3d-20261117.zh-CN.vtt">
+            <p>浏览器无法播放：<a href="assets/hero-3d-20261117-wide.mp4">下载 MP4</a>或阅读下方文字说明。</p>
           </video>
         </div>
         <figcaption class="film-caption wrap">
-          <p>从一份伪装文件，到井然有序。<small>24 秒功能演绎</small></p>
+          <p>以层为序。<small>12 秒原创 3D 影片</small></p>
           <div id="film-actions" class="film-actions" hidden>
             <button type="button" id="film-toggle" aria-label="播放影片"><span data-play-icon aria-hidden="true">▷</span> <span data-play-label>播放</span></button>
             <button type="button" id="film-sound" aria-pressed="false"><span aria-hidden="true">♪</span> <span data-sound-label>开启声音</span></button>
@@ -49,41 +49,41 @@
           </div>
         </figcaption>
         <p id="film-status" class="status wrap" role="status" aria-live="polite"></p>
-        <noscript><p class="wrap film-description"><a href="assets/tunpack-20261117-wide.mp4">播放横幅 MP4</a> · <a href="assets/tunpack-20261117-portrait.mp4">播放手机竖幅</a> · <a href="assets/film.zh-CN.vtt">阅读动作字幕</a></p></noscript>
+        <noscript><p class="wrap film-description"><a href="assets/hero-3d-20261117-wide.mp4">播放横幅 MP4</a> · <a href="assets/hero-3d-20261117-portrait.mp4">播放手机竖幅</a> · <a href="assets/hero-3d-20261117.zh-CN.vtt">阅读动作字幕</a></p></noscript>
       </figure>
       <div class="chapters wrap" aria-label="影片章节">
-        <button type="button" disabled data-time="0" data-end="7.5"><span class="index">01</span><span><strong>看内容，不猜后缀。</strong><small>识别改名压缩包与部分 MP4 前缀伪装。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
-        <button type="button" disabled data-time="7.5" data-end="15"><span class="index">02</span><span><strong>密码、分卷，一次理顺。</strong><small>候选优先验证，缺卷清楚提示。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
-        <button type="button" disabled data-time="15" data-end="24"><span class="index">03</span><span><strong>层层展开，结果就位。</strong><small>自动解开嵌套，内层失败可单独重试。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
+        <button type="button" disabled data-time="0" data-end="3.2"><span class="index">01</span><span><strong>轮廓，初现。</strong><small>从暗部与金属细节，走近主体。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
+        <button type="button" disabled data-time="3.2" data-end="8.2"><span class="index">02</span><span><strong>结构，解开。</strong><small>外壳分离，内部层片徐徐展开。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
+        <button type="button" disabled data-time="8.2" data-end="12"><span class="index">03</span><span><strong>层次，尽现。</strong><small>同一个主体，以另一种视角完整呈现。</small></span><span class="arrow" aria-hidden="true">↗</span></button>
       </div>
-      <p id="film-description" class="film-description wrap">影片为功能演绎，非实际录屏。格式和伪装识别取决于文件内容及完整性；密码来自你保存、导入或提供的候选，不进行无边界暴力破解。</p>
+      <p id="film-description" class="film-description wrap">原创 3D 品牌概念影片，非软件录屏。实际能力与使用方式见下方。</p>
     </section>
 
     <section class="workflow wrap" aria-labelledby="workflow-title">
-      <div class="section-heading"><h2 id="workflow-title">交给队列。<br><span>把时间留给自己。</span></h2><p>一批文件，一个工作台。<br>从拖入到找到结果，每一步都有交代。</p></div>
+      <div class="section-heading"><h2 id="workflow-title">一批文件，<br><span>一处处理。</span></h2><p>从拖入到找到结果。<br>重要的，是每一步都接得住。</p></div>
       <ol class="steps">
-        <li><span class="index">01</span><div><h3>拖进来</h3><p>文件、文件夹都能加入，也能手动添加。原生队列支持多选、排序和任务专用设置。</p></div></li>
-        <li><span class="index">02</span><div><h3>按你的方式解开</h3><p>默认在原包旁输出，也可指定目录。密码本由 Windows 加密保存；遇到缺卷、密码或校验问题，提示具体位置。</p></div></li>
-        <li><span class="index">03</span><div><h3>直接找到结果</h3><p>嵌套包逐层展开，同名内容自动换名保留。成功后可按设置将源包送入回收站；失败不会清理原包。</p></div></li>
+        <li><span class="index">01</span><div><h3>先认出内容。</h3><p>识别改名压缩包与受支持的前缀伪装。文件、文件夹都能拖入，也能手动加入；分卷缺失或有歧义时，给出明确提示。</p></div></li>
+        <li><span class="index">02</span><div><h3>再逐层解开。</h3><p>复用你保存、导入或提供的密码，优先验证候选。理顺分卷，展开嵌套；遇到内层问题，可以单独准备重试，不重复解压外层。</p></div></li>
+        <li><span class="index">03</span><div><h3>让结果归位。</h3><p>默认在原包旁输出，也可指定目录。已有同名内容使用新名称保留；直接定位结果与问题包。失败保留源包和已解内容。</p></div></li>
       </ol>
       <div class="continuity"><p><strong>中途有事，也接得住。</strong>完成当前项后暂停，或下次打开恢复队列。失败内层可独立准备重试，保留外层记录和已解内容。</p><a href="https://github.com/thomasthzh/TUnpack#readme">查看完整使用说明 <span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="download wrap" id="download" aria-labelledby="download-title">
-      <div class="download-heading"><h2 id="download-title">轻装上阵。<br><span>即刻解开。</span></h2><div class="download-action">
+      <div class="download-heading"><h2 id="download-title">下载<br><span>T解压。</span></h2><div class="download-action">
         <a id="download-primary" class="button primary" href="https://github.com/thomasthzh/TUnpack/releases/download/v0.13.0/TUnpack-0.13.0-windows-x64.zip">下载 Windows 便携版 <span aria-hidden="true">↓</span></a>
         <p>v0.13.0 · Windows 10 / 11 x64 · 3.63 MB</p>
         <p id="platform-note" class="platform-note">手机上浏览？可复制下方链接，稍后在 Windows 电脑上打开。</p>
-        <div class="download-alternatives"><a class="text-link" href="https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0">GitHub 发布页 <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/thomasthzh/TUnpack/releases/download/v0.13.0/SHA256SUMS.txt">校验文件 <span aria-hidden="true">↓</span></a></div>
+        <div class="download-alternatives"><a class="text-link" href="https://tunpack.thomasthzh.top/downloads/T%E8%A7%A3%E5%8E%8B-portable.zip">官网备用下载 <span aria-hidden="true">↓</span></a><a class="text-link" href="https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.0">GitHub 发布页 <span aria-hidden="true">↗</span></a><a class="text-link" href="https://github.com/thomasthzh/TUnpack/releases/download/v0.13.0/SHA256SUMS.txt">校验文件 <span aria-hidden="true">↓</span></a></div>
       </div></div>
       <div class="download-help"><p><strong>默认：每个任务及其嵌套包全部解压成功后，原包移入回收站。</strong>可在开始前关闭回收选项；失败会保留原包。便携版免安装，密码本与工作台状态保存在当前 Windows 用户目录。</p>
         <div class="transfer"><label for="download-link">留给另一台电脑</label><div><input id="download-link" type="url" readonly value="https://github.com/thomasthzh/TUnpack/releases/download/v0.13.0/TUnpack-0.13.0-windows-x64.zip" aria-label="Windows 便携包下载链接"><button id="copy-download" type="button" hidden>复制链接</button></div></div>
       </div>
       <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
       <div class="install"><h3>无需安装，三步开始。</h3><ol><li><span class="index">01</span><p>展开下载的 ZIP。<br>保留文件夹内全部文件。</p></li><li><span class="index">02</span><p>运行 <code>T解压.exe</code>。<br>无需 .NET、Python 或 WebView。</p></li><li><span class="index">03</span><p>拖入待解文件，检查输出和选项。<br>点击“开始全部”。</p></li></ol></div>
-      <details><summary>首次下载与系统提示</summary><p>此版本尚未进行数字签名，Windows 可能显示来源或信誉提示。请只从本页链接的 GitHub Release 下载；可用同页校验文件核对下载。若系统提示拦截，先核对来源与文件，不必关闭系统防护。当前仅提供 Windows x64 便携版。</p></details>
+      <details><summary>首次下载与系统提示</summary><p>此版本尚未进行数字签名，Windows 可能显示来源或信誉提示。请从本页的官方站点或 GitHub Release 下载，并用同页校验文件核对。若系统提示拦截，先核对来源与文件，不必关闭系统防护。当前仅提供 Windows x64 便携版。</p></details>
     </section>
   </main>
-  <footer class="footer wrap"><a class="brand" href="./"><img src="assets/mark.svg" width="27" height="27" alt="">T解压</a><p>轻一点，顺一点。</p><nav aria-label="页脚"><a href="https://github.com/thomasthzh/TUnpack">源代码</a><a href="https://github.com/thomasthzh/TUnpack/issues">反馈问题</a><a href="https://github.com/thomasthzh/TUnpack/blob/main/LICENSE">MIT 许可</a></nav><div class="footer-bottom"><span>© 2026 T解压 · 免费开源<br>基于 bit7z 与 7-Zip ZS，第三方组件遵循各自许可。</span><a href="assets/tunpack-20261117-wide.mp4">下载横幅短片 <span aria-hidden="true">↓</span></a><a href="assets/tunpack-20261117-portrait.mp4">下载竖幅短片 <span aria-hidden="true">↓</span></a></div></footer>
+  <footer class="footer wrap"><a class="brand" href="./"><img src="assets/mark.svg" width="27" height="27" alt="">T解压</a><p>轻一点，顺一点。</p><nav aria-label="页脚"><a href="https://github.com/thomasthzh/TUnpack">源代码</a><a href="https://github.com/thomasthzh/TUnpack/issues">反馈问题</a><a href="https://github.com/thomasthzh/TUnpack/blob/main/LICENSE">MIT 许可</a></nav><div class="footer-bottom"><span>© 2026 T解压 · 免费开源<br>基于 bit7z 与 7-Zip ZS，第三方组件遵循各自许可。</span><a href="assets/hero-3d-20261117-wide.mp4">下载横幅短片 <span aria-hidden="true">↓</span></a><a href="assets/hero-3d-20261117-portrait.mp4">下载竖幅短片 <span aria-hidden="true">↓</span></a></div></footer>
 </body>
 </html>
