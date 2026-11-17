@@ -1,8 +1,8 @@
 {
-  "verified_at_utc": "2026-11-17T12:51:04.425706+00:00",
+  "verified_at_utc": "2026-11-17T15:11:20.018450+00:00",
   "version": "0.13.0",
   "site": "https://tunpack.thomasthzh.top/",
-  "source_commit": "a7879ede0153f756d5afa1cce979b68e01f2d70c",
+  "source_commit": "8c4398d4b63aac03fa4024a4531543f2ee22b2ee",
   "published": true,
   "site_checks": [
     {
@@ -15,26 +15,26 @@
     {
       "path": "",
       "status": 200,
-      "bytes": 11101,
+      "bytes": 11199,
       "mime": "text/html; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "styles.css?v=20261117-7",
+      "path": "styles.css?v=20261117-8",
       "status": 200,
       "bytes": 13099,
       "mime": "text/css; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "player.js?v=20261117-7",
+      "path": "player.js?v=20261117-8",
       "status": 200,
       "bytes": 7923,
       "mime": "text/javascript; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "download.js?v=20261117-7",
+      "path": "download.js?v=20261117-8",
       "status": 200,
       "bytes": 1359,
       "mime": "text/javascript; charset=utf-8",
@@ -48,44 +48,44 @@
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117.zh-CN.vtt",
+      "path": "assets/hero-icons-polish-20261117.zh-CN.vtt",
       "status": 200,
       "bytes": 1054,
       "mime": "text/vtt; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117-cover.jpg",
+      "path": "assets/hero-icons-polish-20261117-cover.jpg",
       "status": 200,
-      "bytes": 60028,
+      "bytes": 60479,
       "mime": "image/jpeg",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117-wide.webp",
+      "path": "assets/hero-icons-polish-20261117-wide.webp",
       "status": 200,
-      "bytes": 37736,
+      "bytes": 38382,
       "mime": "image/webp",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117-portrait.webp",
+      "path": "assets/hero-icons-polish-20261117-portrait.webp",
       "status": 200,
-      "bytes": 31614,
+      "bytes": 32152,
       "mime": "image/webp",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117-wide.mp4",
+      "path": "assets/hero-icons-polish-20261117-wide.mp4",
       "status": 200,
-      "bytes": 1970624,
+      "bytes": 2263313,
       "mime": "video/mp4",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-icons-20261117-portrait.mp4",
+      "path": "assets/hero-icons-polish-20261117-portrait.mp4",
       "status": 200,
-      "bytes": 1717205,
+      "bytes": 2001024,
       "mime": "video/mp4",
       "bytes_match_published_source": true
     }
@@ -94,12 +94,12 @@
     {
       "format": "wide",
       "status": 206,
-      "content_range": "bytes 0-1023/1970624"
+      "content_range": "bytes 0-1023/2263313"
     },
     {
       "format": "portrait",
       "status": 206,
-      "content_range": "bytes 0-1023/1717205"
+      "content_range": "bytes 0-1023/2001024"
     }
   ],
   "csp_media_self": true,
@@ -107,7 +107,7 @@
   "deployment": {
     "phase": "apply",
     "host": "tunpack.thomasthzh.top",
-    "active_root": "/srv/tunpack-site/releases/hero-20261117-icons",
+    "active_root": "/srv/tunpack-site/releases/hero-20261117-icons-polish",
     "other_configuration_unchanged": true,
     "autosave_persisted": true,
     "previous_release_retained": true
@@ -115,7 +115,7 @@
   "media": [
     {
       "format": "wide",
-      "source": "Microsoft Fluent SVG icon paths and native T mark, independent icon actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser",
+      "source": "Microsoft Fluent SVG icon paths and native T mark, continuous shared package and output actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser",
       "sequence_frames": 1680,
       "fps": 60,
       "duration_seconds": 28,
@@ -123,13 +123,13 @@
         1600,
         900
       ],
-      "mp4_bytes": 1970624,
+      "mp4_bytes": 2263313,
       "full_h264_aac_decode": true,
-      "hero_moves": "3.6s start click and workbench full-bleed; 4.2-4.56s icon-detail push with continuous focus; 14.6-14.96s nested detail; 21.2s visible result opening; 22-23.1s format/app/output icon convergence"
+      "hero_moves": "3.6s start/full-bleed; 6.6-8.65s ZIP emits volume actors; 10.15-14.4s one package gathers/unlocks/moves; 15.05-16.35s foreground ZIP reveal; output actors persist 15.45-28s through result and brand"
     },
     {
       "format": "portrait",
-      "source": "Microsoft Fluent SVG icon paths and native T mark, independent icon actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser",
+      "source": "Microsoft Fluent SVG icon paths and native T mark, continuous shared package and output actors, one workbench/cursor/camera timeline; no raster illustration, Blender, GUI or browser",
       "sequence_frames": 1680,
       "fps": 60,
       "duration_seconds": 28,
@@ -137,9 +137,9 @@
         900,
         1200
       ],
-      "mp4_bytes": 1717205,
+      "mp4_bytes": 2001024,
       "full_h264_aac_decode": true,
-      "hero_moves": "3.6s start click and workbench full-bleed; 4.2-4.56s icon-detail push with continuous focus; 14.6-14.96s nested detail; 21.2s visible result opening; 22-23.1s format/app/output icon convergence"
+      "hero_moves": "3.6s start/full-bleed; 6.6-8.65s ZIP emits volume actors; 10.15-14.4s one package gathers/unlocks/moves; 15.05-16.35s foreground ZIP reveal; output actors persist 15.45-28s through result and brand"
     }
   ],
   "node_checks": 20,
@@ -158,10 +158,10 @@
   "official_backup_download_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
   "official_backup_is_licensed_7_file_release": true,
   "github_tag_and_assets_unchanged": true,
-  "validation_scope": "Original icon-workbench animation with pointer actions, SVG icons, camera timing and score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. 60fps film from pinned Microsoft Fluent SVG paths and the native T brand; no raster illustration, Blender or CU.",
-  "native_scope": "Native release and its seven-file artifact unchanged. Earlier 292 native checks not relabeled as rerun. The previously generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
+  "validation_scope": "Continuous shared package/output icon actors, pointer actions, a foreground ZIP reveal, camera timing and synchronized original score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. 60fps film from pinned Microsoft Fluent SVG paths and the native T brand; no raster illustration, Blender or CU.",
+  "native_scope": "Native release and its seven-file artifact unchanged. This film-only edit leaves the public native release untouched and does not relabel earlier native checks as rerun. The previously generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
   "github_pages_mirror": {
-    "run": 44086376340,
+    "run": 44111209448,
     "success": true,
     "verified_resources": [
       {
@@ -174,26 +174,26 @@
       {
         "path": "",
         "status": 200,
-        "bytes": 11012,
+        "bytes": 11110,
         "mime": "text/html; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "styles.css?v=20261117-7",
+        "path": "styles.css?v=20261117-8",
         "status": 200,
         "bytes": 12911,
         "mime": "text/css; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "player.js?v=20261117-7",
+        "path": "player.js?v=20261117-8",
         "status": 200,
         "bytes": 7716,
         "mime": "application/javascript; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "download.js?v=20261117-7",
+        "path": "download.js?v=20261117-8",
         "status": 200,
         "bytes": 1331,
         "mime": "application/javascript; charset=utf-8",
@@ -207,44 +207,44 @@
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117.zh-CN.vtt",
+        "path": "assets/hero-icons-polish-20261117.zh-CN.vtt",
         "status": 200,
         "bytes": 1054,
         "mime": "text/vtt; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117-cover.jpg",
+        "path": "assets/hero-icons-polish-20261117-cover.jpg",
         "status": 200,
-        "bytes": 60028,
+        "bytes": 60479,
         "mime": "image/jpeg",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117-wide.webp",
+        "path": "assets/hero-icons-polish-20261117-wide.webp",
         "status": 200,
-        "bytes": 37736,
+        "bytes": 38382,
         "mime": "image/webp",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117-portrait.webp",
+        "path": "assets/hero-icons-polish-20261117-portrait.webp",
         "status": 200,
-        "bytes": 31614,
+        "bytes": 32152,
         "mime": "image/webp",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117-wide.mp4",
+        "path": "assets/hero-icons-polish-20261117-wide.mp4",
         "status": 200,
-        "bytes": 1970624,
+        "bytes": 2263313,
         "mime": "video/mp4",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-icons-20261117-portrait.mp4",
+        "path": "assets/hero-icons-polish-20261117-portrait.mp4",
         "status": 200,
-        "bytes": 1717205,
+        "bytes": 2001024,
         "mime": "video/mp4",
         "bytes_match_published_source": true
       }
@@ -253,23 +253,23 @@
       {
         "format": "wide",
         "status": 206,
-        "content_range": "bytes 0-1023/1970624"
+        "content_range": "bytes 0-1023/2263313"
       },
       {
         "format": "portrait",
         "status": 206,
-        "content_range": "bytes 0-1023/1717205"
+        "content_range": "bytes 0-1023/2001024"
       }
     ]
   },
   "github_release_notes_updated": true,
   "github_api_verification": {
-    "method": "Connected GitHub tool, actual GitHub REST GET responses; local gh API connection timed out",
-    "fetched_at_utc": "2026-11-17T12:50:59.751Z",
+    "method": "Connected GitHub tool, actual repository release/tag/workflow REST GET responses",
+    "fetched_at_utc": "2026-11-17T15:11:14.840Z",
     "source_urls": {
       "releases/tags/v0.13.0": "https://api.github.com/repos/thomasthzh/TUnpack/releases/tags/v0.13.0",
       "git/ref/tags/v0.13.0": "https://api.github.com/repos/thomasthzh/TUnpack/git/ref/tags/v0.13.0",
-      "actions/workflows/site.yml/runs?head_sha=a7879ede0153f756d5afa1cce979b68e01f2d70c": "https://api.github.com/repos/thomasthzh/TUnpack/actions/runs?head_sha=a7879ede0153f756d5afa1cce979b68e01f2d70c&per_page=5"
+      "actions/workflows/site.yml/runs?head_sha=8c4398d4b63aac03fa4024a4531543f2ee22b2ee": "https://api.github.com/repos/thomasthzh/TUnpack/actions/runs?head_sha=8c4398d4b63aac03fa4024a4531543f2ee22b2ee&per_page=5"
     }
   }
 }
