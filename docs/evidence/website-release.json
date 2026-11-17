@@ -1,33 +1,33 @@
 {
-  "verified_at_utc": "2026-11-17T09:28:06.723487+00:00",
+  "verified_at_utc": "2026-11-17T10:04:42.077888+00:00",
   "version": "0.13.0",
   "site": "https://tunpack.thomasthzh.top/",
-  "source_commit": "768ff268e01fbe529bb73bced2f3bc754f8d664d",
+  "source_commit": "ac19c011862c0cda96a8573c7cd640e158d1cf66",
   "published": true,
   "site_checks": [
     {
       "path": "",
       "status": 200,
-      "bytes": 10994,
+      "bytes": 11032,
       "mime": "text/html; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "styles.css?v=20261117-4",
+      "path": "styles.css?v=20261117-5",
       "status": 200,
-      "bytes": 13037,
+      "bytes": 13099,
       "mime": "text/css; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "player.js?v=20261117-4",
+      "path": "player.js?v=20261117-5",
       "status": 200,
       "bytes": 7923,
       "mime": "text/javascript; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "download.js?v=20261117-4",
+      "path": "download.js?v=20261117-5",
       "status": 200,
       "bytes": 1359,
       "mime": "text/javascript; charset=utf-8",
@@ -41,44 +41,44 @@
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117.zh-CN.vtt",
+      "path": "assets/hero-motion-20261117.zh-CN.vtt",
       "status": 200,
-      "bytes": 942,
+      "bytes": 979,
       "mime": "text/vtt; charset=utf-8",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117-cover.jpg",
+      "path": "assets/hero-motion-20261117-cover.jpg",
       "status": 200,
-      "bytes": 55411,
+      "bytes": 59743,
       "mime": "image/jpeg",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117-wide.webp",
+      "path": "assets/hero-motion-20261117-wide.webp",
       "status": 200,
-      "bytes": 26782,
+      "bytes": 36866,
       "mime": "image/webp",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117-portrait.webp",
+      "path": "assets/hero-motion-20261117-portrait.webp",
       "status": 200,
-      "bytes": 24550,
+      "bytes": 32842,
       "mime": "image/webp",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117-wide.mp4",
+      "path": "assets/hero-motion-20261117-wide.mp4",
       "status": 200,
-      "bytes": 1375036,
+      "bytes": 2350558,
       "mime": "video/mp4",
       "bytes_match_published_source": true
     },
     {
-      "path": "assets/hero-story-20261117-portrait.mp4",
+      "path": "assets/hero-motion-20261117-portrait.mp4",
       "status": 200,
-      "bytes": 1140266,
+      "bytes": 2306341,
       "mime": "video/mp4",
       "bytes_match_published_source": true
     }
@@ -87,12 +87,12 @@
     {
       "format": "wide",
       "status": 206,
-      "content_range": "bytes 0-1023/1375036"
+      "content_range": "bytes 0-1023/2350558"
     },
     {
       "format": "portrait",
       "status": 206,
-      "content_range": "bytes 0-1023/1140266"
+      "content_range": "bytes 0-1023/2306341"
     }
   ],
   "csp_media_self": true,
@@ -100,7 +100,7 @@
   "deployment": {
     "phase": "apply",
     "host": "tunpack.thomasthzh.top",
-    "active_root": "/srv/tunpack-site/releases/hero-20261117-product",
+    "active_root": "/srv/tunpack-site/releases/hero-20261117-motion",
     "other_configuration_unchanged": true,
     "autosave_persisted": true,
     "previous_release_retained": true
@@ -108,41 +108,31 @@
   "media": [
     {
       "format": "wide",
-      "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
-      "sequence_frames": 480,
-      "render_fps": 24,
-      "duration_seconds": 20,
-      "cycles_frames_rendered": 301,
-      "held_frames_reused": 179,
-      "render_size": [
-        1152,
-        720
-      ],
+      "source": "Original Skia vector paths, kinetic typography and single camera timeline; no Blender, GUI or browser",
+      "sequence_frames": 1320,
+      "fps": 60,
+      "duration_seconds": 22,
       "delivery_size": [
-        1536,
-        720
+        1600,
+        900
       ],
-      "mp4_bytes": 1375036,
-      "full_h264_aac_decode": true
+      "mp4_bytes": 2350558,
+      "full_h264_aac_decode": true,
+      "hero_moves": "2.45-2.95s full-bleed reveal; 3.00-3.36s fast push then settle; 4.05-4.70s route handoff; 19.00-20.05s complete-route pullback"
     },
     {
       "format": "portrait",
-      "source": "Blender 5.3 Cycles / OptiX, original mesh and PBR materials",
-      "sequence_frames": 480,
-      "render_fps": 24,
-      "duration_seconds": 20,
-      "cycles_frames_rendered": 271,
-      "held_frames_reused": 209,
-      "render_size": [
-        720,
-        900
-      ],
+      "source": "Original Skia vector paths, kinetic typography and single camera timeline; no Blender, GUI or browser",
+      "sequence_frames": 1320,
+      "fps": 60,
+      "duration_seconds": 22,
       "delivery_size": [
-        720,
-        1100
+        900,
+        1200
       ],
-      "mp4_bytes": 1140266,
-      "full_h264_aac_decode": true
+      "mp4_bytes": 2306341,
+      "full_h264_aac_decode": true,
+      "hero_moves": "2.45-2.95s full-bleed reveal; 3.00-3.36s fast push then settle; 4.05-4.70s route handoff; 19.00-20.05s complete-route pullback"
     }
   ],
   "node_checks": 20,
@@ -161,35 +151,35 @@
   "official_backup_download_sha256": "6e786e370c93579a7a2a283b3caeb80e0c6714eef3146359b64b798ba64ef48a",
   "official_backup_is_licensed_7_file_release": true,
   "github_tag_and_assets_unchanged": true,
-  "validation_scope": "Original physical scenes, explanatory text and score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. Static holds reuse identical rendered pixels.",
-  "native_scope": "Native release and its seven-file artifact unchanged. Earlier 292 native checks not relabeled as rerun. One additional generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
+  "validation_scope": "Original vector motion, kinetic typography, camera timing and score. Authored and encoded frames inspected; complete H264/AAC decode and actual public HTTP bytes/ranges verified. No CU, GUI or browser automation; no browser-screen or aesthetic user acceptance claimed. 60fps film exported directly from a deterministic Skia timeline; no Blender.",
+  "native_scope": "Native release and its seven-file artifact unchanged. Earlier 292 native checks not relabeled as rerun. The previously generated combined story fixture actually decoded through the CLI/SDK with recycling disabled and all inputs retained.",
   "github_pages_mirror": {
-    "run": 44055671013,
+    "run": 44061218611,
     "success": true,
     "verified_resources": [
       {
         "path": "",
         "status": 200,
-        "bytes": 10905,
+        "bytes": 10943,
         "mime": "text/html; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "styles.css?v=20261117-4",
+        "path": "styles.css?v=20261117-5",
         "status": 200,
-        "bytes": 12850,
+        "bytes": 12911,
         "mime": "text/css; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "player.js?v=20261117-4",
+        "path": "player.js?v=20261117-5",
         "status": 200,
         "bytes": 7716,
         "mime": "application/javascript; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "download.js?v=20261117-4",
+        "path": "download.js?v=20261117-5",
         "status": 200,
         "bytes": 1331,
         "mime": "application/javascript; charset=utf-8",
@@ -203,44 +193,44 @@
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117.zh-CN.vtt",
+        "path": "assets/hero-motion-20261117.zh-CN.vtt",
         "status": 200,
-        "bytes": 942,
+        "bytes": 979,
         "mime": "text/vtt; charset=utf-8",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117-cover.jpg",
+        "path": "assets/hero-motion-20261117-cover.jpg",
         "status": 200,
-        "bytes": 55411,
+        "bytes": 59743,
         "mime": "image/jpeg",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117-wide.webp",
+        "path": "assets/hero-motion-20261117-wide.webp",
         "status": 200,
-        "bytes": 26782,
+        "bytes": 36866,
         "mime": "image/webp",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117-portrait.webp",
+        "path": "assets/hero-motion-20261117-portrait.webp",
         "status": 200,
-        "bytes": 24550,
+        "bytes": 32842,
         "mime": "image/webp",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117-wide.mp4",
+        "path": "assets/hero-motion-20261117-wide.mp4",
         "status": 200,
-        "bytes": 1375036,
+        "bytes": 2350558,
         "mime": "video/mp4",
         "bytes_match_published_source": true
       },
       {
-        "path": "assets/hero-story-20261117-portrait.mp4",
+        "path": "assets/hero-motion-20261117-portrait.mp4",
         "status": 200,
-        "bytes": 1140266,
+        "bytes": 2306341,
         "mime": "video/mp4",
         "bytes_match_published_source": true
       }
@@ -249,12 +239,12 @@
       {
         "format": "wide",
         "status": 206,
-        "content_range": "bytes 0-1023/1375036"
+        "content_range": "bytes 0-1023/2350558"
       },
       {
         "format": "portrait",
         "status": 206,
-        "content_range": "bytes 0-1023/1140266"
+        "content_range": "bytes 0-1023/2306341"
       }
     ]
   },
