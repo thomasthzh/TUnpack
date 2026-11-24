@@ -60,7 +60,7 @@ float drawerAnim=0.0f,donePulse=0.0f;
 bool progressActive=false,progressUnknown=false,animRunning=false;
 std::map<HWND,float> btnHoverAnim;
 HWND hoveredBtn=nullptr;
-RECT customProgressRect{},listCardRect{},drawerCardRect{};
+RECT customProgressRect{},listCardRect{},inspectorCardRect{},drawerCardRect{};
 HIMAGELIST rowHeightList=nullptr;
 
 // Swiss Industrial Ceramic + Graphite + International Orange Palette
@@ -187,7 +187,7 @@ void updateFonts(){
  titleFont=makeUiFont(dpi,24,FW_SEMIBOLD);
  smallFont=makeUiFont(dpi,12,FW_NORMAL);
  if(window)EnumChildWindows(window,[](HWND h,LPARAM){SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);return TRUE;},0);
- for(auto h:{status,phaseStatus})if(h)SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(smallFont),TRUE);
+ for(auto h:{status,phaseStatus,GetDlgItem(window,TaskDetails)})if(h)SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(smallFont),TRUE);
  if(tips){SendMessageW(tips,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);SendMessageW(tips,TTM_SETMAXTIPWIDTH,0,px(560));}
  auto filter=GetDlgItem(window,QueueFilter);if(filter){SendMessageW(filter,CB_SETITEMHEIGHT,0,px(22));SendMessageW(filter,CB_SETITEMHEIGHT,WPARAM(-1),px(22));}
  for(auto f:old)if(f)DeleteObject(f);
@@ -218,11 +218,12 @@ void layout(){
 
  if(currentPage==Page::Queue){
   int w=l.width,h=l.height;
-  bool isQueue=true;
-  bool hasSel=!selectedIndices(list,rows.size()).empty();
+  auto sel=selectedIndices(list,rows.size());
+  bool hasSel=!sel.empty();
   bool hasItems=queue.counts().total()>0;
   bool searchOpen=showSearchBar||!taskView.unfiltered();
   bool optsOpen=showOptionsDrawer;
+  bool dualCol=hasItems||(drawerAnim>0.01f);
 
   // Header: Segmented pill switcher + calm utility pills on the right
   placeHwnd(GetDlgItem(window,QueueTab),248,26,96,34);
@@ -231,100 +232,141 @@ void layout(){
   placeHwnd(btnToggleSearch,w-216,26,64,34);
   placeHwnd(btnToggleOptions,w-144,26,68,34);
   placeHwnd(GetDlgItem(window,Tools),w-68,26,44,34);
-  for(int id:{int(Add),IdToggleSearch,IdToggleOptions,int(Tools)})showCtrl(id,isQueue);
-  // Hide old cluttered toolbar buttons (all still accessible via Add/More menu & shortcuts!)
-  for(int id:{int(AddFolder),int(Volumes),int(PasteFiles),int(Create)})showCtrl(id,false);
+  for(int id:{int(Add),IdToggleSearch,IdToggleOptions,int(Tools)})showCtrl(id,true);
+  for(int id:{int(AddFolder),int(Volumes),int(PasteFiles),int(Create),int(Up),int(Down)})showCtrl(id,false);
 
-  int y=82;
-  // Collapsible Search & Filter bar (Ctrl+F or Search pill)
+  int topY=82;
+  int footerH=78;
+  int footerTop=h-footerH;
+  int bodyBottom=footerTop-12;
+
+  int gutter=16;
+  int rightW=dualCol?std::clamp(w*35/100,308,386):0;
+  int leftX=28;
+  int leftW=dualCol?(w-56-rightW-gutter):(w-56);
+  int rightX=leftX+leftW+gutter;
+
+  // === LEFT COLUMN: Search + Drop Zone + Queue List Card ===
+  int ly=topY;
   showCtrl(QueueSearch,searchOpen);showCtrl(SearchClear,searchOpen);showCtrl(QueueFilter,searchOpen);
   if(searchOpen){
-   placeHwnd(GetDlgItem(window,QueueSearch),28,y,w-334,32);
-   placeHwnd(GetDlgItem(window,SearchClear),w-298,y,62,32);
-   auto fb=pixelBox({w-228,y,200,220},dpi,scrollX,scrollY);
+   int filterW=std::min(156,leftW/3);
+   int clearW=56;
+   placeHwnd(GetDlgItem(window,QueueSearch),leftX,ly,std::max(100,leftW-filterW-clearW-16),32);
+   placeHwnd(GetDlgItem(window,SearchClear),leftX+leftW-filterW-clearW-8,ly,clearW,32);
+   auto fb=pixelBox({leftX+leftW-filterW,ly,filterW,220},dpi,scrollX,scrollY);
    SetWindowPos(GetDlgItem(window,QueueFilter),nullptr,fb.x,fb.y,fb.width,fb.height,SWP_NOZORDER|SWP_NOACTIVATE);
-   y+=42;
+   ly+=42;
   }
 
-  // Hero Drop Zone (expands gracefully when empty!)
-  int dropH=hasItems?76:std::max(180,h-y-180);
+  int dropH=hasItems?68:std::max(180,bodyBottom-ly-24);
   showCtrl(DropZone,true);
-  placeHwnd(GetDlgItem(window,DropZone),28,y,w-56,dropH);
-  y+=dropH+14;
+  placeHwnd(GetDlgItem(window,DropZone),leftX,ly,leftW,dropH);
+  ly+=dropH+12;
 
-  // Footer & smooth animated Options Drawer heights
-  int footerH=78;
-  int drawerH=int(std::round(118.0f*drawerAnim));
-  int ctxH=(hasItems&&hasSel)?44:0;
-  int footerTop=h-footerH;
-  int drawerTop=footerTop-drawerH;
-  int ctxTop=drawerTop-ctxH;
-
-  // Queue List (only shown when queue has items; framed in a crisp rounded white card!)
-  int summaryH=hasItems?28:0;
   showCtrl(IdQuickClearDone,hasItems&&queue.counts().done>0&&!running);
-  if(hasItems&&queue.counts().done>0&&!running)placeHwnd(btnQuickClearDone,w-124,y,96,24);
-  y+=summaryH;
-
-  int listH=std::max(80,ctxTop-y-12);
-  showCtrl(List,hasItems);
   if(hasItems){
-   auto lb=pixelBox({28,y,w-56,listH},dpi,scrollX,scrollY);
+   if(queue.counts().done>0&&!running)placeHwnd(btnQuickClearDone,leftX+leftW-96,ly,96,24);
+   ly+=28;
+   int listH=std::max(90,bodyBottom-ly);
+   showCtrl(List,true);
+   auto lb=pixelBox({leftX,ly,leftW,listH},dpi,scrollX,scrollY);
    listCardRect={lb.x,lb.y,lb.right(),lb.bottom()};
-   placeHwnd(list,32,y+4,w-64,std::max(60,listH-8));
-  }else listCardRect={};
-  // Hide bulky old readonly TaskDetails box in Zen mode (details shown cleanly in footer/tooltip & double-click)
-  showCtrl(TaskDetails,false);
+   placeHwnd(list,leftX+4,ly+4,leftW-8,std::max(60,listH-8));
+  }else{
+   showCtrl(List,false);
+   listCardRect={};
+  }
 
-  // Contextual Selection Bar (ONLY visible when 1+ tasks selected — zero grey button clutter!)
+  // === RIGHT COLUMN: Task Inspector Card + Animated Options Card ===
   bool repairVis=false;
-  {
-   auto sel=selectedIndices(list,rows.size());
-   if(sel.size()==1){
-    auto t=queue.get(rows[size_t(sel.front())].task.id);
-    repairVis=t&&t->state==State::Attention&&(t->result.status==L"password_required"||t->result.status==L"missing_volume"||t->result.status==L"ambiguous_volume"||t->result.status==L"source_unavailable");
-   }
+  if(sel.size()==1){
+   auto t=queue.get(rows[size_t(sel.front())].task.id);
+   repairVis=t&&t->state==State::Attention&&(t->result.status==L"password_required"||t->result.status==L"missing_volume"||t->result.status==L"ambiguous_volume"||t->result.status==L"source_unavailable");
   }
-  bool showCtx=hasItems&&hasSel;
-  showCtrl(OpenOutput,showCtx);showCtrl(Retry,showCtx);showCtrl(HoldTask,showCtx);showCtrl(Remove,showCtx);showCtrl(ConfigureTask,showCtx);
+  int drawerH=dualCol?int(std::round(218.0f*drawerAnim)):0;
+  int drawerGap=(drawerH>4)?12:0;
+  int inspTop=topY;
+  int inspH=dualCol?std::max(140,bodyBottom-inspTop-drawerH-drawerGap):0;
+  int drawerTop=bodyBottom-drawerH;
+
+  if(dualCol){
+   auto ib=pixelBox({rightX,inspTop,rightW,inspH},dpi,scrollX,scrollY);
+   inspectorCardRect={ib.x,ib.y,ib.right(),ib.bottom()};
+  }else inspectorCardRect={};
+
+  // Inspector inner controls (borderless TaskDetails + clean 2-column action pills)
+  bool showCtx=dualCol&&hasItems&&hasSel;
+  bool showSingleDetails=showCtx&&sel.size()==1&&inspH>=210;
+  showCtrl(TaskDetails,showSingleDetails);
+  showCtrl(OpenOutput,showCtx&&sel.size()==1);
   showCtrl(NextStep,showCtx&&repairVis&&!running);
-  showCtrl(Up,false);showCtrl(Down,false); // Ctrl+Up/Down & context menu keep reorder clean
+  showCtrl(Retry,showCtx);
+  showCtrl(HoldTask,showCtx);
+  showCtrl(ConfigureTask,showCtx);
+  showCtrl(Remove,showCtx);
   if(showCtx){
-   int cx=28;
-   placeHwnd(GetDlgItem(window,OpenOutput),cx,ctxTop+6,96,30);cx+=104;
-   if(repairVis&&!running){placeHwnd(GetDlgItem(window,NextStep),cx,ctxTop+6,118,30);cx+=126;}
-   placeHwnd(GetDlgItem(window,Retry),cx,ctxTop+6,82,30);cx+=90;
-   placeHwnd(GetDlgItem(window,HoldTask),cx,ctxTop+6,86,30);cx+=94;
-   placeHwnd(GetDlgItem(window,ConfigureTask),cx,ctxTop+6,86,30);cx+=94;
-   placeHwnd(GetDlgItem(window,Remove),w-110,ctxTop+6,82,30);
+   int pad=16,btnGap=8,btnH=30;
+   int innerW=rightW-pad*2;
+   int halfW=(innerW-btnGap)/2;
+   bool hasPrimaryRow=(sel.size()==1)||(repairVis&&!running);
+   int actionRows=hasPrimaryRow?3:2;
+   int actionsH=actionRows*btnH+(actionRows-1)*btnGap;
+   int actY=inspTop+inspH-pad-actionsH;
+
+   if(showSingleDetails){
+    int detTop=inspTop+84;
+    int detH=std::max(44,actY-detTop-12);
+    placeHwnd(GetDlgItem(window,TaskDetails),rightX+pad,detTop,innerW,detH);
+   }
+
+   int rowY=actY;
+   if(sel.size()==1){
+    if(repairVis&&!running){
+     placeHwnd(GetDlgItem(window,NextStep),rightX+pad,rowY,halfW,btnH);
+     placeHwnd(GetDlgItem(window,OpenOutput),rightX+pad+halfW+btnGap,rowY,halfW,btnH);
+    }else{
+     placeHwnd(GetDlgItem(window,OpenOutput),rightX+pad,rowY,innerW,btnH);
+    }
+    rowY+=btnH+btnGap;
+   }
+   placeHwnd(GetDlgItem(window,Retry),rightX+pad,rowY,halfW,btnH);
+   placeHwnd(GetDlgItem(window,HoldTask),rightX+pad+halfW+btnGap,rowY,halfW,btnH);
+   rowY+=btnH+btnGap;
+   placeHwnd(GetDlgItem(window,ConfigureTask),rightX+pad,rowY,halfW,btnH);
+   placeHwnd(GetDlgItem(window,Remove),rightX+pad+halfW+btnGap,rowY,halfW,btnH);
   }
 
-  // Collapsible Options Drawer (smoothly animated elevated white card!)
-  bool showDrawerControls=optsOpen&&drawerAnim>0.65f;
+  // Collapsible Options Card in Right Column (smooth 60fps slide)
+  bool showDrawerControls=dualCol&&optsOpen&&drawerAnim>0.65f;
   for(int id:{int(DirectoryLabel),int(Directory),int(Choose),int(Reset),int(Nested),int(Recycle),int(Deep),int(BatchLabel),int(BatchPassword)})showCtrl(id,showDrawerControls);
-  if(drawerH>4){
-   auto db=pixelBox({28,drawerTop+4,w-56,drawerH-10},dpi,scrollX,scrollY);
+  if(dualCol&&drawerH>4){
+   auto db=pixelBox({rightX,drawerTop,rightW,drawerH},dpi,scrollX,scrollY);
    drawerCardRect={db.x,db.y,db.right(),db.bottom()};
   }else drawerCardRect={};
   if(showDrawerControls){
+   int pad=16,innerW=rightW-pad*2;
    int dy=drawerTop+12;
-   placeHwnd(GetDlgItem(window,DirectoryLabel),40,dy+4,58,24);
-   placeHwnd(GetDlgItem(window,Directory),102,dy,w-336,28);
-   placeHwnd(GetDlgItem(window,Choose),w-226,dy,90,28);
-   placeHwnd(GetDlgItem(window,Reset),w-128,dy,90,28);
+   placeHwnd(GetDlgItem(window,DirectoryLabel),rightX+pad,dy+2,70,20);
+   placeHwnd(GetDlgItem(window,Choose),rightX+rightW-pad-144,dy,68,24);
+   placeHwnd(GetDlgItem(window,Reset),rightX+rightW-pad-70,dy,70,24);
+   dy+=28;
+   placeHwnd(GetDlgItem(window,Directory),rightX+pad,dy,innerW,26);
    dy+=34;
-   placeHwnd(GetDlgItem(window,Nested),40,dy,150,24);
-   placeHwnd(GetDlgItem(window,Recycle),200,dy,220,24);
-   placeHwnd(GetDlgItem(window,Deep),430,dy,150,24);
-   dy+=30;
-   placeHwnd(GetDlgItem(window,BatchLabel),40,dy+3,104,24);
-   placeHwnd(GetDlgItem(window,BatchPassword),148,dy,240,28);
+   placeHwnd(GetDlgItem(window,Nested),rightX+pad,dy,innerW,22);
+   dy+=24;
+   placeHwnd(GetDlgItem(window,Recycle),rightX+pad,dy,innerW,22);
+   dy+=24;
+   placeHwnd(GetDlgItem(window,Deep),rightX+pad,dy,innerW,22);
+   dy+=28;
+   placeHwnd(GetDlgItem(window,BatchLabel),rightX+pad,dy+3,96,22);
+   placeHwnd(GetDlgItem(window,BatchPassword),rightX+pad+100,dy,std::max(80,innerW-100),26);
   }
 
-  // Minimal Footer Dock (custom 60fps progress bar drawn in paint(); hide native Win32 green progress bar)
+  // Minimal Footer Dock (full-width calm action bar)
   showCtrl(ProgressBar,false);
   showCtrl(QueuePhase,true);showCtrl(Status,true);
-  int ctaW=152;
+  int ctaW=156;
   int rightEdge=w-28;
   showCtrl(Start,true);
   placeHwnd(GetDlgItem(window,Start),rightEdge-ctaW,footerTop+18,ctaW,40);
@@ -335,8 +377,39 @@ void layout(){
   placeHwnd(status,28,footerTop+34,std::max(120,textRight-28),18);
   auto pb=pixelBox({28,footerTop+58,std::max(120,textRight-28),6},dpi,scrollX,scrollY);
   customProgressRect={pb.x,pb.y,pb.right(),pb.bottom()};
+ }else if(currentPage==Page::Passwords){
+  // Modern Dual-Column Password Book
+  int w=l.width,h=l.height;
+  showCtrl(IdToggleOptions,false);showCtrl(IdToggleSearch,false);showCtrl(IdQuickClearDone,false);
+  drawerCardRect={};customProgressRect={};
+  placeHwnd(GetDlgItem(window,QueueTab),248,26,96,34);
+  placeHwnd(GetDlgItem(window,PasswordTab),350,26,88,34);
+  int gutter=16;
+  int rightW=std::clamp(w*38/100,320,420);
+  int leftX=28,leftW=w-56-rightW-gutter,rightX=leftX+leftW+gutter;
+  int topY=92,bottomY=h-48;
+  // Left Column: Search + Show toggle + Saved Passwords Card
+  placeHwnd(GetDlgItem(window,PasswordSearch),leftX,topY,leftW-132,32);
+  placeHwnd(GetDlgItem(window,ShowPasswords),leftX+leftW-122,topY+4,122,24);
+  int listTop=topY+44,listH=std::max(120,bottomY-listTop);
+  auto lb=pixelBox({leftX,listTop,leftW,listH},dpi,scrollX,scrollY);
+  listCardRect={lb.x,lb.y,lb.right(),lb.bottom()};
+  placeHwnd(passwordList,leftX+4,listTop+4,leftW-8,std::max(80,listH-8));
+  // Right Column: Add / Import / Apply Card
+  auto ib=pixelBox({rightX,topY,rightW,bottomY-topY},dpi,scrollX,scrollY);
+  inspectorCardRect={ib.x,ib.y,ib.right(),ib.bottom()};
+  int pad=16,innerW=rightW-pad*2;
+  placeHwnd(GetDlgItem(window,PasswordLabel),rightX+pad,topY+14,innerW,24);
+  int btnRowY=bottomY-118;
+  placeHwnd(passwordEdit,rightX+pad,topY+42,innerW,std::max(80,btnRowY-topY-52));
+  int halfW=(innerW-8)/2;
+  placeHwnd(GetDlgItem(window,SavePasswords),rightX+pad,btnRowY,halfW,34);
+  placeHwnd(GetDlgItem(window,ImportPasswords),rightX+pad+halfW+8,btnRowY,halfW,34);
+  placeHwnd(GetDlgItem(window,UsePassword),rightX+pad,btnRowY+42,innerW,32);
+  placeHwnd(GetDlgItem(window,PasswordFeedback),rightX+pad,btnRowY+80,innerW,30);
  }else{
   showCtrl(IdToggleOptions,false);showCtrl(IdToggleSearch,false);showCtrl(IdQuickClearDone,false);
+  listCardRect={};inspectorCardRect={};drawerCardRect={};customProgressRect={};
   auto batch=BeginDeferWindowPos(int(l.boxes.size()));
   auto place=[&](auto move){for(size_t i=0;i<l.boxes.size();++i){const auto& box=l.boxes[i];auto id=Id(int(Add)+int(i));auto target=GetDlgItem(window,id);if(!target||!box.width)continue;auto pixels=pixelBox(box,dpi,scrollX,scrollY);if(id==QueueFilter)pixels.height=px(220);if(!move(target,pixels))return false;}return true;};
   bool queued=batch&&place([&](HWND target,const Box& box){batch=DeferWindowPos(batch,target,nullptr,box.x,box.y,box.width,box.height,SWP_NOZORDER|SWP_NOACTIVATE);return batch!=nullptr;});
@@ -732,25 +805,117 @@ void paint(){
  std::wstring tagline=dragHover?(L"松开手，立刻接住这 "+std::to_wstring(dragCount)+L" 项"):running?L"正在并行加速，喝口水的功夫就好":counts.attention?L"有几项需要你搭把手":counts.done&&!counts.waiting?L"搞定了，干干净净":L"拖进来，剩下的交给我";
  write(81,48,162,18,tagline,smallFont,dragHover?ColOrange:ColInkSoft);
 
+ auto drawCard=[&](const RECT& cr,int rad){
+  if(cr.right<=cr.left||cr.bottom<=cr.top)return;
+  auto cPen=CreatePen(PS_SOLID,1,ColBorder);
+  auto ob=SelectObject(dc,surfaceBrush);auto op=SelectObject(dc,cPen);
+  RoundRect(dc,cr.left,cr.top,cr.right,cr.bottom,px(rad),px(rad));
+  SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(cPen);
+ };
+
  if(currentPage==Page::Queue){
   auto total=counts.total();
   if(total>0){
    bool searchOpen=showSearchBar||!taskView.unfiltered();
-   int summaryY=(searchOpen?124:82)+76+16;
+   int summaryY=(searchOpen?124:82)+68+14;
+   int rightW=std::clamp(w*35/100,308,386);
+   int leftW=w-56-rightW-16;
    std::wstring summary=L"共 "+std::to_wstring(total)+L" 项 · "+countSummary(counts);
    if(!taskView.unfiltered())summary=L"显示 "+std::to_wstring(rows.size())+L" / "+std::to_wstring(total)+L" 项 · "+countSummary(counts);
-   write(28,summaryY,w-164,22,summary,smallFont,ColInkSoft);
+   write(28,summaryY,std::max(120,leftW-104),22,summary,smallFont,ColInkSoft);
   }
-  // Elevated rounded white card frames for Queue List & Collapsible Options Drawer
-  auto drawCard=[&](const RECT& cr,int rad){
-   if(cr.right<=cr.left||cr.bottom<=cr.top)return;
-   auto cPen=CreatePen(PS_SOLID,1,ColBorder);
-   auto ob=SelectObject(dc,surfaceBrush);auto op=SelectObject(dc,cPen);
-   RoundRect(dc,cr.left,cr.top,cr.right,cr.bottom,px(rad),px(rad));
-   SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(cPen);
-  };
+  // Elevated rounded white ceramic card frames (Left Queue + Right Inspector + Options)
   drawCard(listCardRect,12);
+  drawCard(inspectorCardRect,12);
   drawCard(drawerCardRect,12);
+
+  // Right Column: Swiss-Industrial Task Inspector / Queue Overview Content
+  if(inspectorCardRect.right>inspectorCardRect.left&&inspectorCardRect.bottom>inspectorCardRect.top){
+   RECT ir=inspectorCardRect;
+   int pad=px(16);
+   int ix=ir.left+pad,iy=ir.top+px(14),iw=std::max(1,int(ir.right-ir.left)-pad*2);
+   auto sel=selectedIndices(list,rows.size());
+   if(sel.size()==1){
+    const auto& row=rows[size_t(sel.front())];
+    const auto& t=row.task;
+    // Task title
+    auto of=SelectObject(dc,boldFont);SetTextColor(dc,ColInk);
+    RECT titleR{ix,iy,ix+iw,iy+px(24)};
+    DrawTextW(dc,row.cells[0].c_str(),-1,&titleR,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+    // Status pill badge + action subtitle
+    COLORREF pillBg=ColSurfaceMuted,pillTx=ColInkSoft;
+    if(t.state==State::Done){pillBg=RGB(220,252,231);pillTx=RGB(21,128,61);}
+    else if(t.state==State::Running){pillBg=RGB(255,237,213);pillTx=RGB(194,65,12);}
+    else if(t.state==State::Attention){pillBg=RGB(254,243,199);pillTx=RGB(180,83,9);}
+    int py=iy+px(30),ph=px(22);
+    RECT pr{ix,py,ix+px(66),py+ph};
+    auto pb=CreateSolidBrush(pillBg);auto ob=SelectObject(dc,pb);auto np=SelectObject(dc,GetStockObject(NULL_PEN));
+    RoundRect(dc,pr.left,pr.top,pr.right,pr.bottom,ph,ph);
+    SelectObject(dc,ob);SelectObject(dc,np);DeleteObject(pb);
+    SelectObject(dc,smallFont);SetTextColor(dc,pillTx);
+    DrawTextW(dc,row.cells[2].c_str(),-1,&pr,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    std::wstring sub=row.cells[1]+(t.percent>=0?L" · "+std::to_wstring(t.percent)+L"%":L"");
+    RECT subR{pr.right+px(10),py,ix+iw,py+ph};
+    SetTextColor(dc,ColInkSoft);
+    DrawTextW(dc,sub.c_str(),-1,&subR,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+    // Subtle hairline divider below inspector header
+    auto dp=CreatePen(PS_SOLID,1,RGB(238,235,227));auto op=SelectObject(dc,dp);
+    MoveToEx(dc,ix,iy+px(62),nullptr);LineTo(dc,ix+iw,iy+px(62));
+    SelectObject(dc,op);DeleteObject(dp);
+    SelectObject(dc,of);
+   }else if(sel.size()>1){
+    auto of=SelectObject(dc,boldFont);SetTextColor(dc,ColInk);
+    RECT r1{ix,iy,ix+iw,iy+px(26)};
+    std::wstring heading=L"已选中 "+std::to_wstring(sel.size())+L" 项任务";
+    DrawTextW(dc,heading.c_str(),-1,&r1,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+    SelectObject(dc,smallFont);SetTextColor(dc,ColInkSoft);
+    RECT r2{ix,iy+px(32),ix+iw,iy+px(74)};
+    DrawTextW(dc,L"可通过下方按钮批量重试、暂缓、统一配置专用设置或从队列移除。",-1,&r2,DT_LEFT|DT_WORDBREAK);
+    SelectObject(dc,of);
+   }else{
+    // Queue Overview Card with 2x2 Swiss metric tiles
+    auto of=SelectObject(dc,boldFont);SetTextColor(dc,ColInk);
+    RECT r1{ix,iy,ix+iw,iy+px(24)};
+    DrawTextW(dc,L"工作台概览",-1,&r1,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+    SelectObject(dc,smallFont);SetTextColor(dc,ColInkSoft);
+    RECT r2{ix,iy+px(26),ix+iw,iy+px(44)};
+    DrawTextW(dc,L"点选左侧任务查看完整路径、识别结果与快捷操作",-1,&r2,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+
+    int tileTop=iy+px(56),tileGap=px(10),tileW=(iw-tileGap)/2,tileH=px(58);
+    struct Metric{const wchar_t* label;unsigned val;COLORREF col;};
+    std::array<Metric,4> metrics{{
+     {L"待开始",counts.waiting,ColInk},
+     {L"处理中",counts.running,ColOrange},
+     {L"已完成",counts.done,ColEmerald},
+     {L"需处理",counts.attention,RGB(180,83,9)}
+    }};
+    auto tileBr=CreateSolidBrush(ColCanvas);auto np=GetStockObject(NULL_PEN);
+    for(int i=0;i<4;++i){
+     int col=i%2,rowIdx=i/2;
+     RECT tr{ix+col*(tileW+tileGap),tileTop+rowIdx*(tileH+tileGap),ix+col*(tileW+tileGap)+tileW,tileTop+rowIdx*(tileH+tileGap)+tileH};
+     if(tr.bottom>ir.bottom-px(12))break;
+     auto ob=SelectObject(dc,tileBr);auto op=SelectObject(dc,np);
+     RoundRect(dc,tr.left,tr.top,tr.right,tr.bottom,px(10),px(10));
+     SelectObject(dc,ob);SelectObject(dc,op);
+     RECT numR{tr.left+px(12),tr.top+px(8),tr.right-px(10),tr.top+px(34)};
+     SelectObject(dc,titleFont);SetTextColor(dc,metrics[size_t(i)].col);
+     auto numStr=std::to_wstring(metrics[size_t(i)].val);
+     DrawTextW(dc,numStr.c_str(),-1,&numR,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+     RECT lblR{tr.left+px(12),tr.top+px(36),tr.right-px(10),tr.bottom-px(6)};
+     SelectObject(dc,smallFont);SetTextColor(dc,ColInkSoft);
+     DrawTextW(dc,metrics[size_t(i)].label,-1,&lblR,DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+    }
+    DeleteObject(tileBr);
+    int hintY=tileTop+tileH*2+tileGap+px(14);
+    if(hintY+px(36)<ir.bottom-px(10)){
+     RECT hr{ix,hintY,ix+iw,ir.bottom-px(12)};
+     SelectObject(dc,smallFont);SetTextColor(dc,ColInkMuted);
+     std::wstring tip=L"快捷键：Ctrl+F 查找 · Ctrl+, 展开本批选项\n双击已完成任务可直接打开输出目录。";
+     DrawTextW(dc,tip.c_str(),-1,&hr,DT_LEFT|DT_WORDBREAK);
+    }
+    SelectObject(dc,of);
+   }
+  }
 
   // Subtle divider above footer dock
   auto divPen=CreatePen(PS_SOLID,1,ColBorder);auto oldP=SelectObject(dc,divPen);
@@ -790,7 +955,12 @@ void paint(){
    SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(trackBr);
   }
  }
- else if(currentPage==Page::Passwords){write(24,98,w-48,28,L"密码本 · 已保存 "+std::to_wstring(book->count())+L" 条  /  当前显示 "+std::to_wstring(passwordRows.size())+L" 条",font,ColInk);write(24,h-56,w-48,28,running?L"队列运行中，可查看与编辑草稿；本轮结束后保存或导入。":L"成功密码自动记住 · Windows 账户加密保存 · 本机离线处理",smallFont,ColInkSoft);}
+ else if(currentPage==Page::Passwords){
+  drawCard(listCardRect,12);
+  drawCard(inspectorCardRect,12);
+  write(28,68,w-56,22,L"已保存 "+std::to_wstring(book->count())+L" 条密码 · 显示 "+std::to_wstring(passwordRows.size())+L" 条",smallFont,ColInkSoft);
+  write(28,h-36,w-56,24,running?L"队列运行中，可查看与编辑草稿；本轮结束后保存或导入。":L"成功密码自动记住 · Windows 账户加密保存 · 本机离线处理",smallFont,ColInkSoft);
+ }
  else if(currentPage==Page::Volumes){write(24,98,w-48,28,L"分卷顺序 · "+std::to_wstring(volumeEditor.files.size())+L" 卷",font,ColInk);write(24,135,w-48,24,L"按卷序排列：ZIP 的 .z01 在前、.zip 最后。可多选移动；拖入和粘贴只补充文件。",smallFont,ColInkSoft);write(420,h-126,w-444,34,L"已选 "+std::to_wstring(selectedVolumes().size())+L" 卷",smallFont,ColInkSoft);}
  else {write(24,98,w-48,28,L"任务设置 · "+std::to_wstring(taskEditor.ids.size())+L" 项",font,ColInk);write(24,138,w-48,40,L"同一队列可使用不同处理方式。“保存设置”保留当前状态；“保存并待开始”准备所选任务，仍需手动开始。",smallFont,ColInkSoft,DT_LEFT|DT_WORDBREAK);}
  SetViewportOrgEx(dc,0,0,nullptr);
@@ -813,7 +983,8 @@ void drawButton(DRAWITEMSTRUCT* item){
  RECT rc=item->rcItem;int bw=std::max(1,int(rc.right-rc.left)),bh=std::max(1,int(rc.bottom-rc.top));
  auto memDc=CreateCompatibleDC(item->hDC);auto memBmp=CreateCompatibleBitmap(item->hDC,bw,bh);auto oldBmp=SelectObject(memDc,memBmp);
  RECT local{0,0,bw,bh};
- FillRect(memDc,&local,background);
+ bool onWhiteCard=(currentPage==Page::Queue&&(id==OpenOutput||id==NextStep||id==Retry||id==HoldTask||id==ConfigureTask||id==Remove||id==Choose||id==Reset))||(currentPage==Page::Passwords&&(id==SavePasswords||id==ImportPasswords||id==UsePassword));
+ FillRect(memDc,&local,onWhiteCard?surfaceBrush:background);
 
  COLORREF bgCol=ColSurface,bdCol=ColBorder,txCol=ColInk;
  int radius=px(10);
@@ -888,7 +1059,8 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   btnQuickClearDone=button(L"清空已完成",IdQuickClearDone);queueControls.push_back(btnQuickClearDone);
   auto queueSearch=control(WC_EDITW,L"",ES_AUTOHSCROLL,QueueSearch);queueControls.push_back(queueSearch);SendMessageW(queueSearch,EM_SETCUEBANNER,TRUE,reinterpret_cast<LPARAM>(L"查找文件名或路径 · Ctrl+F"));queueControls.push_back(button(L"重置",SearchClear));
   auto filter=control(WC_COMBOBOXW,L"",CBS_DROPDOWNLIST|CBS_HASSTRINGS|WS_VSCROLL,QueueFilter);queueControls.push_back(filter);for(const auto* label:TaskFilterNames)SendMessageW(filter,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(label));SendMessageW(filter,CB_SETCURSEL,0,0);
-  queueControls.push_back(button(L"拖入文件或文件夹，或点击添加",DropZone));list=table(List,{L"文件 / 任务",L"操作",L"状态",L"阶段",L"说明"},false);queueControls.push_back(list);queueControls.push_back(control(WC_EDITW,L"",ES_READONLY|ES_MULTILINE|ES_AUTOVSCROLL|WS_VSCROLL,TaskDetails));
+  queueControls.push_back(button(L"拖入文件或文件夹，或点击添加",DropZone));list=table(List,{L"文件 / 任务",L"操作",L"状态",L"阶段",L"说明"},false);queueControls.push_back(list);
+  {auto td=CreateWindowExW(0,WC_EDITW,L"",WS_CHILD|WS_VISIBLE|WS_TABSTOP|ES_READONLY|ES_MULTILINE|ES_AUTOVSCROLL|WS_VSCROLL,0,0,0,0,window,reinterpret_cast<HMENU>(TaskDetails),GetModuleHandleW(nullptr),nullptr);SendMessageW(td,WM_SETFONT,reinterpret_cast<WPARAM>(smallFont),TRUE);queueControls.push_back(td);}
   queueControls.push_back(control(WC_STATICW,L"本批输出",0,DirectoryLabel));directoryEdit=control(WC_EDITW,L"原包所在目录 · 创建同名文件夹，重名自动改名",ES_AUTOHSCROLL|ES_READONLY,Directory);queueControls.push_back(directoryEdit);
   queueControls.push_back(control(WC_STATICW,L"本批密码（可选）",0,BatchLabel));batchEdit=control(WC_EDITW,L"",ES_PASSWORD|ES_AUTOHSCROLL,BatchPassword);queueControls.push_back(batchEdit);SendMessageW(batchEdit,EM_SETCUEBANNER,TRUE,reinterpret_cast<LPARAM>(L"优先尝试这个密码"));
   for(auto [label,id]:std::initializer_list<std::pair<const wchar_t*,Id>>{{L"自动解压嵌套包",Nested},{L"全部成功后，原包移入回收站",Recycle},{L"必要时深度识别",Deep}}){queueControls.push_back(control(WC_BUTTONW,label,BS_AUTOCHECKBOX,id));CheckDlgButton(hwnd,id,(id==Nested?startupWorkspace.defaults.recursive:id==Recycle?startupWorkspace.defaults.recycle:startupWorkspace.defaults.deep)?BST_CHECKED:BST_UNCHECKED);}
@@ -930,10 +1102,10 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
  case WM_ERASEBKGND:return 1;
  case WM_CTLCOLORSTATIC:{
   int cid=GetDlgCtrlID(reinterpret_cast<HWND>(lp));
-  bool inDrawer=currentPage==Page::Queue&&(cid==DirectoryLabel||cid==BatchLabel||cid==Nested||cid==Recycle||cid==Deep);
-  SetBkColor(reinterpret_cast<HDC>(wp),inDrawer?ColSurface:ColCanvas);
-  SetTextColor(reinterpret_cast<HDC>(wp),inDrawer?ColInk:ColInkSoft);
-  return reinterpret_cast<LRESULT>(inDrawer?surfaceBrush:background);
+  bool onCard=(currentPage==Page::Queue&&(cid==TaskDetails||cid==DirectoryLabel||cid==BatchLabel||cid==Nested||cid==Recycle||cid==Deep))||(currentPage==Page::Passwords&&(cid==PasswordLabel||cid==PasswordFeedback));
+  SetBkColor(reinterpret_cast<HDC>(wp),onCard?ColSurface:ColCanvas);
+  SetTextColor(reinterpret_cast<HDC>(wp),cid==TaskDetails?ColInkSoft:(onCard?ColInk:ColInkSoft));
+  return reinterpret_cast<LRESULT>(onCard?surfaceBrush:background);
  }
  case WM_CTLCOLOREDIT:SetBkColor(reinterpret_cast<HDC>(wp),ColSurface);SetTextColor(reinterpret_cast<HDC>(wp),ColInk);return reinterpret_cast<LRESULT>(surfaceBrush);
  case WM_PAINT:paint();return 0;
