@@ -56,10 +56,12 @@ std::array<TableSizing,PageCount> columnSizes{};
 
 // 60fps micro-interaction animation state (0% CPU when settled)
 float dragAnim=0.0f,displayProgress=0.0f,targetProgress=0.0f,shimmerPhase=0.0f;
+float drawerAnim=0.0f,donePulse=0.0f;
 bool progressActive=false,progressUnknown=false,animRunning=false;
 std::map<HWND,float> btnHoverAnim;
 HWND hoveredBtn=nullptr;
-RECT customProgressRect{};
+RECT customProgressRect{},listCardRect{},drawerCardRect{};
+HIMAGELIST rowHeightList=nullptr;
 
 // Swiss Industrial Ceramic + Graphite + International Orange Palette
 constexpr COLORREF ColCanvas=RGB(246,245,240);
@@ -143,8 +145,14 @@ void updateIcons(){
  for(auto icon:{iconLarge,iconSmall,iconHero})if(icon)DestroyIcon(icon);iconLarge=big;iconSmall=small;iconHero=hero;
 }
 HWND control(const wchar_t* cls,const wchar_t* label,DWORD style,Id id){
- auto h=CreateWindowExW(wcscmp(cls,WC_EDITW)==0?WS_EX_CLIENTEDGE:0,cls,label,WS_CHILD|WS_VISIBLE|(wcscmp(cls,WC_STATICW)?WS_TABSTOP:0)|style,0,0,0,0,window,reinterpret_cast<HMENU>(id),GetModuleHandleW(nullptr),nullptr);
+ bool isEdit=wcscmp(cls,WC_EDITW)==0;
+ auto h=CreateWindowExW(isEdit?WS_EX_CLIENTEDGE:0,cls,label,WS_CHILD|WS_VISIBLE|(wcscmp(cls,WC_STATICW)?WS_TABSTOP:0)|style,0,0,0,0,window,reinterpret_cast<HMENU>(id),GetModuleHandleW(nullptr),nullptr);
  SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);return h;
+}
+void applyRowHeights(){
+ if(rowHeightList)ImageList_Destroy(rowHeightList);
+ rowHeightList=ImageList_Create(1,px(38),ILC_COLOR32,1,0);
+ for(auto tbl:{list,passwordList,volumeList})if(tbl)ListView_SetImageList(tbl,rowHeightList,LVSIL_SMALL);
 }
 struct TableRedraw {
  HWND target;
@@ -244,23 +252,27 @@ void layout(){
   placeHwnd(GetDlgItem(window,DropZone),28,y,w-56,dropH);
   y+=dropH+14;
 
-  // Footer & collapsible Options Drawer heights
+  // Footer & smooth animated Options Drawer heights
   int footerH=78;
-  int drawerH=optsOpen?112:0;
+  int drawerH=int(std::round(118.0f*drawerAnim));
   int ctxH=(hasItems&&hasSel)?44:0;
   int footerTop=h-footerH;
   int drawerTop=footerTop-drawerH;
   int ctxTop=drawerTop-ctxH;
 
-  // Queue List (only shown when queue has items; clean breathing space!)
+  // Queue List (only shown when queue has items; framed in a crisp rounded white card!)
   int summaryH=hasItems?28:0;
   showCtrl(IdQuickClearDone,hasItems&&queue.counts().done>0&&!running);
   if(hasItems&&queue.counts().done>0&&!running)placeHwnd(btnQuickClearDone,w-124,y,96,24);
   y+=summaryH;
 
-  int listH=std::max(80,ctxTop-y-10);
+  int listH=std::max(80,ctxTop-y-12);
   showCtrl(List,hasItems);
-  if(hasItems)placeHwnd(list,28,y,w-56,listH);
+  if(hasItems){
+   auto lb=pixelBox({28,y,w-56,listH},dpi,scrollX,scrollY);
+   listCardRect={lb.x,lb.y,lb.right(),lb.bottom()};
+   placeHwnd(list,32,y+4,w-64,std::max(60,listH-8));
+  }else listCardRect={};
   // Hide bulky old readonly TaskDetails box in Zen mode (details shown cleanly in footer/tooltip & double-click)
   showCtrl(TaskDetails,false);
 
@@ -287,21 +299,26 @@ void layout(){
    placeHwnd(GetDlgItem(window,Remove),w-110,ctxTop+6,82,30);
   }
 
-  // Collapsible Options Drawer (hidden by default!)
-  for(int id:{int(DirectoryLabel),int(Directory),int(Choose),int(Reset),int(Nested),int(Recycle),int(Deep),int(BatchLabel),int(BatchPassword)})showCtrl(id,optsOpen);
-  if(optsOpen){
-   int dy=drawerTop+8;
-   placeHwnd(GetDlgItem(window,DirectoryLabel),28,dy+4,58,24);
-   placeHwnd(GetDlgItem(window,Directory),90,dy,w-316,28);
-   placeHwnd(GetDlgItem(window,Choose),w-218,dy,90,28);
-   placeHwnd(GetDlgItem(window,Reset),w-120,dy,92,28);
-   dy+=36;
-   placeHwnd(GetDlgItem(window,Nested),28,dy,150,24);
-   placeHwnd(GetDlgItem(window,Recycle),188,dy,220,24);
-   placeHwnd(GetDlgItem(window,Deep),418,dy,150,24);
+  // Collapsible Options Drawer (smoothly animated elevated white card!)
+  bool showDrawerControls=optsOpen&&drawerAnim>0.65f;
+  for(int id:{int(DirectoryLabel),int(Directory),int(Choose),int(Reset),int(Nested),int(Recycle),int(Deep),int(BatchLabel),int(BatchPassword)})showCtrl(id,showDrawerControls);
+  if(drawerH>4){
+   auto db=pixelBox({28,drawerTop+4,w-56,drawerH-10},dpi,scrollX,scrollY);
+   drawerCardRect={db.x,db.y,db.right(),db.bottom()};
+  }else drawerCardRect={};
+  if(showDrawerControls){
+   int dy=drawerTop+12;
+   placeHwnd(GetDlgItem(window,DirectoryLabel),40,dy+4,58,24);
+   placeHwnd(GetDlgItem(window,Directory),102,dy,w-336,28);
+   placeHwnd(GetDlgItem(window,Choose),w-226,dy,90,28);
+   placeHwnd(GetDlgItem(window,Reset),w-128,dy,90,28);
+   dy+=34;
+   placeHwnd(GetDlgItem(window,Nested),40,dy,150,24);
+   placeHwnd(GetDlgItem(window,Recycle),200,dy,220,24);
+   placeHwnd(GetDlgItem(window,Deep),430,dy,150,24);
    dy+=30;
-   placeHwnd(GetDlgItem(window,BatchLabel),28,dy+3,104,24);
-   placeHwnd(GetDlgItem(window,BatchPassword),136,dy,240,28);
+   placeHwnd(GetDlgItem(window,BatchLabel),40,dy+3,104,24);
+   placeHwnd(GetDlgItem(window,BatchPassword),148,dy,240,28);
   }
 
   // Minimal Footer Dock (custom 60fps progress bar drawn in paint(); hide native Win32 green progress bar)
@@ -392,11 +409,25 @@ void tickAnimations(){
   needMore=true;
  }
 
- // 3. 60fps spring-smoothed progress bar + shimmer
+ // 3. Smooth 60fps Options Drawer slide animation
+ float drawerTarget=showOptionsDrawer?1.0f:0.0f;
+ if(std::fabs(drawerAnim-drawerTarget)>0.008f){
+  drawerAnim+=(drawerTarget-drawerAnim)*0.28f;
+  if(std::fabs(drawerAnim-drawerTarget)<=0.008f)drawerAnim=drawerTarget;
+  layout();
+  needMore=true;
+ }
+
+ // 4. 60fps spring-smoothed progress bar + shimmer + completion pulse
  bool progDirty=false;
  if(std::fabs(displayProgress-targetProgress)>0.15f){
   displayProgress+=(targetProgress-displayProgress)*0.18f;
   if(std::fabs(displayProgress-targetProgress)<=0.15f)displayProgress=targetProgress;
+  progDirty=true;needMore=true;
+ }
+ if(donePulse>0.01f){
+  donePulse*=0.90f;
+  if(donePulse<=0.01f)donePulse=0.0f;
   progDirty=true;needMore=true;
  }
  if(progressActive){
@@ -710,10 +741,20 @@ void paint(){
    if(!taskView.unfiltered())summary=L"显示 "+std::to_wstring(rows.size())+L" / "+std::to_wstring(total)+L" 项 · "+countSummary(counts);
    write(28,summaryY,w-164,22,summary,smallFont,ColInkSoft);
   }
+  // Elevated rounded white card frames for Queue List & Collapsible Options Drawer
+  auto drawCard=[&](const RECT& cr,int rad){
+   if(cr.right<=cr.left||cr.bottom<=cr.top)return;
+   auto cPen=CreatePen(PS_SOLID,1,ColBorder);
+   auto ob=SelectObject(dc,surfaceBrush);auto op=SelectObject(dc,cPen);
+   RoundRect(dc,cr.left,cr.top,cr.right,cr.bottom,px(rad),px(rad));
+   SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(cPen);
+  };
+  drawCard(listCardRect,12);
+  drawCard(drawerCardRect,12);
+
   // Subtle divider above footer dock
   auto divPen=CreatePen(PS_SOLID,1,ColBorder);auto oldP=SelectObject(dc,divPen);
   MoveToEx(dc,px(28),px(h-78),nullptr);LineTo(dc,px(w-28),px(h-78));
-  if(showOptionsDrawer){MoveToEx(dc,px(28),px(h-190),nullptr);LineTo(dc,px(w-28),px(h-190));}
   SelectObject(dc,oldP);DeleteObject(divPen);
 
   // Custom 60fps Spring-Smoothed Pill Progress Bar
@@ -733,7 +774,7 @@ void paint(){
     DeleteObject(fillBr);
    }else if(displayProgress>0.1f){
     int fw=std::max(radius,int(pw*std::clamp(displayProgress/100.0f,0.0f,1.0f)));
-    COLORREF barCol=(!progressActive&&displayProgress>=99.5f)?ColEmerald:ColOrange;
+    COLORREF barCol=(!progressActive&&displayProgress>=99.5f)?lerpColor(ColEmerald,RGB(74,222,128),donePulse):ColOrange;
     auto fillBr=CreateSolidBrush(barCol);SelectObject(dc,fillBr);
     RoundRect(dc,pr.left,pr.top,pr.left+fw,pr.bottom,radius,radius);
     if(progressActive&&fw>px(36)){
@@ -879,21 +920,28 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   selectedOutput=startupWorkspace.defaults.output;SetWindowTextW(directoryEdit,selectedOutput.empty()?L"原包所在目录 · 创建同名文件夹，重名自动改名":selectedOutput.c_str());SendDlgItemMessageW(hwnd,QueueFilter,CB_SETCURSEL,unsigned(taskView.filter),0);SetWindowTextW(queueSearch,taskView.query.c_str());
   volumeEditor=std::move(startupWorkspace.volumes);taskEditor=std::move(startupWorkspace.editor);if(taskEditor.active)loadTaskEditorControls();refresh();
   auto page=startupWorkspace.page;if(page==Page::Volumes&&!volumeEditor.active)page=Page::Queue;if(page==Page::TaskSettings&&!taskEditor.active)page=Page::Queue;
-  if(page==Page::Volumes)refreshVolumes({},true);showPage(page);workspaceReady=true;SetTimer(hwnd,WorkspaceTimer,1000,nullptr);
+  if(page==Page::Volumes)refreshVolumes({},true);applyRowHeights();showPage(page);workspaceReady=true;SetTimer(hwnd,WorkspaceTimer,1000,nullptr);
   if(!startupNotice.empty())feedback(startupNotice);else if(workspaceLoaded)feedback(L"已恢复工作台 "+std::to_wstring(queue.counts().total())+L" 项。未完成任务不会自动执行；上次处理中断的任务可重试。");return 0;}
  case WM_SIZE:if(wp!=SIZE_MINIMIZED&&!layingOut){workspaceChanged();layout();revealFocus();}return 0;
  case WM_VSCROLL:case WM_HSCROLL:{int bar=msg==WM_VSCROLL?SB_VERT:SB_HORZ;SCROLLINFO info{sizeof(info),SIF_ALL};GetScrollInfo(hwnd,bar,&info);int value=info.nPos;switch(LOWORD(wp)){case SB_LINEUP:value-=32;break;case SB_LINEDOWN:value+=32;break;case SB_PAGEUP:value-=int(info.nPage)*3/4;break;case SB_PAGEDOWN:value+=int(info.nPage)*3/4;break;case SB_THUMBTRACK:value=info.nTrackPos;break;case SB_TOP:value=info.nMin;break;case SB_BOTTOM:value=info.nMax;break;}scrollView(bar,value);return 0;}
  case WM_MOUSEWHEEL:scrollView(SB_VERT,scrollY-GET_WHEEL_DELTA_WPARAM(wp)*48/WHEEL_DELTA);return 0;
- case WM_DPICHANGED:workspaceChanged();dpi=HIWORD(wp);updateFonts();updateIcons();{auto r=reinterpret_cast<RECT*>(lp);SetWindowPos(hwnd,nullptr,r->left,r->top,r->right-r->left,r->bottom-r->top,SWP_NOZORDER|SWP_NOACTIVATE);}layout();revealFocus();return 0;
+ case WM_DPICHANGED:workspaceChanged();dpi=HIWORD(wp);updateFonts();updateIcons();applyRowHeights();{auto r=reinterpret_cast<RECT*>(lp);SetWindowPos(hwnd,nullptr,r->left,r->top,r->right-r->left,r->bottom-r->top,SWP_NOZORDER|SWP_NOACTIVATE);}layout();revealFocus();return 0;
  case WM_GETMINMAXINFO:{MONITORINFO monitor{sizeof(monitor)};GetMonitorInfoW(MonitorFromWindow(hwnd,MONITOR_DEFAULTTONEAREST),&monitor);auto info=reinterpret_cast<MINMAXINFO*>(lp);info->ptMinTrackSize={std::min<LONG>(px(920),monitor.rcWork.right-monitor.rcWork.left-px(24)),std::min<LONG>(px(620),monitor.rcWork.bottom-monitor.rcWork.top-px(24))};return 0;}
  case WM_ERASEBKGND:return 1;
- case WM_CTLCOLORSTATIC:SetBkColor(reinterpret_cast<HDC>(wp),ColCanvas);SetTextColor(reinterpret_cast<HDC>(wp),ColInkSoft);return reinterpret_cast<LRESULT>(background);
+ case WM_CTLCOLORSTATIC:{
+  int cid=GetDlgCtrlID(reinterpret_cast<HWND>(lp));
+  bool inDrawer=currentPage==Page::Queue&&(cid==DirectoryLabel||cid==BatchLabel||cid==Nested||cid==Recycle||cid==Deep);
+  SetBkColor(reinterpret_cast<HDC>(wp),inDrawer?ColSurface:ColCanvas);
+  SetTextColor(reinterpret_cast<HDC>(wp),inDrawer?ColInk:ColInkSoft);
+  return reinterpret_cast<LRESULT>(inDrawer?surfaceBrush:background);
+ }
+ case WM_CTLCOLOREDIT:SetBkColor(reinterpret_cast<HDC>(wp),ColSurface);SetTextColor(reinterpret_cast<HDC>(wp),ColInk);return reinterpret_cast<LRESULT>(surfaceBrush);
  case WM_PAINT:paint();return 0;
  case WM_DRAWITEM:if(reinterpret_cast<DRAWITEMSTRUCT*>(lp)->CtlType==ODT_BUTTON){drawButton(reinterpret_cast<DRAWITEMSTRUCT*>(lp));return TRUE;}break;
  case WM_DROPFILES:{auto drop=reinterpret_cast<HDROP>(wp);auto files=pathsFromDrop(drop);DragFinish(drop);try{receiveFiles(files);}catch(const std::exception& e){message(errorText(e));}return 0;}
  case WM_QUEUE_UPDATE:if(!SetTimer(hwnd,QueueRefreshTimer,90,nullptr))flushUpdates();return 0;
  case WM_TIMER:if(wp==AnimTimer){tickAnimations();return 0;}if(wp==WorkspaceTimer){try{if(running)updatePhaseCaption();checkWorkspaceSave();}catch(const std::exception& e){feedback(L"工作台快照未能保存："+errorText(e));}return 0;}if(wp==QueueRefreshTimer){flushUpdates();return 0;}if(wp==PasswordPreviewTimer){KillTimer(hwnd,PasswordPreviewTimer);updatePasswordPreview();return 0;}break;
- case WM_FINISHED:{KillTimer(hwnd,QueueRefreshTimer);backgroundUpdates.take();running=false;currentPhase.clear();auto counts=queue.counts();if(stopped||!counts.waiting)pauseAfterCurrent=false;setProgress(!wp&&!stopped&&!counts.attention&&!counts.waiting&&!counts.paused?100:0,false);if(closing){if(wp)delete reinterpret_cast<std::wstring*>(lp);if(saveBeforeExit())DestroyWindow(hwnd);else {closing=false;refresh();}return 0;}refresh();if(!wp&&!stopped&&!pauseAfterCurrent&&counts.waiting){start();requestWorkspaceSave(true);return 0;}if(wp){std::unique_ptr<std::wstring> error(reinterpret_cast<std::wstring*>(lp));feedback(*error);}else feedback((stopped?L"已停止。":pauseAfterCurrent?L"当前项已结束，批次已暂停。":L"本轮已结束。")+countSummary(queue.counts()));if(currentPage==Page::Passwords){refreshPasswords();updatePasswordPreview();}requestWorkspaceSave(true);return 0;}
+ case WM_FINISHED:{KillTimer(hwnd,QueueRefreshTimer);backgroundUpdates.take();running=false;currentPhase.clear();auto counts=queue.counts();if(stopped||!counts.waiting)pauseAfterCurrent=false;bool allClean=!wp&&!stopped&&!counts.attention&&!counts.waiting&&!counts.paused;setProgress(allClean?100:0,false);if(allClean){donePulse=1.0f;ensureAnimTimer();}if(closing){if(wp)delete reinterpret_cast<std::wstring*>(lp);if(saveBeforeExit())DestroyWindow(hwnd);else {closing=false;refresh();}return 0;}refresh();if(!wp&&!stopped&&!pauseAfterCurrent&&counts.waiting){start();requestWorkspaceSave(true);return 0;}if(wp){std::unique_ptr<std::wstring> error(reinterpret_cast<std::wstring*>(lp));feedback(*error);}else feedback(stopped?L"已停止，未完成项留在队列。":pauseAfterCurrent?L"当前项已结束，批次已暂停。":allClean?L"全部搞定！双击已完成项即可直达结果文件夹。":L"本轮已结束 · "+countSummary(queue.counts()));if(currentPage==Page::Passwords){refreshPasswords();updatePasswordPreview();}requestWorkspaceSave(true);return 0;}
  case WM_CONTEXTMENU:if(reinterpret_cast<HWND>(wp)==list){
   POINT anchor{GET_X_LPARAM(lp),GET_Y_LPARAM(lp)};
   if(anchor.x==-1&&anchor.y==-1){int index=ListView_GetNextItem(list,-1,LVNI_FOCUSED);RECT r{};if(index>=0){ListView_EnsureVisible(list,index,FALSE);ListView_GetItemRect(list,index,&r,LVIR_BOUNDS);}else GetClientRect(list,&r);anchor={r.left+px(16),index>=0?r.bottom:r.top+px(24)};ClientToScreen(list,&anchor);}
@@ -920,13 +968,79 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   if(notification->code==LVN_GETDISPINFOW){auto info=reinterpret_cast<NMLVDISPINFOW*>(lp);int i=info->item.iItem,j=info->item.iSubItem;if(info->item.mask&LVIF_TEXT){info->item.pszText=const_cast<wchar_t*>(L"");if(i>=0&&j>=0){if(notification->idFrom==List&&size_t(i)<rows.size()&&j<5)info->item.pszText=rows[size_t(i)].cells[size_t(j)].data();else if(notification->idFrom==PasswordList&&size_t(i)<passwordCells.size()&&j<3)info->item.pszText=passwordCells[size_t(i)][size_t(j)].data();else if(notification->idFrom==VolumeList&&size_t(i)<volumeCells.size()&&j<4)info->item.pszText=volumeCells[size_t(i)][size_t(j)].data();}}return 0;}
   if((notification->code==LVN_ITEMCHANGED||notification->code==LVN_ODSTATECHANGED)&&!refreshing){if(notification->idFrom==List){updateControls();workspaceChanged();}else if(notification->idFrom==VolumeList){updateVolumeControls();workspaceChanged();}else if(notification->idFrom==PasswordList)updatePasswordControls();return 0;}
   if(notification->idFrom==PasswordList&&(notification->code==NM_DBLCLK||notification->code==NM_RETURN)){if(notification->code==NM_RETURN||reinterpret_cast<NMITEMACTIVATE*>(lp)->iItem>=0)activateList(passwordList);return 0;}
+  if(notification->idFrom==List&&notification->code==NM_CUSTOMDRAW){
+   auto cd=reinterpret_cast<NMLVCUSTOMDRAW*>(lp);
+   if(cd->nmcd.dwDrawStage==CDDS_PREPAINT)return CDRF_NOTIFYITEMDRAW;
+   if(cd->nmcd.dwDrawStage==CDDS_ITEMPREPAINT)return CDRF_NOTIFYSUBITEMDRAW;
+   if(cd->nmcd.dwDrawStage==(CDDS_ITEMPREPAINT|CDDS_SUBITEM)){
+    size_t idx=size_t(cd->nmcd.dwItemSpec);
+    int col=cd->iSubItem;
+    if(idx>=rows.size())return CDRF_DODEFAULT;
+    const auto& row=rows[idx];
+    bool sel=(ListView_GetItemState(list,int(idx),LVIS_SELECTED)&LVIS_SELECTED)!=0;
+    RECT rc{};ListView_GetSubItemRect(list,int(idx),col,LVIR_BOUNDS,&rc);
+    if(col==0&&rc.right>rc.left){RECT full{};ListView_GetItemRect(list,int(idx),&full,LVIR_BOUNDS);rc.left=full.left;}
+    HDC dc=cd->nmcd.hdc;
+    COLORREF bg=sel?ColOrangeWash:(idx%2?RGB(251,250,247):ColSurface);
+    auto br=CreateSolidBrush(bg);FillRect(dc,&rc,br);DeleteObject(br);
+    // Crisp hairline divider at bottom of row
+    auto divP=CreatePen(PS_SOLID,1,RGB(238,235,227));auto op=SelectObject(dc,divP);
+    MoveToEx(dc,rc.left,rc.bottom-1,nullptr);LineTo(dc,rc.right,rc.bottom-1);
+    SelectObject(dc,op);DeleteObject(divP);
+    // Warm orange left accent bar on selected row
+    if(sel&&col==0){
+     RECT bar{rc.left,rc.top+px(4),rc.left+px(3),rc.bottom-px(5)};
+     auto acc=CreateSolidBrush(ColOrange);FillRect(dc,&bar,acc);DeleteObject(acc);
+    }
+    SetBkMode(dc,TRANSPARENT);
+    if(col==2){
+     // Color-coded modern status pill badge
+     COLORREF pillBg=ColSurfaceMuted,pillTx=ColInkSoft;
+     if(row.task.state==State::Done){pillBg=RGB(220,252,231);pillTx=RGB(21,128,61);}
+     else if(row.task.state==State::Running){pillBg=RGB(255,237,213);pillTx=RGB(194,65,12);}
+     else if(row.task.state==State::Attention){pillBg=RGB(254,243,199);pillTx=RGB(180,83,9);}
+     else if(row.task.paused){pillBg=RGB(238,236,229);pillTx=ColInkSoft;}
+     int ph=px(22),py=(rc.top+rc.bottom-ph)/2;
+     RECT pr{rc.left+px(6),py,std::min(rc.right-px(6),rc.left+px(74)),py+ph};
+     if(pr.right>pr.left+px(12)){
+      auto pb=CreateSolidBrush(pillBg);auto ob=SelectObject(dc,pb);auto np=SelectObject(dc,GetStockObject(NULL_PEN));
+      RoundRect(dc,pr.left,pr.top,pr.right,pr.bottom,ph,ph);
+      SelectObject(dc,ob);SelectObject(dc,np);DeleteObject(pb);
+      auto of=SelectObject(dc,smallFont);SetTextColor(dc,pillTx);
+      DrawTextW(dc,row.cells[2].c_str(),-1,&pr,DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+      SelectObject(dc,of);
+     }
+     return CDRF_SKIPDEFAULT;
+    }
+    if(col==3&&row.task.state==State::Running&&row.task.percent>=0){
+     // Inline mini orange progress pill inside row
+     int bh=px(6),by=(rc.top+rc.bottom-bh)/2;
+     RECT tr{rc.left+px(6),by,rc.right-px(6),by+bh};
+     if(tr.right>tr.left+px(16)){
+      auto tb=CreateSolidBrush(ColSurfaceMuted);auto ob=SelectObject(dc,tb);auto np=SelectObject(dc,GetStockObject(NULL_PEN));
+      RoundRect(dc,tr.left,tr.top,tr.right,tr.bottom,bh,bh);
+      int fw=std::max(bh,int((tr.right-tr.left)*std::clamp(row.task.percent/100.0f,0.0f,1.0f)));
+      auto fb=CreateSolidBrush(ColOrange);SelectObject(dc,fb);
+      RoundRect(dc,tr.left,tr.top,tr.left+fw,tr.bottom,bh,bh);
+      SelectObject(dc,ob);SelectObject(dc,np);DeleteObject(tb);DeleteObject(fb);
+      return CDRF_SKIPDEFAULT;
+     }
+    }
+    RECT tr=rc;tr.left+=px(col==0?12:8);tr.right-=px(8);
+    auto of=SelectObject(dc,col==0?boldFont:font);
+    SetTextColor(dc,col==0?ColInk:ColInkSoft);
+    DrawTextW(dc,row.cells[size_t(col)].c_str(),-1,&tr,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+    SelectObject(dc,of);
+    return CDRF_SKIPDEFAULT;
+   }
+  }
   if(notification->idFrom==List&&(notification->code==NM_DBLCLK||notification->code==NM_RETURN)){if(notification->code==NM_RETURN||reinterpret_cast<NMITEMACTIVATE*>(lp)->iItem>=0)activateList(list);return 0;}break;}
  case WM_COMMAND:try{auto id=LOWORD(wp);if(id==QueueSearch&&HIWORD(wp)==EN_CHANGE){taskView.query=text(GetDlgItem(hwnd,QueueSearch));workspaceChanged();if(list)refresh();return 0;}
   if(id==QueueFilter&&HIWORD(wp)==CBN_SELCHANGE){auto index=SendDlgItemMessageW(hwnd,QueueFilter,CB_GETCURSEL,0,0);if(index>=0){taskView.filter=TaskFilter(index);workspaceChanged();refresh();}return 0;}
   if(id==NewPassword&&HIWORD(wp)==EN_CHANGE){SetTimer(hwnd,PasswordPreviewTimer,160,nullptr);return 0;}
   if(id==PasswordSearch&&HIWORD(wp)==EN_CHANGE){refreshPasswords();return 0;}switch(id){
   case QueueTab:showPage(Page::Queue);break;case PasswordTab:showPage(Page::Passwords);break;
-  case IdToggleOptions:showOptionsDrawer=!showOptionsDrawer;layout();InvalidateRect(btnToggleOptions,nullptr,FALSE);break;
+  case IdToggleOptions:showOptionsDrawer=!showOptionsDrawer;ensureAnimTimer();InvalidateRect(btnToggleOptions,nullptr,FALSE);break;
   case IdToggleSearch:showSearchBar=!showSearchBar;if(!showSearchBar&&!taskView.unfiltered()){resetTaskViewUI();refresh();}layout();if(showSearchBar)focusAndReveal(GetDlgItem(hwnd,QueueSearch));InvalidateRect(btnToggleSearch,nullptr,FALSE);break;
   case IdQuickClearDone:SendMessageW(hwnd,WM_COMMAND,ClearDone,0);break;
   case Add:case DropZone:addFiles(chooseFiles());break;case AddFolder:{auto dir=chooseDirectory();if(!dir.empty())addFiles({dir});break;}
@@ -940,7 +1054,7 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   case TaskSourceDirectory:workspaceChanged();taskEditor.value.output.clear();SetWindowTextW(GetDlgItem(hwnd,TaskDirectory),L"原包所在目录");break;
   case TaskBack:readTaskEditor();showPage(Page::Queue);break;case TaskSave:saveTaskSettings(false);break;case TaskApply:saveTaskSettings(true);break;
   case SearchClear:taskView={};SendDlgItemMessageW(hwnd,QueueFilter,CB_SETCURSEL,0,0);SetWindowTextW(GetDlgItem(hwnd,QueueSearch),L"");refresh();focusAndReveal(GetDlgItem(hwnd,QueueSearch));break;
-  case NextStep:{auto task=selectedTask();if(!task||task->state!=State::Attention||running)break;if(task->result.status==L"password_required"){if(!showOptionsDrawer){showOptionsDrawer=true;layout();}focusAndReveal(batchEdit);SendMessageW(batchEdit,EM_SETSEL,0,-1);revealFocus();feedback(L"填写本批优先密码后，重试所选任务，再开始解压。");}else if(task->result.status==L"source_unavailable")relocateSource(*task);else if(task->result.status==L"missing_volume"||task->result.status==L"ambiguous_volume")orderedVolumes();break;}case Cancel:stopped=true;feedback(L"未开始的任务留在队列，本轮结束后可重试取消项。");updateControls();break;
+  case NextStep:{auto task=selectedTask();if(!task||task->state!=State::Attention||running)break;if(task->result.status==L"password_required"){if(!showOptionsDrawer){showOptionsDrawer=true;drawerAnim=1.0f;layout();}focusAndReveal(batchEdit);SendMessageW(batchEdit,EM_SETSEL,0,-1);revealFocus();feedback(L"填写本批优先密码后，重试所选任务，再开始解压。");}else if(task->result.status==L"source_unavailable")relocateSource(*task);else if(task->result.status==L"missing_volume"||task->result.status==L"ambiguous_volume")orderedVolumes();break;}case Cancel:stopped=true;feedback(L"未开始的任务留在队列，本轮结束后可重试取消项。");updateControls();break;
   case Choose:{auto dir=chooseDirectory();if(!dir.empty()){selectedOutput=dir;SetWindowTextW(directoryEdit,dir.c_str());workspaceChanged();}break;}
   case Reset:workspaceChanged();selectedOutput.clear();SetWindowTextW(directoryEdit,L"原包所在目录 · 创建同名文件夹，重名自动改名");break;
   case ShowPasswords:refreshPasswords();break;case UsePassword:useSavedPassword();break;
@@ -1003,7 +1117,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show){
    if(ctrl&&msg.wParam=='A'&&(focus==list||focus==volumeList)){ListView_SetItemState(focus,-1,LVIS_SELECTED,LVIS_SELECTED);if(focus==list)updateControls();else updateVolumeControls();continue;}
    if(ctrl&&msg.wParam=='V'&&(focus==list||focus==volumeList)){invokeCommand(focus==list?PasteFiles:VolumePaste);continue;}
    if(ctrl&&msg.wParam=='F'&&(currentPage==Page::Queue||currentPage==Page::Passwords)){if(currentPage==Page::Queue&&!showSearchBar){showSearchBar=true;layout();}auto search=GetDlgItem(window,currentPage==Page::Queue?QueueSearch:PasswordSearch);focusAndReveal(search);SendMessageW(search,EM_SETSEL,0,-1);revealFocus();continue;}
-   if(ctrl&&msg.wParam==VK_OEM_COMMA&&currentPage==Page::Queue){showOptionsDrawer=!showOptionsDrawer;layout();continue;}
+   if(ctrl&&msg.wParam==VK_OEM_COMMA&&currentPage==Page::Queue){showOptionsDrawer=!showOptionsDrawer;ensureAnimTimer();continue;}
    if(ctrl&&(msg.wParam==VK_UP||msg.wParam==VK_DOWN)&&(focus==list||focus==volumeList)){invokeCommand(focus==list?(msg.wParam==VK_UP?Up:Down):(msg.wParam==VK_UP?VolumeUp:VolumeDown));continue;}
    if(msg.wParam==VK_DELETE&&(focus==list||focus==volumeList)){invokeCommand(focus==list?Remove:VolumeRemove);continue;}
    if(msg.wParam==VK_ESCAPE&&(focus==GetDlgItem(window,QueueSearch)||focus==GetDlgItem(window,PasswordSearch))){SetWindowTextW(focus,L"");continue;}
@@ -1012,5 +1126,5 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show){
   }
   if(!IsDialogMessageW(window,&msg)){TranslateMessage(&msg);DispatchMessageW(&msg);}if(msg.message==WM_KEYDOWN||msg.message==WM_CHAR)revealFocus();
  }
- if(worker.joinable())worker.join();workspaceWriter.reset();for(auto face:{font,boldFont,titleFont,smallFont})if(face)DeleteObject(face);DeleteObject(background);DeleteObject(surfaceBrush);OleUninitialize();return 0;
+ if(worker.joinable())worker.join();workspaceWriter.reset();if(rowHeightList)ImageList_Destroy(rowHeightList);for(auto face:{font,boldFont,titleFont,smallFont})if(face)DeleteObject(face);DeleteObject(background);DeleteObject(surfaceBrush);OleUninitialize();return 0;
 }
