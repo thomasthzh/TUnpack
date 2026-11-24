@@ -169,7 +169,21 @@ void setProgress(int percent,bool active){
  }
  if(!unknown)SendMessageW(progress,PBM_SETPOS,percent<0?0:percent,0);
 }
-void updatePhaseCaption(){auto counts=queue.counts();auto task=activeTaskId?queue.get(activeTaskId):std::optional<Task>{};auto detail=task&&task->state==State::Running?taskName(*task)+L" · "+taskProgressCaption(*task):currentPhase;auto phase=phaseCaption(counts,running,stopped,detail,pauseAfterCurrent);if(text(phaseStatus)!=phase)SetWindowTextW(phaseStatus,phase.c_str());}
+void resetTaskViewUI(){
+ taskView={};
+ refreshing=true;
+ SetWindowTextW(GetDlgItem(window,QueueSearch),L"");
+ SendDlgItemMessageW(window,QueueFilter,CB_SETCURSEL,0,0);
+ refreshing=false;
+ workspaceChanged();
+}
+void updatePhaseCaption(){
+ auto counts=queue.counts();auto task=activeTaskId?queue.get(activeTaskId):std::optional<Task>{};
+ std::wstring detail=task&&task->state==State::Running?taskName(*task)+L" · "+taskProgressCaption(*task):currentPhase;
+ if(counts.running>1&&!detail.empty())detail=L"并行处理 "+std::to_wstring(counts.running)+L" 项 · "+detail;
+ auto phase=phaseCaption(counts,running,stopped,detail,pauseAfterCurrent);
+ if(text(phaseStatus)!=phase)SetWindowTextW(phaseStatus,phase.c_str());
+}
 void updateControls(){
  auto selected=selectedIndices(list,rows.size());std::optional<Task> task=selected.size()==1?queue.get(rows[size_t(selected.front())].task.id):std::optional<Task>{};auto c=queue.counts();bool hasWaiting=std::any_of(selected.begin(),selected.end(),[](auto i){return rows[size_t(i)].task.state==State::Waiting;});auto enable=[&](Id id,bool value){EnableWindow(GetDlgItem(window,id),value);};
  enable(Start,!running&&c.waiting);enable(Cancel,running&&!stopped);std::wstring startLabel=running?L"正在处理…":c.waiting?(pauseAfterCurrent?L"继续全部 ":L"开始全部 ")+std::to_wstring(c.waiting)+L" 项":L"开始队列";SetWindowTextW(GetDlgItem(window,Start),startLabel.c_str());
@@ -190,8 +204,9 @@ void refresh(uint64_t select){
  if(restoredSelection){selection=std::move(*restoredSelection);restoredSelection.reset();}
  uint64_t top=0;auto topIndex=ListView_GetTopIndex(list);if(topIndex>=0&&size_t(topIndex)<rows.size())top=rows[size_t(topIndex)].task.id;
  auto snapshot=queue.snapshot();if(select){auto target=std::find_if(snapshot.begin(),snapshot.end(),[&](const auto& t){return t.id==select;});if(target!=snapshot.end()&&taskView.matches(*target)){selection.ids={select};selection.focus=selection.anchor=select;}else select=0;}
- selection=restoreSelection(snapshot,selection);std::vector<size_t> visible;std::wstring activeCaption;int activePercent=-1;activeTaskId=0;
- for(size_t i=0;i<snapshot.size();++i){const auto& task=snapshot[i];if(taskView.matches(task))visible.push_back(i);if(task.state==State::Running){activeTaskId=task.id;activeCaption=taskName(task)+L" · "+task.phase;activePercent=task.percent;}}
+ selection=restoreSelection(snapshot,selection);std::vector<size_t> visible;std::wstring activeCaption;int activePercent=-1;activeTaskId=0;unsigned runningCount=0,knownPercent=0;int percentSum=0;
+ for(size_t i=0;i<snapshot.size();++i){const auto& task=snapshot[i];if(taskView.matches(task))visible.push_back(i);if(task.state==State::Running){++runningCount;if(!activeTaskId){activeTaskId=task.id;activeCaption=taskName(task)+L" · "+task.phase;}if(task.percent>=0){percentSum+=task.percent;++knownPercent;}}}
+ if(knownPercent)activePercent=percentSum/int(knownPercent);
  bool unchanged=visible.size()==rows.size();if(unchanged)for(size_t i=0;i<visible.size();++i)if(rows[i].task.id!=snapshot[visible[i]].id){unchanged=false;break;}
  if(unchanged&&!select){
   for(size_t i=0;i<visible.size();++i){auto& current=snapshot[visible[i]];const auto& old=rows[i].task;
@@ -227,7 +242,24 @@ void relocateSource(const Task& task){
 unsigned addFiles(const std::vector<fs::path>& files,bool navigate=true){
  unsigned added=0,duplicates=0,unavailable=0;uint64_t first=0;
  for(const auto& file:files){Task task;task.files={file};auto attributes=GetFileAttributesW(file.c_str());if(attributes==INVALID_FILE_ATTRIBUTES){++unavailable;continue;}if(attributes&FILE_ATTRIBUTE_DIRECTORY)task.action=Action::Scan;auto id=queue.add(std::move(task));if(id){++added;if(!first)first=id;}else ++duplicates;}
- if(files.empty())return 0;if(navigate)showPage(Page::Queue);refresh(navigate?first:0);if(navigate)focusAndReveal(list);feedback(L"已加入 "+std::to_wstring(added)+L" 项"+(duplicates?L"，跳过 "+std::to_wstring(duplicates)+L" 个重复项":L"")+(unavailable?L"，无法访问 "+std::to_wstring(unavailable)+L" 项":L"")+(taskView.unfiltered()?L"。分卷在后台识别，等待队列处理。":L"。当前查找或筛选可能隐藏新任务；开始按钮处理全部等待项。"));return added;
+ if(files.empty())return 0;
+ uint64_t revealId=first;
+ if(!revealId&&duplicates&&navigate){
+  auto firstKey=pathKey(files.front());
+  for(const auto& t:queue.snapshot()){
+   if(std::any_of(t.files.begin(),t.files.end(),[&](const auto& p){return pathKey(p)==firstKey;})){revealId=t.id;break;}
+  }
+ }
+ bool filterReset=false;
+ if(navigate&&revealId&&!taskView.unfiltered()){
+  auto target=queue.get(revealId);
+  if(target&&!taskView.matches(*target)){resetTaskViewUI();filterReset=true;}
+ }
+ if(navigate)showPage(Page::Queue);refresh(navigate?revealId:0);if(navigate)focusAndReveal(list);
+ std::wstring msg=L"已加入 "+std::to_wstring(added)+L" 项"+(duplicates?L"，跳过 "+std::to_wstring(duplicates)+L" 个重复项":L"")+(unavailable?L"，无法访问 "+std::to_wstring(unavailable)+L" 项":L"");
+ if(filterReset)msg+=L"（已自动重置筛选以显示任务）。";
+ else msg+=L"。分卷在后台识别，等待队列处理。";
+ feedback(msg);return added;
 }
 void postUpdate(uint64_t id){if(backgroundUpdates.add(id))PostMessageW(window,WM_QUEUE_UPDATE,0,0);}
 void start(){
@@ -336,7 +368,7 @@ void acceptVolumes(){
  if(volumeEditor.files.empty())return;for(size_t i=0;i<volumeEditor.files.size();++i){std::error_code error;if(!fs::is_regular_file(volumeEditor.files[i],error)){refreshVolumes({volumeEditor.files[i]},true);auto note=L"第 "+std::to_wstring(i+1)+L" 卷不存在或无法读取，请重新添加该文件。";SetWindowTextW(GetDlgItem(window,VolumeFeedback),note.c_str());return;}}
  uint64_t id=volumeEditor.taskId;if(id){if(!queue.setVolumes(id,volumeEditor.files)){SetWindowTextW(GetDlgItem(window,VolumeFeedback),L"原任务已经开始或已移除，请返回队列后重新整理。");return;}}
  else {Task task;task.files=volumeEditor.files;task.manualVolumes=true;task.settings=volumeEditor.settings;id=queue.add(std::move(task));if(!id){SetWindowTextW(GetDlgItem(window,VolumeFeedback),L"该卷组已在队列中，或原包正在使用。请返回队列查看；当前顺序草稿会保留。");return;}}
- volumeEditor.active=false;showPage(Page::Queue);refresh(id);feedback(L"已保存 "+std::to_wstring(volumeEditor.files.size())+L" 卷的读取顺序。"+(queue.get(id)->paused?L"此任务仍暂缓，继续后再处理。":L"已回到待开始队列；开始全部后处理。"));
+ volumeEditor.active=false;if(!taskView.unfiltered()){auto target=queue.get(id);if(target&&!taskView.matches(*target))resetTaskViewUI();}showPage(Page::Queue);refresh(id);feedback(L"已保存 "+std::to_wstring(volumeEditor.files.size())+L" 卷的读取顺序。"+(queue.get(id)->paused?L"此任务仍暂缓，继续后再处理。":L"已回到待开始队列；开始全部后处理。"));
 }
 bool receiveFiles(const std::vector<fs::path>& files){
  if(currentPage==Page::TaskSettings)return false;
@@ -386,7 +418,7 @@ void createArchive(){
  auto menu=CreatePopupMenu();AppendMenuW(menu,MF_STRING,1,L"创建 7z 压缩包");AppendMenuW(menu,MF_STRING,2,L"创建 ZIP 压缩包");RECT r;GetWindowRect(GetDlgItem(window,Create),&r);auto choice=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTALIGN,r.right,r.bottom,0,window,nullptr);DestroyMenu(menu);if(!choice)return;
  auto paths=chooseFiles(L"选择要压缩的文件");if(paths.empty())return;std::wstring initial=(paths.front().parent_path()/(paths.front().stem().wstring()+(choice==1?L".7z":L".zip"))).wstring();std::vector<wchar_t> buffer(32768);std::copy(initial.begin(),initial.end(),buffer.begin());
  OPENFILENAMEW ofn{sizeof(ofn)};ofn.hwndOwner=window;ofn.lpstrTitle=L"新压缩包保存位置";ofn.lpstrFile=buffer.data();ofn.nMaxFile=DWORD(buffer.size());ofn.lpstrFilter=choice==1?L"7z 压缩包\0*.7z\0":L"ZIP 压缩包\0*.zip\0";ofn.lpstrDefExt=choice==1?L"7z":L"zip";ofn.Flags=OFN_EXPLORER|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;if(!GetSaveFileNameW(&ofn))return;
- Task task;task.files=paths;task.target=buffer.data();task.action=choice==1?Action::Create7z:Action::CreateZip;task.target.replace_extension(choice==1?L".7z":L".zip");auto id=queue.add(std::move(task));refresh(id);feedback(L"创建任务已加入队列。下方本批密码可用于加密。");
+ Task task;task.files=paths;task.target=buffer.data();task.action=choice==1?Action::Create7z:Action::CreateZip;task.target.replace_extension(choice==1?L".7z":L".zip");auto id=queue.add(std::move(task));if(id&&!taskView.unfiltered()){auto target=queue.get(id);if(target&&!taskView.matches(*target))resetTaskViewUI();}refresh(id);feedback(L"创建任务已加入队列。下方本批密码可用于加密。");
 }
 void taskMenu(std::optional<POINT> anchor={}){
  auto selected=selectedIndices(list,rows.size());bool fileTask=!selected.empty()&&std::all_of(selected.begin(),selected.end(),[](auto i){return fileActionAllowed(rows[size_t(i)].task);});auto menu=CreatePopupMenu();
@@ -457,8 +489,12 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
    [](const auto& files){return !closing&&acceptsDrop(currentPage,files,running);},
    [](const auto& files){return receiveFiles(files);},
    dropFeedback,
-   [](const auto& error){message(error);}});for(auto target:{hwnd,list,GetDlgItem(hwnd,DropZone),passwordList,passwordEdit,volumeList})if(SUCCEEDED(RegisterDragDrop(target,drop)))dropWindows.push_back(target);drop->Release();if(dropWindows.empty())DragAcceptFiles(hwnd,TRUE);
+   [](const auto& error){message(error);}});for(auto target:{hwnd,list,GetDlgItem(hwnd,DropZone),GetDlgItem(hwnd,TaskDetails),passwordList,passwordEdit,volumeList})if(SUCCEEDED(RegisterDragDrop(target,drop)))dropWindows.push_back(target);drop->Release();if(dropWindows.empty())DragAcceptFiles(hwnd,TRUE);
   columnSizes=startupWorkspace.columns;pageScroll=startupWorkspace.scroll;scrollX=pageScroll[0].x;scrollY=pageScroll[0].y;taskView=startupWorkspace.view;restoredSelection=startupWorkspace.selection;
+  if(!taskView.unfiltered()){
+   auto snap=queue.snapshot();
+   if(!snap.empty()&&std::none_of(snap.begin(),snap.end(),[&](const auto& t){return taskView.matches(t);}))taskView={};
+  }
   for(size_t i=0;i<PageCount;++i){auto target=GetDlgItem(hwnd,startupWorkspace.focus[i]);if(std::find(pageGroups[i]->begin(),pageGroups[i]->end(),target)!=pageGroups[i]->end())pageFocus[i]=target;}
   selectedOutput=startupWorkspace.defaults.output;SetWindowTextW(directoryEdit,selectedOutput.empty()?L"原包所在目录 · 创建同名文件夹，重名自动改名":selectedOutput.c_str());SendDlgItemMessageW(hwnd,QueueFilter,CB_SETCURSEL,unsigned(taskView.filter),0);SetWindowTextW(queueSearch,taskView.query.c_str());
   volumeEditor=std::move(startupWorkspace.volumes);taskEditor=std::move(startupWorkspace.editor);if(taskEditor.active)loadTaskEditorControls();refresh();
