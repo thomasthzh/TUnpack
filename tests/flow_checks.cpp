@@ -299,5 +299,49 @@ int wmain(int argc,wchar_t** argv){
         VolumeEditor editor;editor.open(t);appendVolumes(editor.files,{L"C:\\generated\\second.002"});editor.open(t);require(editor.files.size()==2,"same source draft reset");
         t.result.output=L"C:\\generated\\retry-output";t.result.failedFile=L"C:\\generated\\retry-output\\other.001";editor.open(t);require(editor.files==std::vector<fs::path>{t.result.failedFile},"old inner source reused after parent retry");
     });
+    check("Single-archive parallel ZIP extraction verifies all entries accurately",[&]{
+        Fixture f(root,L"parallel-single-zip");
+        std::vector<fs::path> inputs;
+        auto srcDir=f.folder/L"multi";
+        for(unsigned i=0;i<32;++i){
+            auto p=srcDir/(L"sub"+std::to_wstring(i%4))/(L"item_"+std::to_wstring(i)+L".bin");
+            std::string body(32768,char('A'+(i%26)));
+            body+="idx="+std::to_string(i);
+            write(p,body);
+            inputs.push_back(p);
+        }
+        auto archive=f.archive(inputs,L"parallel-multi.zip",L"parallel-zip-key");
+        auto options=f.options;options.recursive=false;options.threads=4;options.password=L"parallel-zip-key";
+        auto result=f.engine.extract({archive},options);
+        require(result.ok&&result.passwordVerified,"parallel ZIP extraction failed");
+        for(unsigned i=0;i<32;++i){
+            auto expected=read(inputs[i]);
+            auto actual=read(result.output/(L"item_"+std::to_wstring(i)+L".bin"));
+            require(actual==expected,"parallel ZIP entry mismatch");
+        }
+    });
+    check("Multi-task parallel queue runner extracts independent archives concurrently without output collisions",[&]{
+        Fixture f(root,L"parallel-queue");
+        Queue q;
+        std::vector<uint64_t> ids;
+        for(unsigned i=0;i<6;++i){
+            auto sub=f.folder/(L"src_"+std::to_wstring(i));
+            auto payloadFile=sub/L"data.txt";
+            write(payloadFile,"parallel-task-"+std::to_string(i)+"\n"+std::string(4096,char('a'+i)));
+            auto relName=L"src_"+std::to_wstring(i)+L"/same_name.zip";
+            auto archive=f.archive({payloadFile},relName.c_str());
+            ids.push_back(q.add(task(archive)));
+        }
+        auto options=f.options;options.recursive=false;
+        runQueue(q,f.engine,options,[]{return false;},[](uint64_t){},{},4);
+        std::set<std::wstring> outputs;
+        for(unsigned i=0;i<6;++i){
+            auto item=q.get(ids[i]).value();
+            require(item.state==State::Done&&item.result.ok,"parallel queue task failed");
+            require(outputs.insert(lower(item.result.output.wstring())).second,"parallel queue output collision");
+            auto actual=read(item.result.output/L"data.txt");
+            require(actual=="parallel-task-"+std::to_string(i)+"\n"+std::string(4096,char('a'+i)),"parallel queue content mismatch");
+        }
+    });
     std::cout<<passed<<'/'<<total<<" full production queue flows passed; no windows, no recycling, generated sources retained.\n";return passed==total?0:1;
 }

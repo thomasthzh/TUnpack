@@ -6,5 +6,6 @@ namespace lu::ui {
 void runQueue(Queue& queue,Engine& engine,const Options& options,
               const std::function<bool()>& cancelled,
               const std::function<void(uint64_t)>& notify,
-              const std::function<bool()>& pauseAfterCurrent={});
+              const std::function<bool()>& pauseAfterCurrent={},
+              unsigned concurrency=1);
 }

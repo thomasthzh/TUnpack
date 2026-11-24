@@ -234,7 +234,7 @@ void start(){
  if(running||!queue.counts().waiting)return;auto options=applySettings(Options{},batchSettings());options.password=text(batchEdit);
  stopped=false;pauseAfterCurrent=false;running=true;currentPhase.clear();updateControls();feedback(L"按队列顺序处理，运行中仍可添加文件。");focusAndReveal(list);worker=std::jthread([options]{
   CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);
-  try{Engine engine(*book);runQueue(queue,engine,options,[]{return stopped.load();},postUpdate,[]{return pauseAfterCurrent.load();});
+  try{Engine engine(*book);unsigned jobs=std::clamp(std::thread::hardware_concurrency()/2,2u,4u);runQueue(queue,engine,options,[]{return stopped.load();},postUpdate,[]{return pauseAfterCurrent.load();},jobs);
   }catch(const std::exception& e){auto error=new std::wstring(errorText(e));if(!PostMessageW(window,WM_FINISHED,1,reinterpret_cast<LPARAM>(error)))delete error;CoUninitialize();return;}
   CoUninitialize();PostMessageW(window,WM_FINISHED,0,0);
  });

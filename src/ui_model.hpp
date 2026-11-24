@@ -49,15 +49,18 @@ class Queue {
     std::vector<Task> tasks_;
     std::map<std::wstring,unsigned> active_;
     std::map<std::wstring,unsigned> readers_;
-    std::set<std::wstring> runningSources_;
+    std::map<std::wstring,unsigned> runningSources_;
+    std::map<uint64_t,std::set<std::wstring>> runningByTask_;
     uint64_t nextId_=1;
     uint64_t revision_=0;
     void index(const Task& task,int delta);
+    void addRunningSource(uint64_t id,const std::wstring& key);
+    void clearRunningTask(uint64_t id);
 public:
     uint64_t add(Task task);
     std::vector<Task> snapshot() const;
     std::optional<Task> get(uint64_t id) const;
-    std::optional<Task> takeNext();
+    std::optional<Task> takeNext(bool allowConcurrent=false);
     unsigned resolve(uint64_t id,const std::vector<fs::path>& files);
     bool retainSources(uint64_t id,const std::vector<fs::path>& files);
     void progress(uint64_t id,const std::wstring& phase,uint64_t done,uint64_t total,ProgressUnit unit=ProgressUnit::None);

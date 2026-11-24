@@ -47,6 +47,7 @@ int wmain(int argc,wchar_t** argv) {
             else if(arg==L"--progress") showProgress=true;
             else if(arg==L"--flat") options.scanRecursive=false;
             else if(arg==L"--verify") options.verifyData=true;
+            else if(arg==L"--jobs" && i+1<argc) options.threads=unsigned(std::stoul(argv[++i]));
             else if(arg.starts_with(L"--")) throw std::runtime_error("Unknown option");
             else files.emplace_back(lu::fs::absolute(arg));
         }

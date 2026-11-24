@@ -6,12 +6,16 @@
 #include <shobjidl.h>
 #include <shellapi.h>
 #include <algorithm>
+#include <atomic>
 #include <cstring>
 #include <cwctype>
+#include <exception>
 #include <fstream>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <sstream>
+#include <thread>
 #include <unordered_set>
 
 namespace lu {
@@ -87,11 +91,12 @@ struct Opened {
     Input source;
     InputBuffer buffer;
     std::istream stream;
+    std::wstring enginePassword;
     std::unique_ptr<BitArchiveReader> reader;
     bool manualRar=false;
     std::shared_ptr<std::vector<fs::path>> usedVolumes=std::make_shared<std::vector<fs::path>>();
     explicit Opened(Bit7zLibrary& lib,Input in,const std::wstring& password)
-        :library(lib),source(std::move(in)),buffer(source),stream(&buffer) {
+        :library(lib),source(std::move(in)),buffer(source),stream(&buffer),enginePassword(password) {
         library.setVolumeResolver({});
         usedVolumes->push_back(source.path);
         library.setVolumeObserver([used=usedVolumes](const std::wstring& path){fs::path p(path);if(std::find(used->begin(),used->end(),p)==used->end())used->push_back(p);});
@@ -379,10 +384,112 @@ Result Engine::inspectInput(const std::vector<fs::path>& files,const Options& op
     }
     return result;
 }
-static fs::path outputFolder(const fs::path& source,const fs::path& parent) {
+static std::mutex gOutputDirMutex;
+static fs::path createUniqueOutputFolder(const fs::path& source,const fs::path& parent) {
     auto name=source.stem().wstring();
     if(lower(source.extension().wstring())==L".001") name=source.stem().stem().wstring();
-    return uniquePath((parent.empty()?source.parent_path():parent)/name);
+    std::scoped_lock lock(gOutputDirMutex);
+    auto target=uniquePath((parent.empty()?source.parent_path():parent)/name);
+    fs::create_directories(target);
+    return target;
+}
+static bool extractParallelZip(Bit7zLibrary& lib,const Opened& opened,const fs::path& output,const Progress& progress,const std::wstring& phase,unsigned requestedThreads) {
+    const auto& reader=*opened.reader;
+    if(reader.detectedFormat()!=BitFormat::Zip||opened.source.nativeVolumes)return false;
+    unsigned hw=std::max(1u,std::thread::hardware_concurrency());
+    unsigned maxWorkers=requestedThreads==1?1u:(requestedThreads>1?std::min(requestedThreads,16u):std::min(8u,hw));
+    if(maxWorkers<2)return false;
+    uint32_t count=reader.itemsCount();
+    if(count<16)return false;
+    struct Entry{uint32_t index;uint64_t size;};
+    std::vector<Entry> files;
+    files.reserve(count);
+    std::vector<fs::path> dirs;
+    uint64_t totalBytes=0;
+    for(uint32_t i=0;i<count;++i){
+        if(reader.isItemFolder(i)){
+            auto p=reader.itemProperty(i,BitProperty::Path).getString();
+            if(!p.empty())dirs.push_back(output/fs::path(p));
+        }else{
+            uint64_t sz=propertyUInt(reader.itemProperty(i,BitProperty::Size));
+            totalBytes+=sz;
+            files.push_back({i,sz});
+        }
+    }
+    if(files.size()<16||totalBytes<512ull*1024)return false;
+    unsigned workers=std::min<unsigned>(maxWorkers,unsigned(files.size()/4));
+    if(workers<2)return false;
+
+    // Pre-create all directories on the calling thread to avoid concurrent CreateDirectory races.
+    std::unordered_set<std::wstring> createdDirs;
+    auto ensureDir=[&](const fs::path& dir){
+        if(dir.empty())return;
+        auto key=lower(dir.wstring());
+        if(createdDirs.insert(key).second)fs::create_directories(dir);
+    };
+    for(const auto& d:dirs)ensureDir(d);
+    for(const auto& entry:files){
+        auto p=reader.itemProperty(entry.index,BitProperty::Path).getString();
+        if(!p.empty())ensureDir((output/fs::path(p)).parent_path());
+    }
+
+    // Greedy LPT load balancing by uncompressed size, then sort each bucket ascending for sequential I/O.
+    std::sort(files.begin(),files.end(),[](const Entry& a,const Entry& b){return a.size>b.size;});
+    std::vector<std::vector<uint32_t>> buckets(workers);
+    std::vector<uint64_t> loads(workers,0);
+    for(const auto& entry:files){
+        size_t best=size_t(std::min_element(loads.begin(),loads.end())-loads.begin());
+        buckets[best].push_back(entry.index);
+        loads[best]+=entry.size+4096;
+    }
+    for(auto& b:buckets)std::sort(b.begin(),b.end());
+
+    if(progress&&!progress(phase,0,totalBytes,ProgressUnit::Bytes))throw Cancelled();
+
+    std::atomic<uint64_t> doneBytes{0};
+    std::atomic<bool> cancel{false};
+    std::mutex progressMutex,errorMutex;
+    std::exception_ptr firstError;
+
+    std::vector<std::jthread> threads;
+    threads.reserve(workers);
+    for(unsigned w=0;w<workers;++w){
+        if(buckets[w].empty())continue;
+        threads.emplace_back([&,w]{
+            try{
+                Opened worker(lib,opened.source,opened.enginePassword);
+                auto& wr=*worker.reader;
+                wr.setOverwriteMode(OverwriteMode::None);
+                uint64_t prev=0;
+                wr.setProgressCallback([&](uint64_t n)->bool{
+                    if(cancel.load(std::memory_order_relaxed))return false;
+                    uint64_t delta=n>prev?n-prev:0;
+                    prev=n;
+                    uint64_t agg=doneBytes.fetch_add(delta,std::memory_order_relaxed)+delta;
+                    if(progress){
+                        std::unique_lock lock(progressMutex,std::try_to_lock);
+                        if(lock.owns_lock()){
+                            if(!progress(phase,std::min(agg,totalBytes),totalBytes,ProgressUnit::Bytes)){
+                                cancel.store(true,std::memory_order_relaxed);
+                                return false;
+                            }
+                        }
+                    }
+                    return !cancel.load(std::memory_order_relaxed);
+                });
+                wr.extractTo(output.wstring(),buckets[w]);
+            }catch(...){
+                cancel.store(true,std::memory_order_relaxed);
+                std::scoped_lock lock(errorMutex);
+                if(!firstError)firstError=std::current_exception();
+            }
+        });
+    }
+    for(auto& t:threads)t.join();
+    if(firstError)std::rethrow_exception(firstError);
+    if(cancel)throw Cancelled();
+    if(progress&&!progress(phase,totalBytes,totalBytes,ProgressUnit::Bytes))throw Cancelled();
+    return true;
 }
 Result Engine::scan(const fs::path& directory,const Options& options,const Progress& progress,
                     const std::function<void(const std::vector<fs::path>&,const Result&)>& found){
@@ -466,7 +573,7 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
             if(!options.allowContainer)throw std::runtime_error("This is a normal document or application container. Use explicit container extraction to unpack it; original kept.");
         }
         validatePaths(*opened->reader);
-        output=outputFolder(raw.path,options.output);fs::create_directories(output);
+        output=createUniqueOutputFolder(raw.path,options.output);
     }catch(const std::exception& error){
         archiveFailure(current,error);
         if(!depth)result=current;
@@ -477,13 +584,18 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
     if(!depth){result.output=output;result.type=current.type;result.offset=current.offset;result.apate=current.apate;result.encrypted=current.encrypted;result.recovered=current.recovered;result.status=current.status;result.passwordVerified=current.passwordVerified;}
     if(!depth&&options.outputReady)options.outputReady(output);
     result.recovered|=current.recovered;result.attempts+=current.attempts;
-    setCallbacks(reader,progress,L"解压 "+raw.path.filename().wstring());reader.setOverwriteMode(OverwriteMode::None);
-    try{reader.extractTo(output.wstring());} // Full CRC/MAC validation belongs to the mature engine.
+    const auto extractPhase=L"解压 "+raw.path.filename().wstring();
+    try{
+        if(!extractParallelZip(library_,*opened,output,progress,extractPhase,options.threads)){
+            setCallbacks(reader,progress,extractPhase);reader.setOverwriteMode(OverwriteMode::None);
+            reader.extractTo(output.wstring()); // Full CRC/MAC validation belongs to the mature engine.
+        }
+    }
     catch(const std::exception& error){
         archiveFailure(current,error);result.status=current.status;result.engineError=current.engineError;result.note=current.note;throw;
     }
     ++result.archives;
-    if(!used.empty()) {passwords_.success(used,raw.path);batchPassword_=used;}
+    if(!used.empty()) {passwords_.success(used,raw.path);std::scoped_lock lock(batchMutex_);batchPassword_=used;}
     std::vector<fs::path> children;
     for(const auto& item:reader) {
         if(!item.isDir()) {
@@ -528,8 +640,10 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
 Result Engine::extract(const std::vector<fs::path>& files,const Options& options,const Progress& progress) {
     Result result;
     try {
+        std::wstring preferred;
+        {std::scoped_lock lock(batchMutex_);preferred=batchPassword_;}
         std::vector<fs::path> cleanup,rootVolumes;
-        extractOne(files,options,progress,batchPassword_,0,result,cleanup,rootVolumes);
+        extractOne(files,options,progress,preferred,0,result,cleanup,rootVolumes);
         if(progress&&!progress(L"准备完成任务",result.bytes,result.bytes,ProgressUnit::Bytes))throw Cancelled();
         // All mappings/readers are closed, all nested outputs succeeded before any source recycling.
         result.sources=cleanup;

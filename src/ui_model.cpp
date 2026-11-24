@@ -24,10 +24,23 @@ static std::vector<std::wstring> taskKeys(const Task& task){
     if(task.files.size()>1)keys.insert(keys.begin(),std::move(group));
     return keys;
 }
+void Queue::addRunningSource(uint64_t id,const std::wstring& key){
+    if(runningByTask_[id].insert(key).second)++runningSources_[key];
+}
+void Queue::clearRunningTask(uint64_t id){
+    auto it=runningByTask_.find(id);
+    if(it==runningByTask_.end())return;
+    for(const auto& key:it->second){
+        auto src=runningSources_.find(key);
+        if(src!=runningSources_.end()&&!--src->second)runningSources_.erase(src);
+    }
+    runningByTask_.erase(it);
+}
 void Queue::index(const Task& task,int delta){
     if(task.state!=State::Waiting&&task.state!=State::Running)return;
     for(const auto& key:taskKeys(task))if(delta>0)++active_[key];else {auto it=active_.find(key);if(it!=active_.end()&&!--it->second)active_.erase(it);}
-    for(const auto& file:task.files){auto key=pathKey(file);if(delta>0)++readers_[key];else {auto it=readers_.find(key);if(it!=readers_.end()&&!--it->second)readers_.erase(it);}if(task.state==State::Running){if(delta>0)runningSources_.insert(key);else runningSources_.erase(key);}}
+    if(task.state==State::Running&&delta<0)clearRunningTask(task.id);
+    for(const auto& file:task.files){auto key=pathKey(file);if(delta>0)++readers_[key];else {auto it=readers_.find(key);if(it!=readers_.end()&&!--it->second)readers_.erase(it);}if(task.state==State::Running&&delta>0)addRunningSource(task.id,key);}
 }
 uint64_t Queue::add(Task task){
     if(task.files.empty())return 0;
@@ -39,10 +52,16 @@ uint64_t Queue::add(Task task){
 }
 std::vector<Task> Queue::snapshot() const {std::scoped_lock lock(mutex_);return tasks_;}
 std::optional<Task> Queue::get(uint64_t id) const {std::scoped_lock lock(mutex_);for(const auto& task:tasks_)if(task.id==id)return task;return {};}
-std::optional<Task> Queue::takeNext(){
+std::optional<Task> Queue::takeNext(bool allowConcurrent){
     std::scoped_lock lock(mutex_);
-    if(!runningSources_.empty())return {};
-    for(auto& task:tasks_)if(task.state==State::Waiting&&!task.paused){task.state=State::Running;for(const auto& file:task.files)runningSources_.insert(pathKey(file));task.phase=L"正在识别";task.started=std::chrono::steady_clock::now();task.progressDone=task.progressTotal=0;task.progressUnit=ProgressUnit::None;++revision_;return task;}
+    if(!allowConcurrent&&!runningByTask_.empty())return {};
+    for(auto& task:tasks_){
+        if(task.state!=State::Waiting||task.paused)continue;
+        if(allowConcurrent&&std::any_of(task.files.begin(),task.files.end(),[&](const auto& file){return runningSources_.contains(pathKey(file));}))continue;
+        task.state=State::Running;
+        for(const auto& file:task.files)addRunningSource(task.id,pathKey(file));
+        task.phase=L"正在识别";task.started=std::chrono::steady_clock::now();task.progressDone=task.progressTotal=0;task.progressUnit=ProgressUnit::None;++revision_;return task;
+    }
     return {};
 }
 unsigned Queue::resolve(uint64_t id,const std::vector<fs::path>& files){
@@ -64,7 +83,7 @@ unsigned Queue::resolve(uint64_t id,const std::vector<fs::path>& files){
 bool Queue::retainSources(uint64_t id,const std::vector<fs::path>& files){
     std::scoped_lock lock(mutex_);auto task=std::find_if(tasks_.begin(),tasks_.end(),[&](const auto& t){return t.id==id&&t.state==State::Running;});
     if(task==tasks_.end())return true;
-    bool retain=false;for(const auto& file:files){auto key=pathKey(file);runningSources_.insert(key);auto readers=readers_.find(key);auto own=contains(task->files,{file})?1u:0u;if(readers!=readers_.end()&&readers->second>own)retain=true;}
+    bool retain=false;for(const auto& file:files){auto key=pathKey(file);addRunningSource(id,key);auto readers=readers_.find(key);auto own=contains(task->files,{file})?1u:0u;if(readers!=readers_.end()&&readers->second>own)retain=true;}
     return retain;
 }
 void Queue::progress(uint64_t id,const std::wstring& phase,uint64_t done,uint64_t total,ProgressUnit unit){
@@ -72,7 +91,7 @@ void Queue::progress(uint64_t id,const std::wstring& phase,uint64_t done,uint64_
 }
 void Queue::finish(uint64_t id,Result result,bool cancelled){
     std::scoped_lock lock(mutex_);for(auto& task:tasks_)if(task.id==id){
-        bool wasRunning=task.state==State::Running;index(task,-1);if(wasRunning)runningSources_.clear();task.state=result.ok?State::Done:cancelled?State::Cancelled:State::Attention;
+        bool wasRunning=task.state==State::Running;index(task,-1);if(wasRunning)clearRunningTask(id);task.state=result.ok?State::Done:cancelled?State::Cancelled:State::Attention;
         if(result.output.empty())result.output=task.result.output;
         task.percent=result.ok?100:-1;task.result=std::move(result);task.phase=taskStatus(task);++revision_;return;
     }

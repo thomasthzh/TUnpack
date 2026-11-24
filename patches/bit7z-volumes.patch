@@ -10,28 +10,35 @@ index 652b5b6..d910e8b 100644
  
  #include "bitformat.hpp"
  #include "bittypes.hpp"
-@@ -82,9 +83,24 @@ class Bit7zLibrary final {
+@@ -82,9 +83,27 @@ class Bit7zLibrary final {
           */
          void setLargePageMode();
  
-+        // LightUnpack extension: map explicit, renamed native RAR volumes without copying files.
-+        // A library instance is used by one queue worker at a time.
++        // LightUnpack extension: map explicit, renamed native RAR/ZIP volumes without copying files.
++        // Thread-local hooks allow safe concurrent archive operations sharing one Bit7zLibrary.
 +        using VolumeResolver = std::function<tstring(const tstring&)>;
-+        void setVolumeResolver(VolumeResolver resolver, tstring firstName = {}) {
-+            mVolumeResolver = std::move(resolver);
-+            mVirtualVolumeName = std::move(firstName);
++        struct VolumeHooks {
++            VolumeResolver resolver;
++            tstring virtualVolumeName;
++            std::function<void(const tstring&)> observer;
++        };
++        static auto volumeHooks() -> VolumeHooks& {
++            thread_local VolumeHooks hooks;
++            return hooks;
 +        }
-+        auto volumeResolver() const -> const VolumeResolver& { return mVolumeResolver; }
-+        auto virtualVolumeName() const -> const tstring& { return mVirtualVolumeName; }
-+        void setVolumeObserver(std::function<void(const tstring&)> observer) { mVolumeObserver = std::move(observer); }
-+        auto volumeObserver() const -> const std::function<void(const tstring&)>& { return mVolumeObserver; }
++        void setVolumeResolver(VolumeResolver resolver, tstring firstName = {}) {
++            auto& h = volumeHooks();
++            h.resolver = std::move(resolver);
++            h.virtualVolumeName = std::move(firstName);
++        }
++        auto volumeResolver() const -> const VolumeResolver& { return volumeHooks().resolver; }
++        auto virtualVolumeName() const -> const tstring& { return volumeHooks().virtualVolumeName; }
++        void setVolumeObserver(std::function<void(const tstring&)> observer) { volumeHooks().observer = std::move(observer); }
++        auto volumeObserver() const -> const std::function<void(const tstring&)>& { return volumeHooks().observer; }
 +
      private:
          HMODULE mLibrary;
          FARPROC mCreateObjectFunc;
-+        VolumeResolver mVolumeResolver;
-+        tstring mVirtualVolumeName;
-+        std::function<void(const tstring&)> mVolumeObserver;
  
          BIT7Z_NODISCARD
          auto initInArchive( const BitInFormat& format ) const -> CMyComPtr< IInArchive >;

@@ -2,6 +2,7 @@
 #include "input.hpp"
 #include "passwords.hpp"
 #include <bit7z/bit7zlibrary.hpp>
+#include <mutex>
 
 namespace lu {
 std::wstring errorText(const std::exception& error);
@@ -16,6 +17,8 @@ struct Options {
     bool verifyData=false;
     // Only the current input set has been resolved; nested inputs set their own value.
     bool volumesResolved=false;
+    // 0 = auto parallel threads for eligible archives, 1 = serial, >1 = explicit cap.
+    unsigned threads=0;
     std::wstring password;
     // Reports the actual unique root target before writing; never a nested target.
     std::function<void(const fs::path&)> outputReady;
@@ -36,6 +39,7 @@ struct Result {
 class Engine {
     bit7z::Bit7zLibrary library_;
     PasswordBook& passwords_;
+    mutable std::mutex batchMutex_;
     std::wstring batchPassword_;
     Result inspectInput(const std::vector<fs::path>& files,const Options& options,const Progress& progress,bool volumesResolved);
     void extractOne(const std::vector<fs::path>& files,const Options& options,const Progress& progress,
