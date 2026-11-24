@@ -3,7 +3,7 @@
   "files": [
     {
       "name": "T解压.exe",
-      "bytes": 2210304
+      "bytes": 2221056
     },
     {
       "name": "7z.dll",
@@ -30,10 +30,10 @@
       "bytes": 46106
     }
   ],
-  "total_bytes": 7469009,
+  "total_bytes": 7479761,
   "zip_name": "TUnpack-0.13.1-windows-x64.zip",
-  "zip_bytes": 3311730,
-  "sha256": "4b4e272a7887c4744a2c96cffb0d78b82c02fe3d6012f11c1e5a808e63938dc1",
+  "zip_bytes": 3317333,
+  "sha256": "b27a91b5c51b495b6b9dcd8eec615dc85f5badda837182fec3e2ee25e7d53620",
   "resource_check": "PASS TUnpack brand metadata and nine native ICO sizes; no window created",
   "zip_crc_check": true,
   "published": false

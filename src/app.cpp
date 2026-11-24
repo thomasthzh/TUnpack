@@ -11,6 +11,8 @@
 #include <uxtheme.h>
 #include <atomic>
 #include <chrono>
+#include <cmath>
+#include <map>
 #include <thread>
 #include <algorithm>
 #include <array>
@@ -19,11 +21,13 @@ namespace {
 using namespace lu;
 using namespace lu::ui;
 constexpr UINT WM_QUEUE_UPDATE=WM_APP+1,WM_FINISHED=WM_APP+2;
-constexpr UINT_PTR QueueRefreshTimer=7001,PasswordPreviewTimer=7002,WorkspaceTimer=7003;
+constexpr UINT_PTR QueueRefreshTimer=7001,PasswordPreviewTimer=7002,WorkspaceTimer=7003,AnimTimer=7004;
+constexpr int IdToggleOptions=260,IdToggleSearch=261,IdQuickClearDone=262;
 HWND tips,phaseStatus;
 std::wstring currentPhase,tooltipText;
 uint64_t activeTaskId=0;
 HWND window,list,progress,status,passwordEdit,directoryEdit,batchEdit,passwordList,volumeList;
+HWND btnToggleOptions=nullptr,btnToggleSearch=nullptr,btnQuickClearDone=nullptr;
 std::vector<HWND> queueControls,passwordControls,volumeControls,taskControls,dropWindows;
 std::array<std::vector<HWND>*,PageCount> pageGroups{&queueControls,&passwordControls,&volumeControls,&taskControls};
 TaskSettingsEditor taskEditor;
@@ -41,6 +45,7 @@ fs::path selectedOutput;
 std::jthread worker;
 std::atomic_bool stopped=false,pauseAfterCurrent=false;
 bool running=false,closing=false,refreshing=false,dragHover=false,marquee=false,taskMenuOpen=false;
+bool showOptionsDrawer=false,showSearchBar=false;
 unsigned dragCount=0;
 int scrollX=0,scrollY=0;
 bool layingOut=false;
@@ -48,6 +53,52 @@ Page currentPage=Page::Queue,dropPage=Page::Queue;
 std::array<POINT,PageCount> pageScroll{};
 std::array<HWND,PageCount> pageFocus{};
 std::array<TableSizing,PageCount> columnSizes{};
+
+// 60fps micro-interaction animation state (0% CPU when settled)
+float dragAnim=0.0f,displayProgress=0.0f,targetProgress=0.0f,shimmerPhase=0.0f;
+bool progressActive=false,progressUnknown=false,animRunning=false;
+std::map<HWND,float> btnHoverAnim;
+HWND hoveredBtn=nullptr;
+RECT customProgressRect{};
+
+// Swiss Industrial Ceramic + Graphite + International Orange Palette
+constexpr COLORREF ColCanvas=RGB(246,245,240);
+constexpr COLORREF ColSurface=RGB(255,255,255);
+constexpr COLORREF ColSurfaceMuted=RGB(238,236,229);
+constexpr COLORREF ColBorder=RGB(224,221,212);
+constexpr COLORREF ColInk=RGB(31,33,36);
+constexpr COLORREF ColInkSoft=RGB(108,110,115);
+constexpr COLORREF ColInkMuted=RGB(152,150,142);
+constexpr COLORREF ColOrange=RGB(238,101,49);
+constexpr COLORREF ColOrangeHover=RGB(246,120,68);
+constexpr COLORREF ColOrangePress=RGB(210,80,32);
+constexpr COLORREF ColOrangeWash=RGB(255,243,236);
+constexpr COLORREF ColEmerald=RGB(22,138,76);
+
+COLORREF lerpColor(COLORREF a,COLORREF b,float t){
+ t=std::clamp(t,0.0f,1.0f);
+ return RGB(
+  int(GetRValue(a)+(GetRValue(b)-GetRValue(a))*t),
+  int(GetGValue(a)+(GetGValue(b)-GetGValue(a))*t),
+  int(GetBValue(a)+(GetBValue(b)-GetBValue(a))*t));
+}
+void applyModernDwm(HWND hwnd){
+ if(auto dwm=LoadLibraryW(L"dwmapi.dll")){
+  using SetAttrFn=HRESULT(WINAPI*)(HWND,DWORD,LPCVOID,DWORD);
+  if(auto fn=reinterpret_cast<SetAttrFn>(GetProcAddress(dwm,"DwmSetWindowAttribute"))){
+   COLORREF cap=ColCanvas,txt=ColInk,brd=ColBorder;
+   DWORD corner=2; // DWMWCP_ROUND
+   fn(hwnd,35,&cap,sizeof(cap));
+   fn(hwnd,36,&txt,sizeof(txt));
+   fn(hwnd,34,&brd,sizeof(brd));
+   fn(hwnd,33,&corner,sizeof(corner));
+  }
+  FreeLibrary(dwm);
+ }
+}
+void ensureAnimTimer(){
+ if(!animRunning&&window){SetTimer(window,AnimTimer,16,nullptr);animRunning=true;}
+}
 
 Workspace startupWorkspace;
 std::unique_ptr<WorkspaceWriter> workspaceWriter;
@@ -59,9 +110,10 @@ bool workspaceReady=false,workspaceLoaded=false;
 uint64_t uiRevision=0,lastRequestedUi=UINT64_MAX,lastRequestedQueue=UINT64_MAX;
 void workspaceChanged(){if(workspaceReady)++uiRevision;}
 UINT dpi=96;
-HFONT font=nullptr,titleFont=nullptr,smallFont=nullptr;
+HFONT font=nullptr,titleFont=nullptr,smallFont=nullptr,boldFont=nullptr;
 HICON iconLarge=nullptr,iconSmall=nullptr,iconHero=nullptr;
-HBRUSH background=CreateSolidBrush(RGB(247,249,250));
+HBRUSH background=CreateSolidBrush(ColCanvas);
+HBRUSH surfaceBrush=CreateSolidBrush(ColSurface);
 int px(int n){return MulDiv(n,int(dpi),96);}
 std::wstring text(HWND h){int n=GetWindowTextLengthW(h);std::wstring s(n+1,L'\0');GetWindowTextW(h,s.data(),n+1);s.resize(n);return s;}
 void message(const std::wstring& value){MessageBoxW(window,value.c_str(),L"T解压",MB_OK|MB_ICONINFORMATION);}
@@ -80,6 +132,7 @@ bool saveBeforeExit();
 void loadTaskEditorControls();
 void updatePasswordPreview();
 void revealFocus();
+std::vector<int> selectedIndices(HWND table,size_t count);
 void rememberFocus(){auto focus=GetFocus();const auto& controls=*pageGroups[size_t(currentPage)];if(std::find(controls.begin(),controls.end(),focus)!=controls.end())if(pageFocus[size_t(currentPage)]!=focus){pageFocus[size_t(currentPage)]=focus;workspaceChanged();}}
 void focusAndReveal(HWND target){SetFocus(target);rememberFocus();revealFocus();}
 bool receiveFiles(const std::vector<fs::path>& files);
@@ -98,11 +151,32 @@ struct TableRedraw {
  explicit TableRedraw(HWND table):target(IsWindowVisible(table)?table:nullptr){if(target)SendMessageW(target,WM_SETREDRAW,FALSE,0);}
  ~TableRedraw(){if(target){SendMessageW(target,WM_SETREDRAW,TRUE,0);RedrawWindow(target,nullptr,nullptr,RDW_INVALIDATE|RDW_FRAME|RDW_ERASE|RDW_ALLCHILDREN);}}
 };
-HWND button(const wchar_t* label,Id id){return control(WC_BUTTONW,label,id==Start||id==TaskApply||id==QueueTab||id==PasswordTab||id==DropZone?BS_OWNERDRAW:BS_PUSHBUTTON,id);}
+LRESULT CALLBACK btnHoverProc(HWND h,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR,DWORD_PTR){
+ if(msg==WM_MOUSEMOVE){
+  if(hoveredBtn!=h){
+   hoveredBtn=h;
+   TRACKMOUSEEVENT tme{sizeof(tme),TME_LEAVE,h,0};
+   TrackMouseEvent(&tme);
+   ensureAnimTimer();
+  }
+ }else if(msg==WM_MOUSELEAVE){
+  if(hoveredBtn==h)hoveredBtn=nullptr;
+  ensureAnimTimer();
+ }
+ return DefSubclassProc(h,msg,wp,lp);
+}
+HWND button(const wchar_t* label,int id){
+ auto h=CreateWindowExW(0,WC_BUTTONW,label,WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_OWNERDRAW,0,0,0,0,window,reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),GetModuleHandleW(nullptr),nullptr);
+ SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);
+ SetWindowSubclass(h,btnHoverProc,1,0);
+ return h;
+}
+HWND button(const wchar_t* label,Id id){return button(label,int(id));}
 void updateFonts(){
- auto old=std::array{font,titleFont,smallFont};
+ auto old=std::array{font,titleFont,smallFont,boldFont};
  font=makeUiFont(dpi,14,FW_NORMAL);
- titleFont=makeUiFont(dpi,25,FW_SEMIBOLD);
+ boldFont=makeUiFont(dpi,14,FW_SEMIBOLD);
+ titleFont=makeUiFont(dpi,24,FW_SEMIBOLD);
  smallFont=makeUiFont(dpi,12,FW_NORMAL);
  if(window)EnumChildWindows(window,[](HWND h,LPARAM){SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);return TRUE;},0);
  for(auto h:{status,phaseStatus})if(h)SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(smallFont),TRUE);
@@ -126,11 +200,133 @@ void layout(){
  SCROLLINFO horizontal{sizeof(horizontal),SIF_RANGE|SIF_PAGE|SIF_POS,0,canvas.width-1,UINT(viewW),scrollX,0};SetScrollInfo(window,SB_HORZ,&horizontal,TRUE);
  SCROLLINFO vertical{sizeof(vertical),SIF_RANGE|SIF_PAGE|SIF_POS,0,canvas.height-1,UINT(viewH),scrollY,0};SetScrollInfo(window,SB_VERT,&vertical,TRUE);
  scrollX=GetScrollPos(window,SB_HORZ);scrollY=GetScrollPos(window,SB_VERT);
- auto l=currentLayout();auto batch=BeginDeferWindowPos(int(l.boxes.size()));
- auto place=[&](auto move){for(size_t i=0;i<l.boxes.size();++i){const auto& box=l.boxes[i];auto id=Id(int(Add)+int(i));auto target=GetDlgItem(window,id);if(!target||!box.width)continue;auto pixels=pixelBox(box,dpi,scrollX,scrollY);if(id==QueueFilter)pixels.height=px(220);if(!move(target,pixels))return false;}return true;};
- bool queued=batch&&place([&](HWND target,const Box& box){batch=DeferWindowPos(batch,target,nullptr,box.x,box.y,box.width,box.height,SWP_NOZORDER|SWP_NOACTIVATE);return batch!=nullptr;});
- if(!queued||!EndDeferWindowPos(batch))place([](HWND target,const Box& box){SetWindowPos(target,nullptr,box.x,box.y,box.width,box.height,SWP_NOZORDER|SWP_NOACTIVATE);return true;});
- ShowWindow(GetDlgItem(window,DropZone),currentPage==Page::Queue&&l.showDrop?SW_SHOW:SW_HIDE);
+ auto l=currentLayout();
+ auto placeHwnd=[&](HWND target,int x,int y,int w,int h){
+  if(!target)return;
+  auto b=pixelBox({x,y,w,h},dpi,scrollX,scrollY);
+  SetWindowPos(target,nullptr,b.x,b.y,b.width,b.height,SWP_NOZORDER|SWP_NOACTIVATE);
+ };
+ auto showCtrl=[&](int id,bool vis){if(auto t=GetDlgItem(window,id))ShowWindow(t,vis?SW_SHOW:SW_HIDE);};
+
+ if(currentPage==Page::Queue){
+  int w=l.width,h=l.height;
+  bool isQueue=true;
+  bool hasSel=!selectedIndices(list,rows.size()).empty();
+  bool hasItems=queue.counts().total()>0;
+  bool searchOpen=showSearchBar||!taskView.unfiltered();
+  bool optsOpen=showOptionsDrawer;
+
+  // Header: Segmented pill switcher + calm utility pills on the right
+  placeHwnd(GetDlgItem(window,QueueTab),248,26,96,34);
+  placeHwnd(GetDlgItem(window,PasswordTab),350,26,88,34);
+  placeHwnd(GetDlgItem(window,Add),w-316,26,92,34);
+  placeHwnd(btnToggleSearch,w-216,26,64,34);
+  placeHwnd(btnToggleOptions,w-144,26,68,34);
+  placeHwnd(GetDlgItem(window,Tools),w-68,26,44,34);
+  for(int id:{int(Add),IdToggleSearch,IdToggleOptions,int(Tools)})showCtrl(id,isQueue);
+  // Hide old cluttered toolbar buttons (all still accessible via Add/More menu & shortcuts!)
+  for(int id:{int(AddFolder),int(Volumes),int(PasteFiles),int(Create)})showCtrl(id,false);
+
+  int y=82;
+  // Collapsible Search & Filter bar (Ctrl+F or Search pill)
+  showCtrl(QueueSearch,searchOpen);showCtrl(SearchClear,searchOpen);showCtrl(QueueFilter,searchOpen);
+  if(searchOpen){
+   placeHwnd(GetDlgItem(window,QueueSearch),28,y,w-334,32);
+   placeHwnd(GetDlgItem(window,SearchClear),w-298,y,62,32);
+   auto fb=pixelBox({w-228,y,200,220},dpi,scrollX,scrollY);
+   SetWindowPos(GetDlgItem(window,QueueFilter),nullptr,fb.x,fb.y,fb.width,fb.height,SWP_NOZORDER|SWP_NOACTIVATE);
+   y+=42;
+  }
+
+  // Hero Drop Zone (expands gracefully when empty!)
+  int dropH=hasItems?76:std::max(180,h-y-180);
+  showCtrl(DropZone,true);
+  placeHwnd(GetDlgItem(window,DropZone),28,y,w-56,dropH);
+  y+=dropH+14;
+
+  // Footer & collapsible Options Drawer heights
+  int footerH=78;
+  int drawerH=optsOpen?112:0;
+  int ctxH=(hasItems&&hasSel)?44:0;
+  int footerTop=h-footerH;
+  int drawerTop=footerTop-drawerH;
+  int ctxTop=drawerTop-ctxH;
+
+  // Queue List (only shown when queue has items; clean breathing space!)
+  int summaryH=hasItems?28:0;
+  showCtrl(IdQuickClearDone,hasItems&&queue.counts().done>0&&!running);
+  if(hasItems&&queue.counts().done>0&&!running)placeHwnd(btnQuickClearDone,w-124,y,96,24);
+  y+=summaryH;
+
+  int listH=std::max(80,ctxTop-y-10);
+  showCtrl(List,hasItems);
+  if(hasItems)placeHwnd(list,28,y,w-56,listH);
+  // Hide bulky old readonly TaskDetails box in Zen mode (details shown cleanly in footer/tooltip & double-click)
+  showCtrl(TaskDetails,false);
+
+  // Contextual Selection Bar (ONLY visible when 1+ tasks selected — zero grey button clutter!)
+  bool repairVis=false;
+  {
+   auto sel=selectedIndices(list,rows.size());
+   if(sel.size()==1){
+    auto t=queue.get(rows[size_t(sel.front())].task.id);
+    repairVis=t&&t->state==State::Attention&&(t->result.status==L"password_required"||t->result.status==L"missing_volume"||t->result.status==L"ambiguous_volume"||t->result.status==L"source_unavailable");
+   }
+  }
+  bool showCtx=hasItems&&hasSel;
+  showCtrl(OpenOutput,showCtx);showCtrl(Retry,showCtx);showCtrl(HoldTask,showCtx);showCtrl(Remove,showCtx);showCtrl(ConfigureTask,showCtx);
+  showCtrl(NextStep,showCtx&&repairVis&&!running);
+  showCtrl(Up,false);showCtrl(Down,false); // Ctrl+Up/Down & context menu keep reorder clean
+  if(showCtx){
+   int cx=28;
+   placeHwnd(GetDlgItem(window,OpenOutput),cx,ctxTop+6,96,30);cx+=104;
+   if(repairVis&&!running){placeHwnd(GetDlgItem(window,NextStep),cx,ctxTop+6,118,30);cx+=126;}
+   placeHwnd(GetDlgItem(window,Retry),cx,ctxTop+6,82,30);cx+=90;
+   placeHwnd(GetDlgItem(window,HoldTask),cx,ctxTop+6,86,30);cx+=94;
+   placeHwnd(GetDlgItem(window,ConfigureTask),cx,ctxTop+6,86,30);cx+=94;
+   placeHwnd(GetDlgItem(window,Remove),w-110,ctxTop+6,82,30);
+  }
+
+  // Collapsible Options Drawer (hidden by default!)
+  for(int id:{int(DirectoryLabel),int(Directory),int(Choose),int(Reset),int(Nested),int(Recycle),int(Deep),int(BatchLabel),int(BatchPassword)})showCtrl(id,optsOpen);
+  if(optsOpen){
+   int dy=drawerTop+8;
+   placeHwnd(GetDlgItem(window,DirectoryLabel),28,dy+4,58,24);
+   placeHwnd(GetDlgItem(window,Directory),90,dy,w-316,28);
+   placeHwnd(GetDlgItem(window,Choose),w-218,dy,90,28);
+   placeHwnd(GetDlgItem(window,Reset),w-120,dy,92,28);
+   dy+=36;
+   placeHwnd(GetDlgItem(window,Nested),28,dy,150,24);
+   placeHwnd(GetDlgItem(window,Recycle),188,dy,220,24);
+   placeHwnd(GetDlgItem(window,Deep),418,dy,150,24);
+   dy+=30;
+   placeHwnd(GetDlgItem(window,BatchLabel),28,dy+3,104,24);
+   placeHwnd(GetDlgItem(window,BatchPassword),136,dy,240,28);
+  }
+
+  // Minimal Footer Dock (custom 60fps progress bar drawn in paint(); hide native Win32 green progress bar)
+  showCtrl(ProgressBar,false);
+  showCtrl(QueuePhase,true);showCtrl(Status,true);
+  int ctaW=152;
+  int rightEdge=w-28;
+  showCtrl(Start,true);
+  placeHwnd(GetDlgItem(window,Start),rightEdge-ctaW,footerTop+18,ctaW,40);
+  showCtrl(Cancel,running);
+  if(running)placeHwnd(GetDlgItem(window,Cancel),rightEdge-ctaW-104,footerTop+18,94,40);
+  int textRight=running?(rightEdge-ctaW-120):(rightEdge-ctaW-20);
+  placeHwnd(phaseStatus,28,footerTop+12,std::max(120,textRight-28),20);
+  placeHwnd(status,28,footerTop+34,std::max(120,textRight-28),18);
+  auto pb=pixelBox({28,footerTop+58,std::max(120,textRight-28),6},dpi,scrollX,scrollY);
+  customProgressRect={pb.x,pb.y,pb.right(),pb.bottom()};
+ }else{
+  showCtrl(IdToggleOptions,false);showCtrl(IdToggleSearch,false);showCtrl(IdQuickClearDone,false);
+  auto batch=BeginDeferWindowPos(int(l.boxes.size()));
+  auto place=[&](auto move){for(size_t i=0;i<l.boxes.size();++i){const auto& box=l.boxes[i];auto id=Id(int(Add)+int(i));auto target=GetDlgItem(window,id);if(!target||!box.width)continue;auto pixels=pixelBox(box,dpi,scrollX,scrollY);if(id==QueueFilter)pixels.height=px(220);if(!move(target,pixels))return false;}return true;};
+  bool queued=batch&&place([&](HWND target,const Box& box){batch=DeferWindowPos(batch,target,nullptr,box.x,box.y,box.width,box.height,SWP_NOZORDER|SWP_NOACTIVATE);return batch!=nullptr;});
+  if(!queued||!EndDeferWindowPos(batch))place([](HWND target,const Box& box){SetWindowPos(target,nullptr,box.x,box.y,box.width,box.height,SWP_NOZORDER|SWP_NOACTIVATE);return true;});
+  placeHwnd(GetDlgItem(window,QueueTab),248,26,96,34);
+  placeHwnd(GetDlgItem(window,PasswordTab),350,26,88,34);
+ }
  fitTable(list,Page::Queue);fitTable(passwordList,Page::Passwords);fitTable(volumeList,Page::Volumes);
  InvalidateRect(window,nullptr,FALSE);layingOut=false;
 }
@@ -160,14 +356,60 @@ std::vector<uint64_t> selectedTasks(){std::vector<uint64_t> ids;for(auto i:selec
 std::optional<Task> selectedTask(){auto ids=selectedTasks();return ids.size()==1?queue.get(ids.front()):std::optional<Task>{};}
 Row makeRow(Task task){Row r;r.task=std::move(task);r.cells={taskName(r.task),taskActionName(r.task),taskStatus(r.task),r.task.percent<0?L"—":std::to_wstring(r.task.percent)+L"%",r.task.result.note.empty()?(r.task.settings?settingsDescription(r.task.settings):r.task.manualVolumes?L"手工顺序 · 首卷在第一行":r.task.files.front().parent_path().wstring()):r.task.result.note};return r;}
 void setProgress(int percent,bool active){
- bool unknown=active&&percent<0;
- if(unknown!=marquee){
-  if(!unknown)SendMessageW(progress,PBM_SETMARQUEE,FALSE,0);
-  auto style=GetWindowLongPtrW(progress,GWL_STYLE);SetWindowLongPtrW(progress,GWL_STYLE,unknown?style|PBS_MARQUEE:style&~LONG_PTR(PBS_MARQUEE));
-  if(unknown)SendMessageW(progress,PBM_SETMARQUEE,TRUE,30);
-  marquee=unknown;
+ progressActive=active;
+ progressUnknown=active&&percent<0;
+ targetProgress=percent<0?(active?0.0f:0.0f):float(std::clamp(percent,0,100));
+ ensureAnimTimer();
+}
+void tickAnimations(){
+ bool needMore=false;
+ // 1. Drag-hover smooth glow interpolation
+ float dragTarget=dragHover?1.0f:0.0f;
+ if(std::fabs(dragAnim-dragTarget)>0.005f){
+  dragAnim+=(dragTarget-dragAnim)*0.22f;
+  if(std::fabs(dragAnim-dragTarget)<=0.005f)dragAnim=dragTarget;
+  InvalidateRect(GetDlgItem(window,DropZone),nullptr,FALSE);
+  needMore=true;
  }
- if(!unknown)SendMessageW(progress,PBM_SETPOS,percent<0?0:percent,0);
+ if(dragHover){shimmerPhase+=0.08f;InvalidateRect(GetDlgItem(window,DropZone),nullptr,FALSE);needMore=true;}
+
+ // 2. Button hover smooth fade-in / fade-out
+ for(auto it=btnHoverAnim.begin();it!=btnHoverAnim.end();){
+  float target=(it->first==hoveredBtn)?1.0f:0.0f;
+  if(std::fabs(it->second-target)>0.01f){
+   it->second+=(target-it->second)*0.26f;
+   if(std::fabs(it->second-target)<=0.01f)it->second=target;
+   InvalidateRect(it->first,nullptr,FALSE);
+   needMore=true;
+   ++it;
+  }else if(target==0.0f){
+   it=btnHoverAnim.erase(it);
+  }else ++it;
+ }
+ if(hoveredBtn&&!btnHoverAnim.contains(hoveredBtn)){
+  btnHoverAnim[hoveredBtn]=0.05f;
+  InvalidateRect(hoveredBtn,nullptr,FALSE);
+  needMore=true;
+ }
+
+ // 3. 60fps spring-smoothed progress bar + shimmer
+ bool progDirty=false;
+ if(std::fabs(displayProgress-targetProgress)>0.15f){
+  displayProgress+=(targetProgress-displayProgress)*0.18f;
+  if(std::fabs(displayProgress-targetProgress)<=0.15f)displayProgress=targetProgress;
+  progDirty=true;needMore=true;
+ }
+ if(progressActive){
+  shimmerPhase+=0.055f;
+  if(shimmerPhase>6.283185f)shimmerPhase-=6.283185f;
+  progDirty=true;needMore=true;
+ }
+ if(progDirty&&currentPage==Page::Queue){
+  RECT inv=customProgressRect;InflateRect(&inv,px(4),px(4));
+  InvalidateRect(window,&inv,FALSE);
+ }
+
+ if(!needMore&&animRunning){KillTimer(window,AnimTimer);animRunning=false;}
 }
 void resetTaskViewUI(){
  taskView={};
@@ -186,7 +428,7 @@ void updatePhaseCaption(){
 }
 void updateControls(){
  auto selected=selectedIndices(list,rows.size());std::optional<Task> task=selected.size()==1?queue.get(rows[size_t(selected.front())].task.id):std::optional<Task>{};auto c=queue.counts();bool hasWaiting=std::any_of(selected.begin(),selected.end(),[](auto i){return rows[size_t(i)].task.state==State::Waiting;});auto enable=[&](Id id,bool value){EnableWindow(GetDlgItem(window,id),value);};
- enable(Start,!running&&c.waiting);enable(Cancel,running&&!stopped);std::wstring startLabel=running?L"正在处理…":c.waiting?(pauseAfterCurrent?L"继续全部 ":L"开始全部 ")+std::to_wstring(c.waiting)+L" 项":L"开始队列";SetWindowTextW(GetDlgItem(window,Start),startLabel.c_str());
+ enable(Start,!running&&c.waiting);enable(Cancel,running&&!stopped);std::wstring startLabel=running?L"正在并行解压…":c.waiting?(pauseAfterCurrent?L"继续全部 ":L"开始解压 ")+std::to_wstring(c.waiting)+L" 项":L"开始解压";SetWindowTextW(GetDlgItem(window,Start),startLabel.c_str());
  enable(Remove,std::any_of(selected.begin(),selected.end(),[](auto i){return rows[size_t(i)].task.state!=State::Running;}));enable(Up,hasWaiting&&taskView.unfiltered()&&!closing);enable(Down,hasWaiting&&taskView.unfiltered()&&!closing);
  bool repair=task&&task->state==State::Attention&&(task->result.status==L"password_required"||task->result.status==L"missing_volume"||task->result.status==L"ambiguous_volume"||task->result.status==L"source_unavailable");enable(NextStep,repair&&!running);ShowWindow(GetDlgItem(window,NextStep),currentPage==Page::Queue&&repair?SW_SHOW:SW_HIDE);if(repair)SetWindowTextW(GetDlgItem(window,NextStep),task->result.status==L"password_required"?L"填写本批密码":task->result.status==L"source_unavailable"?L"重新定位源…":L"补充分卷…");
  enable(Retry,std::any_of(selected.begin(),selected.end(),[](auto i){return retryable(rows[size_t(i)].task);}));enable(OpenOutput,task&&!task->result.output.empty());SetWindowTextW(GetDlgItem(window,OpenOutput),task&&task->state==State::Running?L"查看当前输出":task&&task->state!=State::Done&&!task->result.output.empty()?L"查看保留结果":L"打开结果");enable(Tools,c.total()>0&&!closing);enable(Volumes,!running);enable(Create,!running);
@@ -196,7 +438,9 @@ void updateControls(){
  std::wstring details;if(task)details=taskDetails(*task);
  else details=selected.empty()?L"选中任务查看完整路径、识别结果和处理建议。\r\n开始按钮处理全部等待项；查找和筛选只改变显示。":L"已选中 "+std::to_wstring(selected.size())+L" 项，可批量重试、暂缓或整理等待项顺序。";
  updatePhaseCaption();
- auto detail=GetDlgItem(window,TaskDetails);if(text(detail)!=details)SetWindowTextW(detail,details.c_str());InvalidateRect(window,nullptr,FALSE);
+ auto detail=GetDlgItem(window,TaskDetails);if(text(detail)!=details)SetWindowTextW(detail,details.c_str());
+ if(currentPage==Page::Queue&&!layingOut)layout();
+ InvalidateRect(window,nullptr,FALSE);
 }
 void refresh(uint64_t select){
  Selection selection;selection.ids=selectedTasks();int focused=ListView_GetNextItem(list,-1,LVNI_FOCUSED);if(focused>=0&&size_t(focused)<rows.size())selection.focus=rows[size_t(focused)].task.id;
@@ -430,31 +674,164 @@ void taskMenu(std::optional<POINT> anchor={}){
  for(auto [id,label]:std::initializer_list<std::pair<Id,const wchar_t*>>{{Extract,L"解压所选文件"},{Inspect,L"仅识别格式"},{Restore,L"另存原包"},{Container,L"明确按压缩容器解压"}})AppendMenuW(menu,MF_STRING|(!running&&fileTask?0:MF_GRAYED),id,label);
  bool canReorder=taskView.unfiltered()&&!closing&&std::any_of(selected.begin(),selected.end(),[](auto i){return rows[size_t(i)].task.state==State::Waiting;});AppendMenuW(menu,MF_SEPARATOR,0,nullptr);AppendMenuW(menu,MF_STRING|(canReorder?0:MF_GRAYED),First,L"所选等待项移至最前");AppendMenuW(menu,MF_STRING|(canReorder?0:MF_GRAYED),Last,L"所选等待项移至最后");
  auto visibleFailures=std::count_if(rows.begin(),rows.end(),[](const auto& row){return retryable(row.task);});auto retryLabel=L"重试当前显示的失败/取消项 ("+std::to_wstring(visibleFailures)+L")";AppendMenuW(menu,MF_SEPARATOR,0,nullptr);AppendMenuW(menu,MF_STRING|(!running&&!closing&&visibleFailures?0:MF_GRAYED),RetryVisible,retryLabel.c_str());
- AppendMenuW(menu,MF_SEPARATOR,0,nullptr);AppendMenuW(menu,MF_STRING|(running&&!stopped&&!closing?0:MF_GRAYED),PauseBatch,pauseAfterCurrent?L"取消批次暂停请求":L"完成当前后暂停批次");AppendMenuW(menu,MF_STRING,ClearDone,L"移除全部已完成的队列项");RECT r;GetWindowRect(GetDlgItem(window,Tools),&r);taskMenuOpen=true;auto choice=TrackPopupMenu(menu,TPM_RETURNCMD,anchor?anchor->x:r.left,anchor?anchor->y:r.bottom,0,window,nullptr);taskMenuOpen=false;DestroyMenu(menu);if(choice)SendMessageW(window,WM_COMMAND,choice,0);
+ AppendMenuW(menu,MF_SEPARATOR,0,nullptr);
+ AppendMenuW(menu,MF_STRING|(!running?0:MF_GRAYED),AddFolder,L"添加文件夹…");
+ AppendMenuW(menu,MF_STRING,PasteFiles,L"从剪贴板粘贴文件 (Ctrl+V)");
+ AppendMenuW(menu,MF_STRING|(!running?0:MF_GRAYED),Volumes,L"手工分卷顺序…");
+ AppendMenuW(menu,MF_STRING|(!running?0:MF_GRAYED),Create,L"新建 7z / ZIP 压缩包…");
+ AppendMenuW(menu,MF_SEPARATOR,0,nullptr);AppendMenuW(menu,MF_STRING|(running&&!stopped&&!closing?0:MF_GRAYED),PauseBatch,pauseAfterCurrent?L"取消批次暂停请求":L"完成当前后暂停批次");AppendMenuW(menu,MF_STRING,ClearDone,L"移除全部已完成的队列项");RECT r;GetWindowRect(GetDlgItem(window,Tools),&r);taskMenuOpen=true;auto choice=TrackPopupMenu(menu,TPM_RETURNCMD,anchor?anchor->x:r.right,anchor?anchor->y:r.bottom,0,window,nullptr);taskMenuOpen=false;DestroyMenu(menu);if(choice)SendMessageW(window,WM_COMMAND,choice,0);
 }
 void dropFeedback(bool active,unsigned count){
  if(dragHover==active&&dragCount==count&&dropPage==currentPage)return;dragHover=active;dragCount=count;dropPage=currentPage;
- for(auto [table,page]:std::initializer_list<std::pair<HWND,Page>>{{list,Page::Queue},{passwordList,Page::Passwords},{volumeList,Page::Volumes}}){ListView_SetBkColor(table,active&&page==currentPage?RGB(235,248,242):GetSysColor(COLOR_WINDOW));ListView_SetTextBkColor(table,CLR_NONE);InvalidateRect(table,nullptr,FALSE);}
+ ensureAnimTimer();
+ for(auto [table,page]:std::initializer_list<std::pair<HWND,Page>>{{list,Page::Queue},{passwordList,Page::Passwords},{volumeList,Page::Volumes}}){ListView_SetBkColor(table,active&&page==currentPage?ColOrangeWash:ColSurface);ListView_SetTextBkColor(table,CLR_NONE);InvalidateRect(table,nullptr,FALSE);}
  InvalidateRect(GetDlgItem(window,DropZone),nullptr,FALSE);InvalidateRect(window,nullptr,FALSE);
 }
 void paint(){
- PAINTSTRUCT ps;auto dc=BeginPaint(window,&ps);RECT client;GetClientRect(window,&client);FillRect(dc,&client,background);SetViewportOrgEx(dc,-px(scrollX),-px(scrollY),nullptr);SetBkMode(dc,TRANSPARENT);auto l=currentLayout();int w=l.width,h=l.height;
+ PAINTSTRUCT ps;auto screenDc=BeginPaint(window,&ps);RECT client;GetClientRect(window,&client);
+ int cw=std::max(1,int(client.right)),ch=std::max(1,int(client.bottom));
+ auto dc=CreateCompatibleDC(screenDc);auto bmp=CreateCompatibleBitmap(screenDc,cw,ch);auto oldBmp=SelectObject(dc,bmp);
+ FillRect(dc,&client,background);SetViewportOrgEx(dc,-px(scrollX),-px(scrollY),nullptr);SetBkMode(dc,TRANSPARENT);auto l=currentLayout();int w=l.width,h=l.height;
  auto write=[&](int x,int y,int width,int height,const std::wstring& value,HFONT face,COLORREF color,UINT flags=DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS){auto old=SelectObject(dc,face);SetTextColor(dc,color);RECT r{px(x),px(y),px(x+width),px(y+height)};DrawTextW(dc,value.c_str(),-1,&r,flags);SelectObject(dc,old);};
- if(iconHero)DrawIconEx(dc,px(24),px(20),iconHero,px(42),px(42),0,nullptr,DI_NORMAL);write(80,17,150,33,L"T解压",titleFont,RGB(24,40,43));write(81,49,150,18,L"看内容，不看后缀",smallFont,RGB(85,103,109));
- std::wstring hint=!workspaceError.empty()?L"工作台尚未保存":running?L"处理中 · 仍可添加文件":L"工作台自动保存 · 本机处理";if(dragCount){if(dragHover)hint=currentPage==Page::Volumes?L"松开补充分卷":currentPage==Page::Passwords?L"松开导入密码文本":L"松开加入 "+std::to_wstring(dragCount)+L" 项";else if(currentPage==Page::Passwords)hint=running?L"本轮结束后可导入密码":L"密码本接收 UTF-8 TXT";}write(w-290,27,266,34,hint,font,RGB(16,118,108),DT_RIGHT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
- if(currentPage==Page::Queue){auto counts=queue.counts();auto total=counts.total();write(24,l.showDrop?252:184,w-48,24,L"显示 "+std::to_wstring(rows.size())+L" / "+std::to_wstring(total)+L" 项  ·  "+countSummary(counts),smallFont,RGB(70,91,96));write(388,h-100,w-412,28,L"留空时，自动使用密码本及同目录提示",smallFont,RGB(85,103,109));}
- else if(currentPage==Page::Passwords){write(24,98,w-48,28,L"密码本 · 已保存 "+std::to_wstring(book->count())+L" 条  /  当前显示 "+std::to_wstring(passwordRows.size())+L" 条",font,RGB(24,40,43));write(24,h-56,w-48,28,running?L"队列运行中，可查看与编辑草稿；本轮结束后保存或导入。":L"成功密码自动记住 · Windows 账户加密保存 · 未保存的密码输入不在工作台恢复范围",smallFont,RGB(85,103,109));}
- else if(currentPage==Page::Volumes){write(24,98,w-48,28,L"分卷顺序 · "+std::to_wstring(volumeEditor.files.size())+L" 卷",font,RGB(24,40,43));write(24,135,w-48,24,L"按卷序排列：ZIP 的 .z01 在前、.zip 最后。可多选移动；拖入和粘贴只补充文件。",smallFont,RGB(85,103,109));write(420,h-126,w-444,34,L"已选 "+std::to_wstring(selectedVolumes().size())+L" 卷",smallFont,RGB(85,103,109));}
- else {write(24,98,w-48,28,L"任务设置 · "+std::to_wstring(taskEditor.ids.size())+L" 项",font,RGB(24,40,43));write(24,138,w-48,40,L"同一队列可使用不同处理方式。“保存设置”保留当前状态；“保存并待开始”准备所选任务，仍需手动开始。",smallFont,RGB(85,103,109),DT_LEFT|DT_WORDBREAK);}
+
+ // Header: Brand icon + Warm Human Tagline
+ if(iconHero)DrawIconEx(dc,px(26),px(20),iconHero,px(44),px(44),0,nullptr,DI_NORMAL);
+ write(80,18,150,30,L"T解压",titleFont,ColInk);
+ auto counts=queue.counts();
+ std::wstring tagline=dragHover?(L"松开手，立刻接住这 "+std::to_wstring(dragCount)+L" 项"):running?L"正在并行加速，喝口水的功夫就好":counts.attention?L"有几项需要你搭把手":counts.done&&!counts.waiting?L"搞定了，干干净净":L"拖进来，剩下的交给我";
+ write(81,48,162,18,tagline,smallFont,dragHover?ColOrange:ColInkSoft);
+
+ if(currentPage==Page::Queue){
+  auto total=counts.total();
+  if(total>0){
+   bool searchOpen=showSearchBar||!taskView.unfiltered();
+   int summaryY=(searchOpen?124:82)+76+16;
+   std::wstring summary=L"共 "+std::to_wstring(total)+L" 项 · "+countSummary(counts);
+   if(!taskView.unfiltered())summary=L"显示 "+std::to_wstring(rows.size())+L" / "+std::to_wstring(total)+L" 项 · "+countSummary(counts);
+   write(28,summaryY,w-164,22,summary,smallFont,ColInkSoft);
+  }
+  // Subtle divider above footer dock
+  auto divPen=CreatePen(PS_SOLID,1,ColBorder);auto oldP=SelectObject(dc,divPen);
+  MoveToEx(dc,px(28),px(h-78),nullptr);LineTo(dc,px(w-28),px(h-78));
+  if(showOptionsDrawer){MoveToEx(dc,px(28),px(h-190),nullptr);LineTo(dc,px(w-28),px(h-190));}
+  SelectObject(dc,oldP);DeleteObject(divPen);
+
+  // Custom 60fps Spring-Smoothed Pill Progress Bar
+  RECT pr=customProgressRect;
+  if(pr.right>pr.left&&pr.bottom>pr.top){
+   int radius=pr.bottom-pr.top;
+   auto trackBr=CreateSolidBrush(ColSurfaceMuted);auto nullPen=GetStockObject(NULL_PEN);
+   auto ob=SelectObject(dc,trackBr);auto op=SelectObject(dc,nullPen);
+   RoundRect(dc,pr.left,pr.top,pr.right,pr.bottom,radius,radius);
+   int pw=pr.right-pr.left;
+   if(progressUnknown){
+    float pos=0.5f+0.5f*std::sin(shimmerPhase*1.6f);
+    int segW=std::max(px(48),pw/4);
+    int sx=pr.left+int((pw-segW)*pos);
+    auto fillBr=CreateSolidBrush(ColOrange);SelectObject(dc,fillBr);
+    RoundRect(dc,sx,pr.top,sx+segW,pr.bottom,radius,radius);
+    DeleteObject(fillBr);
+   }else if(displayProgress>0.1f){
+    int fw=std::max(radius,int(pw*std::clamp(displayProgress/100.0f,0.0f,1.0f)));
+    COLORREF barCol=(!progressActive&&displayProgress>=99.5f)?ColEmerald:ColOrange;
+    auto fillBr=CreateSolidBrush(barCol);SelectObject(dc,fillBr);
+    RoundRect(dc,pr.left,pr.top,pr.left+fw,pr.bottom,radius,radius);
+    if(progressActive&&fw>px(36)){
+     float sp=0.5f+0.5f*std::sin(shimmerPhase*2.0f);
+     int sw=std::min(fw/3,px(44));
+     int sx=pr.left+int((fw-sw)*sp);
+     auto shimBr=CreateSolidBrush(RGB(255,182,148));SelectObject(dc,shimBr);
+     RoundRect(dc,sx,pr.top,sx+sw,pr.bottom,radius,radius);
+     DeleteObject(shimBr);
+    }
+    DeleteObject(fillBr);
+   }
+   SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(trackBr);
+  }
+ }
+ else if(currentPage==Page::Passwords){write(24,98,w-48,28,L"密码本 · 已保存 "+std::to_wstring(book->count())+L" 条  /  当前显示 "+std::to_wstring(passwordRows.size())+L" 条",font,ColInk);write(24,h-56,w-48,28,running?L"队列运行中，可查看与编辑草稿；本轮结束后保存或导入。":L"成功密码自动记住 · Windows 账户加密保存 · 本机离线处理",smallFont,ColInkSoft);}
+ else if(currentPage==Page::Volumes){write(24,98,w-48,28,L"分卷顺序 · "+std::to_wstring(volumeEditor.files.size())+L" 卷",font,ColInk);write(24,135,w-48,24,L"按卷序排列：ZIP 的 .z01 在前、.zip 最后。可多选移动；拖入和粘贴只补充文件。",smallFont,ColInkSoft);write(420,h-126,w-444,34,L"已选 "+std::to_wstring(selectedVolumes().size())+L" 卷",smallFont,ColInkSoft);}
+ else {write(24,98,w-48,28,L"任务设置 · "+std::to_wstring(taskEditor.ids.size())+L" 项",font,ColInk);write(24,138,w-48,40,L"同一队列可使用不同处理方式。“保存设置”保留当前状态；“保存并待开始”准备所选任务，仍需手动开始。",smallFont,ColInkSoft,DT_LEFT|DT_WORDBREAK);}
+ SetViewportOrgEx(dc,0,0,nullptr);
+ BitBlt(screenDc,0,0,cw,ch,dc,0,0,SRCCOPY);
+ SelectObject(dc,oldBmp);DeleteObject(bmp);DeleteDC(dc);
  EndPaint(window,&ps);
 }
 void drawButton(DRAWITEMSTRUCT* item){
- bool drop=item->CtlID==DropZone;bool active=item->CtlID==Start||item->CtlID==TaskApply||(item->CtlID==QueueTab&&currentPage==Page::Queue)||(item->CtlID==PasswordTab&&currentPage==Page::Passwords);bool disabled=(item->itemState&ODS_DISABLED)!=0;bool pressed=(item->itemState&ODS_SELECTED)!=0;
- auto fill=CreateSolidBrush(disabled?RGB(229,234,235):drop?(dragHover?RGB(222,246,238):RGB(239,247,244)):active?(pressed?RGB(10,91,84):RGB(16,118,108)):(pressed?RGB(225,235,232):RGB(247,249,250)));auto pen=CreatePen(PS_SOLID,px(drop&&dragHover?2:1),drop?RGB(100,170,157):active?RGB(16,118,108):RGB(207,219,217));auto oldB=SelectObject(item->hDC,fill);auto oldP=SelectObject(item->hDC,pen);auto oldF=SelectObject(item->hDC,font);
- RoundRect(item->hDC,item->rcItem.left,item->rcItem.top,item->rcItem.right,item->rcItem.bottom,px(8),px(8));SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,disabled?RGB(130,143,146):active?RGB(255,255,255):RGB(24,70,66));RECT r=item->rcItem;
- if(drop){r.top+=px(5);r.bottom=r.top+px(24);auto value=dragHover?L"松开即可加入 "+std::to_wstring(dragCount)+L" 项":L"拖入文件或文件夹，也可点击添加";DrawTextW(item->hDC,value.c_str(),-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);SelectObject(item->hDC,smallFont);SetTextColor(item->hDC,RGB(85,103,109));r.top+=px(24);r.bottom+=px(20);DrawTextW(item->hDC,L"任意后缀 · 自动识别伪装与分卷 · 运行中可继续添加",-1,&r,DT_CENTER|DT_TOP|DT_SINGLELINE);}
- else {if(pressed)OffsetRect(&r,px(1),px(1));auto label=text(item->hwndItem);DrawTextW(item->hDC,label.c_str(),-1,&r,DT_CENTER|DT_VCENTER|DT_SINGLELINE);}
- if((item->itemState&ODS_FOCUS)&&!(item->itemState&ODS_NOFOCUSRECT)){r=item->rcItem;InflateRect(&r,-px(4),-px(4));DrawFocusRect(item->hDC,&r);}SelectObject(item->hDC,oldF);SelectObject(item->hDC,oldB);SelectObject(item->hDC,oldP);DeleteObject(fill);DeleteObject(pen);
+ int id=int(item->CtlID);
+ bool drop=id==DropZone;
+ bool primary=id==Start||id==TaskApply||id==AcceptVolumes||id==SavePasswords;
+ bool tabActive=(id==QueueTab&&currentPage==Page::Queue)||(id==PasswordTab&&currentPage==Page::Passwords);
+ bool toggleOn=(id==IdToggleOptions&&showOptionsDrawer)||(id==IdToggleSearch&&(showSearchBar||!taskView.unfiltered()));
+ bool danger=id==Cancel||id==Remove;
+ bool disabled=(item->itemState&ODS_DISABLED)!=0;
+ bool pressed=(item->itemState&ODS_SELECTED)!=0;
+ float hv=btnHoverAnim.contains(item->hwndItem)?btnHoverAnim[item->hwndItem]:0.0f;
+
+ // Double-buffer button draw for zero flicker
+ RECT rc=item->rcItem;int bw=std::max(1,int(rc.right-rc.left)),bh=std::max(1,int(rc.bottom-rc.top));
+ auto memDc=CreateCompatibleDC(item->hDC);auto memBmp=CreateCompatibleBitmap(item->hDC,bw,bh);auto oldBmp=SelectObject(memDc,memBmp);
+ RECT local{0,0,bw,bh};
+ FillRect(memDc,&local,background);
+
+ COLORREF bgCol=ColSurface,bdCol=ColBorder,txCol=ColInk;
+ int radius=px(10);
+ if(drop){
+  float pulse=dragHover?(0.5f+0.5f*std::sin(shimmerPhase*2.2f)):0.0f;
+  float t=std::max(dragAnim,hv*0.45f);
+  bgCol=lerpColor(ColSurface,ColOrangeWash,t);
+  bdCol=lerpColor(ColBorder,ColOrange,std::min(1.0f,t+pulse*0.25f));
+  radius=px(14);
+ }else if(disabled){
+  bgCol=ColSurfaceMuted;bdCol=ColBorder;txCol=ColInkMuted;
+ }else if(primary){
+  bgCol=pressed?ColOrangePress:lerpColor(ColOrange,ColOrangeHover,hv);
+  bdCol=bgCol;txCol=RGB(255,255,255);radius=px(11);
+ }else if(tabActive){
+  bgCol=ColInk;bdCol=ColInk;txCol=RGB(255,255,255);radius=px(10);
+ }else if(toggleOn){
+  bgCol=ColOrangeWash;bdCol=ColOrange;txCol=ColOrangePress;radius=px(10);
+ }else if(danger){
+  bgCol=pressed?RGB(254,226,226):lerpColor(ColSurface,RGB(254,242,242),hv);
+  bdCol=lerpColor(ColBorder,RGB(239,68,68),hv*0.7f);
+  txCol=RGB(185,28,28);
+ }else{
+  bgCol=pressed?ColSurfaceMuted:lerpColor(ColSurface,RGB(240,238,231),hv);
+  bdCol=lerpColor(ColBorder,RGB(190,186,174),hv);
+  txCol=ColInk;
+ }
+
+ auto fill=CreateSolidBrush(bgCol);
+ auto pen=CreatePen(drop&&!dragHover?PS_DASH:PS_SOLID,px(drop&&(dragHover||hv>0.2f)?2:1),bdCol);
+ auto oldB=SelectObject(memDc,fill);auto oldP=SelectObject(memDc,pen);
+ auto oldF=SelectObject(memDc,(primary||tabActive)?boldFont:font);
+ SetBkMode(memDc,TRANSPARENT);
+ RoundRect(memDc,1,1,bw-1,bh-1,radius,radius);
+ SetTextColor(memDc,txCol);
+
+ RECT tr=local;
+ if(drop){
+  bool tall=bh>=px(110);
+  int midY=bh/2;
+  std::wstring title=dragHover?(L"松开手，立刻接住这 "+std::to_wstring(dragCount)+L" 项"):L"把压缩包或文件夹拖到这里";
+  std::wstring sub=dragHover?L"支持伪装后缀、分卷与自动密码匹配":L"点这里也能挑选文件 · 任意后缀自动识别 · 并行极速解压";
+  RECT r1{px(12),tall?midY-px(24):px(10),bw-px(12),tall?midY+px(4):px(36)};
+  SelectObject(memDc,boldFont);SetTextColor(memDc,dragHover?ColOrangePress:ColInk);
+  DrawTextW(memDc,title.c_str(),-1,&r1,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  RECT r2{px(12),tall?midY+px(8):px(38),bw-px(12),tall?midY+px(30):bh-px(8)};
+  SelectObject(memDc,smallFont);SetTextColor(memDc,dragHover?ColOrange:ColInkSoft);
+  DrawTextW(memDc,sub.c_str(),-1,&r2,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ }else{
+  if(pressed)OffsetRect(&tr,0,px(1));
+  auto label=text(item->hwndItem);
+  DrawTextW(memDc,label.c_str(),-1,&tr,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ }
+ if((item->itemState&ODS_FOCUS)&&!(item->itemState&ODS_NOFOCUSRECT)){
+  RECT fr=local;InflateRect(&fr,-px(4),-px(4));DrawFocusRect(memDc,&fr);
+ }
+ BitBlt(item->hDC,rc.left,rc.top,bw,bh,memDc,0,0,SRCCOPY);
+ SelectObject(memDc,oldF);SelectObject(memDc,oldB);SelectObject(memDc,oldP);SelectObject(memDc,oldBmp);
+ DeleteObject(fill);DeleteObject(pen);DeleteObject(memBmp);DeleteDC(memDc);
 }
 HWND table(Id id,const std::vector<const wchar_t*>& titles,bool single){auto h=control(WC_LISTVIEWW,L"",LVS_REPORT|LVS_OWNERDATA|LVS_SHOWSELALWAYS|(single?LVS_SINGLESEL:0),id);ListView_SetExtendedListViewStyle(h,LVS_EX_FULLROWSELECT|LVS_EX_DOUBLEBUFFER|LVS_EX_LABELTIP);for(size_t i=0;i<titles.size();++i){LVCOLUMNW c{};c.mask=LVCF_TEXT|LVCF_WIDTH;c.pszText=const_cast<wchar_t*>(titles[i]);c.cx=px(160);ListView_InsertColumn(h,int(i),&c);}SetWindowTheme(h,L"Explorer",nullptr);return h;}
 LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
@@ -463,8 +840,11 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   auto payload=reinterpret_cast<const COPYDATASTRUCT*>(lp);if(!workspaceReady||closing||!payload||payload->dwData!=OpenFilesMessage)return FALSE;
   try{auto files=decodeOpenFiles(payload->lpData,payload->cbData);if(!files.empty())addFiles(files,IsWindowEnabled(hwnd)&&!taskMenuOpen);activateWorkspace(hwnd);return TRUE;}catch(const std::exception& e){feedback(L"文件打开请求未全部接收："+errorText(e));return FALSE;}
  }
- case WM_CREATE:{window=hwnd;dpi=GetDpiForWindow(hwnd);updateFonts();updateIcons();
-  for(auto [label,id]:std::initializer_list<std::pair<const wchar_t*,Id>>{{L"解压队列",QueueTab},{L"密码本",PasswordTab},{L"添加文件…",Add},{L"添加文件夹…",AddFolder},{L"分卷顺序…",Volumes},{L"任务操作 ▾",Tools},{L"粘贴文件",PasteFiles},{L"新建压缩包 ▾",Create},{L"移除所选",Remove},{L"上移",Up},{L"下移",Down},{L"重试所选",Retry},{L"下一步",NextStep},{L"任务设置…",ConfigureTask},{L"暂缓所选",HoldTask},{L"选择目录…",Choose},{L"原包目录",Reset},{L"打开结果",OpenOutput},{L"开始队列",Start},{L"停止队列",Cancel}}){auto h=button(label,id);if(id!=QueueTab&&id!=PasswordTab)queueControls.push_back(h);}
+ case WM_CREATE:{window=hwnd;dpi=GetDpiForWindow(hwnd);applyModernDwm(hwnd);updateFonts();updateIcons();
+  for(auto [label,id]:std::initializer_list<std::pair<const wchar_t*,Id>>{{L"解压队列",QueueTab},{L"密码本",PasswordTab},{L"+ 添加",Add},{L"添加文件夹…",AddFolder},{L"分卷顺序…",Volumes},{L"⋯",Tools},{L"粘贴文件",PasteFiles},{L"新建压缩包 ▾",Create},{L"移除",Remove},{L"上移",Up},{L"下移",Down},{L"重试",Retry},{L"下一步",NextStep},{L"设置",ConfigureTask},{L"暂缓",HoldTask},{L"选择目录…",Choose},{L"原包目录",Reset},{L"打开结果",OpenOutput},{L"开始解压",Start},{L"停止",Cancel}}){auto h=button(label,id);if(id!=QueueTab&&id!=PasswordTab)queueControls.push_back(h);}
+  btnToggleSearch=button(L"查找",IdToggleSearch);queueControls.push_back(btnToggleSearch);
+  btnToggleOptions=button(L"选项",IdToggleOptions);queueControls.push_back(btnToggleOptions);
+  btnQuickClearDone=button(L"清空已完成",IdQuickClearDone);queueControls.push_back(btnQuickClearDone);
   auto queueSearch=control(WC_EDITW,L"",ES_AUTOHSCROLL,QueueSearch);queueControls.push_back(queueSearch);SendMessageW(queueSearch,EM_SETCUEBANNER,TRUE,reinterpret_cast<LPARAM>(L"查找文件名或路径 · Ctrl+F"));queueControls.push_back(button(L"重置",SearchClear));
   auto filter=control(WC_COMBOBOXW,L"",CBS_DROPDOWNLIST|CBS_HASSTRINGS|WS_VSCROLL,QueueFilter);queueControls.push_back(filter);for(const auto* label:TaskFilterNames)SendMessageW(filter,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(label));SendMessageW(filter,CB_SETCURSEL,0,0);
   queueControls.push_back(button(L"拖入文件或文件夹，或点击添加",DropZone));list=table(List,{L"文件 / 任务",L"操作",L"状态",L"阶段",L"说明"},false);queueControls.push_back(list);queueControls.push_back(control(WC_EDITW,L"",ES_READONLY|ES_MULTILINE|ES_AUTOVSCROLL|WS_VSCROLL,TaskDetails));
@@ -507,12 +887,12 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
  case WM_DPICHANGED:workspaceChanged();dpi=HIWORD(wp);updateFonts();updateIcons();{auto r=reinterpret_cast<RECT*>(lp);SetWindowPos(hwnd,nullptr,r->left,r->top,r->right-r->left,r->bottom-r->top,SWP_NOZORDER|SWP_NOACTIVATE);}layout();revealFocus();return 0;
  case WM_GETMINMAXINFO:{MONITORINFO monitor{sizeof(monitor)};GetMonitorInfoW(MonitorFromWindow(hwnd,MONITOR_DEFAULTTONEAREST),&monitor);auto info=reinterpret_cast<MINMAXINFO*>(lp);info->ptMinTrackSize={std::min<LONG>(px(920),monitor.rcWork.right-monitor.rcWork.left-px(24)),std::min<LONG>(px(620),monitor.rcWork.bottom-monitor.rcWork.top-px(24))};return 0;}
  case WM_ERASEBKGND:return 1;
- case WM_CTLCOLORSTATIC:SetBkColor(reinterpret_cast<HDC>(wp),RGB(247,249,250));SetTextColor(reinterpret_cast<HDC>(wp),RGB(24,40,43));return reinterpret_cast<LRESULT>(background);
+ case WM_CTLCOLORSTATIC:SetBkColor(reinterpret_cast<HDC>(wp),ColCanvas);SetTextColor(reinterpret_cast<HDC>(wp),ColInkSoft);return reinterpret_cast<LRESULT>(background);
  case WM_PAINT:paint();return 0;
  case WM_DRAWITEM:if(reinterpret_cast<DRAWITEMSTRUCT*>(lp)->CtlType==ODT_BUTTON){drawButton(reinterpret_cast<DRAWITEMSTRUCT*>(lp));return TRUE;}break;
  case WM_DROPFILES:{auto drop=reinterpret_cast<HDROP>(wp);auto files=pathsFromDrop(drop);DragFinish(drop);try{receiveFiles(files);}catch(const std::exception& e){message(errorText(e));}return 0;}
  case WM_QUEUE_UPDATE:if(!SetTimer(hwnd,QueueRefreshTimer,90,nullptr))flushUpdates();return 0;
- case WM_TIMER:if(wp==WorkspaceTimer){try{if(running)updatePhaseCaption();checkWorkspaceSave();}catch(const std::exception& e){feedback(L"工作台快照未能保存："+errorText(e));}return 0;}if(wp==QueueRefreshTimer){flushUpdates();return 0;}if(wp==PasswordPreviewTimer){KillTimer(hwnd,PasswordPreviewTimer);updatePasswordPreview();return 0;}break;
+ case WM_TIMER:if(wp==AnimTimer){tickAnimations();return 0;}if(wp==WorkspaceTimer){try{if(running)updatePhaseCaption();checkWorkspaceSave();}catch(const std::exception& e){feedback(L"工作台快照未能保存："+errorText(e));}return 0;}if(wp==QueueRefreshTimer){flushUpdates();return 0;}if(wp==PasswordPreviewTimer){KillTimer(hwnd,PasswordPreviewTimer);updatePasswordPreview();return 0;}break;
  case WM_FINISHED:{KillTimer(hwnd,QueueRefreshTimer);backgroundUpdates.take();running=false;currentPhase.clear();auto counts=queue.counts();if(stopped||!counts.waiting)pauseAfterCurrent=false;setProgress(!wp&&!stopped&&!counts.attention&&!counts.waiting&&!counts.paused?100:0,false);if(closing){if(wp)delete reinterpret_cast<std::wstring*>(lp);if(saveBeforeExit())DestroyWindow(hwnd);else {closing=false;refresh();}return 0;}refresh();if(!wp&&!stopped&&!pauseAfterCurrent&&counts.waiting){start();requestWorkspaceSave(true);return 0;}if(wp){std::unique_ptr<std::wstring> error(reinterpret_cast<std::wstring*>(lp));feedback(*error);}else feedback((stopped?L"已停止。":pauseAfterCurrent?L"当前项已结束，批次已暂停。":L"本轮已结束。")+countSummary(queue.counts()));if(currentPage==Page::Passwords){refreshPasswords();updatePasswordPreview();}requestWorkspaceSave(true);return 0;}
  case WM_CONTEXTMENU:if(reinterpret_cast<HWND>(wp)==list){
   POINT anchor{GET_X_LPARAM(lp),GET_Y_LPARAM(lp)};
@@ -546,6 +926,9 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   if(id==NewPassword&&HIWORD(wp)==EN_CHANGE){SetTimer(hwnd,PasswordPreviewTimer,160,nullptr);return 0;}
   if(id==PasswordSearch&&HIWORD(wp)==EN_CHANGE){refreshPasswords();return 0;}switch(id){
   case QueueTab:showPage(Page::Queue);break;case PasswordTab:showPage(Page::Passwords);break;
+  case IdToggleOptions:showOptionsDrawer=!showOptionsDrawer;layout();InvalidateRect(btnToggleOptions,nullptr,FALSE);break;
+  case IdToggleSearch:showSearchBar=!showSearchBar;if(!showSearchBar&&!taskView.unfiltered()){resetTaskViewUI();refresh();}layout();if(showSearchBar)focusAndReveal(GetDlgItem(hwnd,QueueSearch));InvalidateRect(btnToggleSearch,nullptr,FALSE);break;
+  case IdQuickClearDone:SendMessageW(hwnd,WM_COMMAND,ClearDone,0);break;
   case Add:case DropZone:addFiles(chooseFiles());break;case AddFolder:{auto dir=chooseDirectory();if(!dir.empty())addFiles({dir});break;}
   case Volumes:orderedVolumes();break;case Tools:taskMenu();break;case Create:createArchive();break;
   case Start:start();break;
@@ -557,7 +940,7 @@ LRESULT CALLBACK procedure(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp){
   case TaskSourceDirectory:workspaceChanged();taskEditor.value.output.clear();SetWindowTextW(GetDlgItem(hwnd,TaskDirectory),L"原包所在目录");break;
   case TaskBack:readTaskEditor();showPage(Page::Queue);break;case TaskSave:saveTaskSettings(false);break;case TaskApply:saveTaskSettings(true);break;
   case SearchClear:taskView={};SendDlgItemMessageW(hwnd,QueueFilter,CB_SETCURSEL,0,0);SetWindowTextW(GetDlgItem(hwnd,QueueSearch),L"");refresh();focusAndReveal(GetDlgItem(hwnd,QueueSearch));break;
-  case NextStep:{auto task=selectedTask();if(!task||task->state!=State::Attention||running)break;if(task->result.status==L"password_required"){focusAndReveal(batchEdit);SendMessageW(batchEdit,EM_SETSEL,0,-1);revealFocus();feedback(L"填写本批优先密码后，重试所选任务，再开始全部等待项。");}else if(task->result.status==L"source_unavailable")relocateSource(*task);else if(task->result.status==L"missing_volume"||task->result.status==L"ambiguous_volume")orderedVolumes();break;}case Cancel:stopped=true;feedback(L"未开始的任务留在队列，本轮结束后可重试取消项。");updateControls();break;
+  case NextStep:{auto task=selectedTask();if(!task||task->state!=State::Attention||running)break;if(task->result.status==L"password_required"){if(!showOptionsDrawer){showOptionsDrawer=true;layout();}focusAndReveal(batchEdit);SendMessageW(batchEdit,EM_SETSEL,0,-1);revealFocus();feedback(L"填写本批优先密码后，重试所选任务，再开始解压。");}else if(task->result.status==L"source_unavailable")relocateSource(*task);else if(task->result.status==L"missing_volume"||task->result.status==L"ambiguous_volume")orderedVolumes();break;}case Cancel:stopped=true;feedback(L"未开始的任务留在队列，本轮结束后可重试取消项。");updateControls();break;
   case Choose:{auto dir=chooseDirectory();if(!dir.empty()){selectedOutput=dir;SetWindowTextW(directoryEdit,dir.c_str());workspaceChanged();}break;}
   case Reset:workspaceChanged();selectedOutput.clear();SetWindowTextW(directoryEdit,L"原包所在目录 · 创建同名文件夹，重名自动改名");break;
   case ShowPasswords:refreshPasswords();break;case UsePassword:useSavedPassword();break;
@@ -619,7 +1002,8 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show){
    if(ctrl&&msg.wParam==VK_RETURN){invokeCommand(currentPage==Page::TaskSettings?TaskApply:currentPage==Page::Volumes?AcceptVolumes:currentPage==Page::Passwords?SavePasswords:Start);continue;}
    if(ctrl&&msg.wParam=='A'&&(focus==list||focus==volumeList)){ListView_SetItemState(focus,-1,LVIS_SELECTED,LVIS_SELECTED);if(focus==list)updateControls();else updateVolumeControls();continue;}
    if(ctrl&&msg.wParam=='V'&&(focus==list||focus==volumeList)){invokeCommand(focus==list?PasteFiles:VolumePaste);continue;}
-   if(ctrl&&msg.wParam=='F'&&(currentPage==Page::Queue||currentPage==Page::Passwords)){auto search=GetDlgItem(window,currentPage==Page::Queue?QueueSearch:PasswordSearch);focusAndReveal(search);SendMessageW(search,EM_SETSEL,0,-1);revealFocus();continue;}
+   if(ctrl&&msg.wParam=='F'&&(currentPage==Page::Queue||currentPage==Page::Passwords)){if(currentPage==Page::Queue&&!showSearchBar){showSearchBar=true;layout();}auto search=GetDlgItem(window,currentPage==Page::Queue?QueueSearch:PasswordSearch);focusAndReveal(search);SendMessageW(search,EM_SETSEL,0,-1);revealFocus();continue;}
+   if(ctrl&&msg.wParam==VK_OEM_COMMA&&currentPage==Page::Queue){showOptionsDrawer=!showOptionsDrawer;layout();continue;}
    if(ctrl&&(msg.wParam==VK_UP||msg.wParam==VK_DOWN)&&(focus==list||focus==volumeList)){invokeCommand(focus==list?(msg.wParam==VK_UP?Up:Down):(msg.wParam==VK_UP?VolumeUp:VolumeDown));continue;}
    if(msg.wParam==VK_DELETE&&(focus==list||focus==volumeList)){invokeCommand(focus==list?Remove:VolumeRemove);continue;}
    if(msg.wParam==VK_ESCAPE&&(focus==GetDlgItem(window,QueueSearch)||focus==GetDlgItem(window,PasswordSearch))){SetWindowTextW(focus,L"");continue;}
@@ -628,5 +1012,5 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show){
   }
   if(!IsDialogMessageW(window,&msg)){TranslateMessage(&msg);DispatchMessageW(&msg);}if(msg.message==WM_KEYDOWN||msg.message==WM_CHAR)revealFocus();
  }
- if(worker.joinable())worker.join();workspaceWriter.reset();for(auto face:{font,titleFont,smallFont})if(face)DeleteObject(face);DeleteObject(background);OleUninitialize();return 0;
+ if(worker.joinable())worker.join();workspaceWriter.reset();for(auto face:{font,boldFont,titleFont,smallFont})if(face)DeleteObject(face);DeleteObject(background);DeleteObject(surfaceBrush);OleUninitialize();return 0;
 }
