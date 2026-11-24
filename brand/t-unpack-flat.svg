@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="T解压：瑞士工业极简平面图标">
+  <rect x="22" y="22" width="212" height="212" rx="52" fill="#eceae2" stroke="#cecbc1" stroke-width="2.6"/>
+  <circle cx="200" cy="56" r="8" fill="#d4d1c7"/>
+  <circle cx="200" cy="56" r="5" fill="#6c7e7c"/>
+  <rect x="48" y="80" width="160" height="44" rx="16" fill="#404245"/>
+  <rect x="60" y="96" width="136" height="12" rx="6" fill="#232527"/>
+  <path d="M82 98h92a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-26v58l-10 10h-20l-10-10v-58H82a10 10 0 0 1-10-10v-20a10 10 0 0 1 10-10z" fill="#ee6531"/>
+  <g fill="#c24618">
+    <rect x="82" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="90" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="98" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="106" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="114" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="122" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="130" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="138" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="146" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="154" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="162" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="170" y="100" width="4" height="9" rx="1.5"/>
+  </g>
+</svg>

@@ -1,105 +1,249 @@
-"""Original layered T-unpack mark. Vector source and optically sized native ICO."""
+"""T解压 (TUnpack) Swiss Industrial Icon Builder.
+
+Generates BOTH:
+1. 3D Shadowed Edition (t-unpack.png / t-unpack.ico / t-unpack-3d.*)
+   Clean alpha-matted cutout from the studio 3D render with subtle grounded shadow.
+2. Shadowless Flat Edition (t-unpack-flat.svg / t-unpack.svg / t-unpack-flat.png / t-unpack-flat.ico)
+   Pure flat geometric Swiss industrial vector/raster icon with zero shadows.
+"""
+from collections import deque
 from pathlib import Path
+import shutil
 from PIL import Image, ImageDraw, ImageFilter
 
-ROOT=Path(__file__).resolve().parent
-SIZES=[16,20,24,32,40,48,64,128,256]
+ROOT = Path(__file__).resolve().parent
+SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256]
+SOURCE_3D = ROOT / "t-unpack-3d-source.jpg"
 
-def render(size):
-    scale=4 if size>=128 else 12
-    side=size*scale
-    k=side/256
-    canvas=Image.new("RGBA",(side,side))
-    def box(values):return tuple(round(v*k) for v in values)
-    def mask_rect(rect,radius):
-        mask=Image.new("L",(side,side))
-        ImageDraw.Draw(mask).rounded_rectangle(box(rect),round(radius*k),fill=255)
-        return mask
-    def gradient(mask,top,bottom):
-        layer=Image.new("RGBA",(side,side))
-        draw=ImageDraw.Draw(layer)
-        bounds=mask.getbbox()
-        if not bounds:return layer
-        for y in range(bounds[1],bounds[3]):
-            t=(y-bounds[1])/max(1,bounds[3]-bounds[1]-1)
-            color=tuple(round(a+(b-a)*t) for a,b in zip(top,bottom))+(255,)
-            draw.line((0,y,side,y),fill=color)
-        layer.putalpha(mask)
-        return layer
-    def shadow(mask,dy,blur,alpha):
-        moved=Image.new("L",(side,side))
-        moved.paste(mask,(0,round(dy*k)))
-        moved=moved.filter(ImageFilter.GaussianBlur(blur*k)).point(lambda p:round(p*alpha/255))
-        shade=Image.new("RGBA",(side,side),(0,32,43,0));shade.putalpha(moved)
-        canvas.alpha_composite(shade)
-    def surface(rect,radius,top,bottom,cast=True):
-        mask=mask_rect(rect,radius)
-        if cast:shadow(mask,5,5,100)
-        canvas.alpha_composite(gradient(mask,top,bottom))
-        edge=Image.new("RGBA",(side,side))
-        ImageDraw.Draw(edge).rounded_rectangle(box(rect),round(radius*k),outline=(225,255,247,95),width=max(1,round(1.2*k)))
-        canvas.alpha_composite(edge)
-        return mask
-    # Staggered archive plates. Dark lower edges give each plate actual thickness.
-    surface((76,22,228,196),27,(149,242,215),(44,165,159))
-    surface((52,42,211,217),29,(44,188,174),(8,109,123))
-    surface((28,73,194,237),31,(5,93,110),(3,54,72))
-    front=surface((28,64,194,226),31,(24,153,147),(5,82,105))
-    # A soft light along the top lip, kept inside the front plate.
-    light=Image.new("RGBA",(side,side));d=ImageDraw.Draw(light)
-    d.line(box((59,66,163,66)),fill=(197,255,235,115),width=max(1,round(2*k)))
-    canvas.alpha_composite(light)
-    mark=Image.new("L",(side,side));d=ImageDraw.Draw(mark)
-    d.rounded_rectangle(box((52,91,170,116)),round(6*k),fill=255)
-    d.rectangle(box((100,110,123,169)),fill=255)
-    d.polygon([tuple(round(v*k) for v in p) for p in [(86,160),(138,160),(112,190)]],fill=255)
-    if size>=32:
-        for rect in [(106,124,113,131),(113,135,120,142),(106,146,113,153)]:
-            d.rounded_rectangle(box(rect),round(k),fill=0)
-    shadow(mark,3,1.6,110)
-    canvas.alpha_composite(gradient(mark,(255,255,250),(191,238,230)))
-    if size>=24:
-        tray=Image.new("RGBA",(side,side));d=ImageDraw.Draw(tray)
-        d.line([tuple(round(v*k) for v in p) for p in [(65,193),(65,205),(71,211),(153,211),(159,205),(159,193)]],
-               fill=(154,239,219,255),width=round(5*k),joint="curve")
-        for x,y in [(65,193),(159,193)]:
-            d.ellipse(box((x-2.5,y-2.5,x+2.5,y+2.5)),fill=(154,239,219,255))
-        canvas.alpha_composite(tray)
-    return canvas.resize((size,size),Image.Resampling.LANCZOS)
 
-svg="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="T解压：层叠压缩包与金属T拉链">
-<defs>
-<linearGradient id="back" x2="0" y2="1"><stop stop-color="#95f2d7"/><stop offset="1" stop-color="#2ca59f"/></linearGradient>
-<linearGradient id="mid" x2="0" y2="1"><stop stop-color="#2cbcae"/><stop offset="1" stop-color="#086d7b"/></linearGradient>
-<linearGradient id="base" x2="0" y2="1"><stop stop-color="#055d6e"/><stop offset="1" stop-color="#033648"/></linearGradient>
-<linearGradient id="face" x2="0" y2="1"><stop stop-color="#189993"/><stop offset="1" stop-color="#055269"/></linearGradient>
-<linearGradient id="metal" x2="0" y2="1"><stop stop-color="#fffffa"/><stop offset="1" stop-color="#bfeee6"/></linearGradient>
-<filter id="shadow" x="-30%" y="-30%" width="160%" height="175%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#00202b" flood-opacity=".4"/></filter>
-<filter id="tShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="1.6" flood-color="#00202b" flood-opacity=".43"/></filter>
-<mask id="t"><rect width="256" height="256" fill="black"/><rect x="52" y="91" width="118" height="25" rx="6" fill="white"/><path d="M100 110h23v50h15l-26 30-26-30h14z" fill="white"/>
-<g fill="black"><rect x="106" y="124" width="7" height="7" rx="1"/><rect x="113" y="135" width="7" height="7" rx="1"/><rect x="106" y="146" width="7" height="7" rx="1"/></g></mask>
-</defs>
-<g stroke="#e1fff7" stroke-opacity=".37" stroke-width="1.2" filter="url(#shadow)">
-<rect x="76" y="22" width="152" height="174" rx="27" fill="url(#back)"/>
-<rect x="52" y="42" width="159" height="175" rx="29" fill="url(#mid)"/>
-<rect x="28" y="73" width="166" height="164" rx="31" fill="url(#base)"/>
-<rect x="28" y="64" width="166" height="162" rx="31" fill="url(#face)"/>
-</g>
-<path d="M59 66h104" stroke="#c5ffeb" stroke-opacity=".45" stroke-width="2"/>
-<g filter="url(#tShadow)"><rect width="256" height="256" fill="url(#metal)" mask="url(#t)"/></g>
-<path d="M65 193v12l6 6h82l6-6v-12" fill="none" stroke="#9aefdb" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>"""
-(ROOT/"t-unpack.svg").write_text(svg,encoding="utf-8")
-icons={n:render(n) for n in SIZES}
-icons[256].save(ROOT/"t-unpack.png")
-icons[256].save(ROOT/"t-unpack.ico",format="ICO",sizes=[(n,n) for n in SIZES],append_images=[icons[n] for n in SIZES if n!=256])
-sheet=Image.new("RGB",(760,420),"#eff3f4");draw=ImageDraw.Draw(sheet)
-for i,size in enumerate(SIZES):
-    shown=icons[size] if size<=64 else icons[size].resize((64,64),Image.Resampling.LANCZOS)
-    x=22+i*82
-    sheet.paste(shown,(x+(64-shown.width)//2,24+(64-shown.height)//2),shown)
-    draw.text((x+20,102),str(size),fill="#233f46")
-sheet.paste(icons[256],(55,145),icons[256])
-dark=Image.new("RGB",(270,270),"#172c36");dark.paste(icons[256],(7,7),icons[256]);sheet.paste(dark,(380,135))
-sheet.save(ROOT/"icon-preview.png")
-print("Created layered SVG, PNG, nine native ICO sizes and preview")
+def extract_clean_3d_rgba(src_path: Path) -> Image.Image:
+    """Apply an exact mathematical superellipse/squircle mask to the centered 650x650 studio render.
+    Avoids color-threshold nibbles on bright studio rim highlights while keeping zero white fringe."""
+    rgb = Image.open(src_path).convert("RGB")
+    # Exact measured bounding box of the 1024x1024 studio render is [188..837] (650x650).
+    # Inset by 2px on each side to eliminate any JPEG white halo around the perimeter.
+    crop = rgb.crop((190, 190, 836, 836))
+    cw, ch = crop.size  # 646x646
+
+    # Render an oversampled 4x superellipse (squircle, n=4.35) alpha mask matching the exact corner curve.
+    s = 2
+    mw, mh = cw * s, ch * s
+    mask = Image.new("L", (mw, mh), 0)
+    mpx = mask.load()
+    cx = (mw - 1) / 2.0
+    cy = (mh - 1) / 2.0
+    a = mw / 2.0 - 0.5
+    n = 4.35
+    inv_a = 1.0 / a
+    for y in range(mh):
+        yn = abs(y - cy) * inv_a
+        yp = yn ** n
+        for x in range(mw):
+            xn = abs(x - cx) * inv_a
+            val = (xn ** n) + yp
+            if val <= 0.985:
+                mpx[x, y] = 255
+            elif val < 1.015:
+                mpx[x, y] = round(255 * (1.015 - val) / 0.030)
+    mask = mask.resize((cw, ch), Image.Resampling.LANCZOS)
+
+    rgba = crop.convert("RGBA")
+    rgba.putalpha(mask)
+    return rgba
+
+
+def render_3d(cropped_3d: Image.Image, size: int) -> Image.Image:
+    """Render optically sized 3D shadowed icon onto a square transparent canvas."""
+    scale = 4 if size >= 64 else 8
+    side = size * scale
+    canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+
+    # Give slightly more breathing room at large sizes for soft drop shadow; fill tightly at <=24px
+    margin_ratio = 0.085 if size >= 32 else 0.04
+    body_side = round(side * (1.0 - 2 * margin_ratio))
+    body = cropped_3d.resize((body_side, body_side), Image.Resampling.LANCZOS)
+    x = (side - body_side) // 2
+    y = round(side * (0.068 if size >= 32 else 0.04))
+
+    # Soft grounded ambient + contact shadow for the 3D shadowed version
+    if size >= 20:
+        alpha_ch = body.getchannel("A")
+        sh_mask = Image.new("L", (side, side), 0)
+        dy = max(1, round(side * 0.028))
+        sh_mask.paste(alpha_ch, (x, min(side - body_side, y + dy)))
+        sh_mask = sh_mask.filter(ImageFilter.GaussianBlur(max(1.0, side * 0.032)))
+        sh_mask = sh_mask.point(lambda p: round(p * 0.34))
+        shadow = Image.new("RGBA", (side, side), (18, 20, 24, 0))
+        shadow.putalpha(sh_mask)
+        canvas.alpha_composite(shadow)
+
+    canvas.alpha_composite(body, (x, y))
+    return canvas.resize((size, size), Image.Resampling.LANCZOS)
+
+
+def render_flat(size: int) -> Image.Image:
+    """Render crisp, shadowless flat Swiss Industrial icon matching 2A geometry."""
+    scale = 4 if size >= 128 else 12
+    side = size * scale
+    k = side / 256.0
+    canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    d = ImageDraw.Draw(canvas)
+
+    def box(r):
+        return tuple(round(v * k) for v in r)
+
+    def pt(x, y):
+        return (round(x * k), round(y * k))
+
+    # 1. Warm matte ceramic off-white squircle (pure flat, zero shadow)
+    pad = 22 if size >= 32 else (14 if size >= 24 else 8)
+    rad = 52 if size >= 24 else 46
+    d.rounded_rectangle(
+        box((pad, pad, 256 - pad, 256 - pad)),
+        radius=round(rad * k),
+        fill=(236, 234, 226, 255),
+        outline=(206, 203, 193, 255),
+        width=max(1, round(2.6 * k)),
+    )
+
+    # 2. Upper-right Braun micro-indicator dot (dainty hardware proportion, visible at >=24px)
+    if size >= 24:
+        d.ellipse(box((192, 48, 208, 64)), fill=(212, 209, 199, 255))
+        d.ellipse(box((195, 51, 205, 61)), fill=(108, 126, 124, 255))
+
+    # 3. Dark charcoal-graphite precision slot
+    slot_rect = (48, 80, 208, 124) if size >= 24 else (38, 72, 218, 122)
+    d.rounded_rectangle(box(slot_rect), radius=round(16 * k), fill=(64, 66, 69, 255))
+    # Inner dark slit line
+    slit_rect = (60, 96, 196, 108) if size >= 24 else (50, 92, 206, 104)
+    d.rounded_rectangle(box(slit_rect), radius=round(6 * k), fill=(35, 37, 39, 255))
+
+    # 4. Bold flat international-orange "T" pull-tab with subtle faceted bottom chamfer
+    orange = (238, 101, 49, 255)
+    groove = (194, 70, 24, 255)
+    if size >= 24:
+        # Crossbar
+        d.rounded_rectangle(box((72, 98, 184, 138)), radius=round(10 * k), fill=orange)
+        # Vertical stem with faceted downward chamfer at bottom
+        d.polygon(
+            [
+                pt(108, 132),
+                pt(148, 132),
+                pt(148, 196),
+                pt(138, 206),
+                pt(118, 206),
+                pt(108, 196),
+            ],
+            fill=orange,
+        )
+        # Subtle inner junction fill for clean rounded T neck
+        d.rectangle(box((104, 130, 152, 142)), fill=orange)
+        # Micro-knurled top grip ticks at >=32px
+        if size >= 32:
+            for x in range(82, 176, 8):
+                d.rounded_rectangle(box((x, 100, x + 4, 109)), radius=round(1.5 * k), fill=groove)
+    else:
+        # Extra-bold optical silhouette at 16px-20px
+        d.rounded_rectangle(box((58, 92, 198, 140)), radius=round(10 * k), fill=orange)
+        d.rounded_rectangle(box((104, 128, 152, 214)), radius=round(8 * k), fill=orange)
+
+    return canvas.resize((size, size), Image.Resampling.LANCZOS)
+
+
+FLAT_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="T解压：瑞士工业极简平面图标">
+  <rect x="22" y="22" width="212" height="212" rx="52" fill="#eceae2" stroke="#cecbc1" stroke-width="2.6"/>
+  <circle cx="200" cy="56" r="8" fill="#d4d1c7"/>
+  <circle cx="200" cy="56" r="5" fill="#6c7e7c"/>
+  <rect x="48" y="80" width="160" height="44" rx="16" fill="#404245"/>
+  <rect x="60" y="96" width="136" height="12" rx="6" fill="#232527"/>
+  <path d="M82 98h92a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10h-26v58l-10 10h-20l-10-10v-58H82a10 10 0 0 1-10-10v-20a10 10 0 0 1 10-10z" fill="#ee6531"/>
+  <g fill="#c24618">
+    <rect x="82" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="90" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="98" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="106" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="114" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="122" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="130" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="138" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="146" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="154" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="162" y="100" width="4" height="9" rx="1.5"/>
+    <rect x="170" y="100" width="4" height="9" rx="1.5"/>
+  </g>
+</svg>
+"""
+
+
+def save_preview(icons: dict, path: Path):
+    sheet = Image.new("RGB", (760, 420), "#eff3f4")
+    draw = ImageDraw.Draw(sheet)
+    for i, size in enumerate(SIZES):
+        shown = icons[size] if size <= 64 else icons[size].resize((64, 64), Image.Resampling.LANCZOS)
+        x = 22 + i * 82
+        sheet.paste(shown, (x + (64 - shown.width) // 2, 24 + (64 - shown.height) // 2), shown)
+        draw.text((x + 20, 102), str(size), fill="#233f46")
+    sheet.paste(icons[256], (55, 145), icons[256])
+    dark = Image.new("RGB", (270, 270), "#141820")
+    dark.paste(icons[256], (7, 7), icons[256])
+    sheet.paste(dark, (380, 135))
+    sheet.save(path, optimize=True)
+
+
+def save_both_preview(icons_3d: dict, icons_flat: dict, path: Path):
+    W, H = 840, 680
+    sheet = Image.new("RGB", (W, H), "#f3f5f8")
+    draw = ImageDraw.Draw(sheet)
+    draw.rectangle((0, 350, W, H), fill="#131720")
+
+    cols = [
+        ("3D Shadowed (t-unpack.ico)", icons_3d, 210),
+        ("Flat Shadowless (t-unpack-flat.ico)", icons_flat, 630),
+    ]
+    for label, icons, cx in cols:
+        draw.text((cx - 115, 16), label, fill="#0f172a")
+        sheet.paste(icons[256], (cx - 128, 40), icons[256])
+        sx = cx - 80
+        for sz in (64, 32, 20, 16):
+            im = icons[sz]
+            sheet.paste(im, (sx, 318 - sz // 2), im)
+            sx += sz + 14
+        draw.text((cx - 115, 368), label + " (Dark)", fill="#e2e8f0")
+        sheet.paste(icons[256], (cx - 128, 396), icons[256])
+    sheet.save(path, optimize=True)
+
+
+def save_ico(icons: dict, path: Path):
+    icons[256].save(
+        path,
+        format="ICO",
+        sizes=[(n, n) for n in SIZES],
+        append_images=[icons[n] for n in SIZES if n != 256],
+    )
+
+
+def main():
+    cropped_3d = extract_clean_3d_rgba(SOURCE_3D)
+    icons_3d = {n: render_3d(cropped_3d, n) for n in SIZES}
+    icons_flat = {n: render_flat(n) for n in SIZES}
+
+    # Main app icon = 3D Shadowed Edition
+    icons_3d[256].save(ROOT / "t-unpack.png", optimize=True)
+    save_ico(icons_3d, ROOT / "t-unpack.ico")
+    icons_3d[256].save(ROOT / "t-unpack-3d.png", optimize=True)
+    save_ico(icons_3d, ROOT / "t-unpack-3d.ico")
+    save_preview(icons_3d, ROOT / "icon-preview.png")
+
+    # Flat Shadowless Edition (vector SVG + 256px PNG + 9-size ICO)
+    (ROOT / "t-unpack-flat.svg").write_text(FLAT_SVG, encoding="utf-8")
+    (ROOT / "t-unpack.svg").write_text(FLAT_SVG, encoding="utf-8")
+    icons_flat[256].save(ROOT / "t-unpack-flat.png", optimize=True)
+    save_ico(icons_flat, ROOT / "t-unpack-flat.ico")
+    save_preview(icons_flat, ROOT / "icon-preview-flat.png")
+
+    save_both_preview(icons_3d, icons_flat, ROOT / "icon-preview-both.png")
+    print("Generated 3D shadowed and shadowless flat icon suites (all 9 native ICO sizes).")
+
+
+if __name__ == "__main__":
+    main()

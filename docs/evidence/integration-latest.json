@@ -1,16 +1,16 @@
 {
-  "run": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455",
+  "run": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033",
   "passed": 92,
   "total": 92,
   "cases": [
     {
       "name": "plain ZIP + unicode + zero-length file",
       "ok": true,
-      "wall_ms": 266.93,
+      "wall_ms": 106.99,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\normal",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\normal",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -23,23 +23,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.2769,
+        "ms": 14.2141,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\normal.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\normal.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ZIP renamed to MP4",
       "ok": true,
-      "wall_ms": 112.78,
+      "wall_ms": 158.23,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -52,23 +53,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.603,
+        "ms": 11.8174,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ZIP disguised as DOCX",
       "ok": true,
-      "wall_ms": 104.19,
+      "wall_ms": 132.92,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\fake",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\fake",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -81,23 +83,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.0152,
+        "ms": 11.5896,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\fake.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\fake.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "existing output preserved and renamed",
       "ok": true,
-      "wall_ms": 46.33,
+      "wall_ms": 42.65,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\normal (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\normal (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -110,19 +113,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.1422,
+        "ms": 10.844,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\normal.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\normal.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "full SDK integrity test creates no extraction files",
       "ok": true,
-      "wall_ms": 36.95,
+      "wall_ms": 34.76,
       "result": {
         "ok": true,
         "type": "zip",
@@ -139,23 +143,24 @@
         "status": "verified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.3821,
+        "ms": 1.4422,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\normal.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\normal.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "archive beyond 8MiB SFX window",
       "ok": true,
-      "wall_ms": 76.15,
+      "wall_ms": 64.24,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\embedded",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\embedded",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -168,19 +173,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 14.2788,
+        "ms": 11.4107,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\embedded.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\embedded.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "shallow mode locates ZIP from tail without a carrier scan",
       "ok": true,
-      "wall_ms": 34.11,
+      "wall_ms": 28.78,
       "result": {
         "ok": true,
         "type": "zip",
@@ -197,21 +203,22 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 2.1882,
+        "ms": 2.2677,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "signature across scan block boundary",
       "ok": true,
-      "wall_ms": 60.74,
+      "wall_ms": 54.37,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\boundary",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\boundary",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -224,23 +231,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.1899,
+        "ms": 11.4418,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\boundary.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\boundary.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "apate recovery L=64",
       "ok": true,
-      "wall_ms": 45.67,
+      "wall_ms": 47.95,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\apate-64",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\apate-64",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -253,23 +261,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.1578,
+        "ms": 11.9385,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\apate-64.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\apate-64.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "apate lossless save L=64",
       "ok": true,
-      "wall_ms": 33.93,
+      "wall_ms": 31.31,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\apate-64.restored.zip",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\apate-64.restored.zip",
         "note": "已另存原始压缩包，源文件保留",
         "archives": 0,
         "attempts": 0,
@@ -282,21 +291,22 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 3.7356,
+        "ms": 3.1157,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "apate recovery L=4096",
       "ok": true,
-      "wall_ms": 154.18,
+      "wall_ms": 42.82,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\apate-4096",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\apate-4096",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -309,23 +319,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.5854,
+        "ms": 11.2242,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\apate-4096.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\apate-4096.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "apate lossless save L=4096",
       "ok": true,
-      "wall_ms": 32.57,
+      "wall_ms": 29.78,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\apate-4096.restored.zip",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\apate-4096.restored.zip",
         "note": "已另存原始压缩包，源文件保留",
         "archives": 0,
         "attempts": 0,
@@ -338,17 +349,18 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 3.4313,
+        "ms": 3.0441,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "real document identified",
       "ok": true,
-      "wall_ms": 85.41,
+      "wall_ms": 128.36,
       "result": {
         "ok": true,
         "type": "zip",
@@ -365,17 +377,18 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 0.7271,
+        "ms": 0.5866,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "real document not unpacked or recycled",
       "ok": true,
-      "wall_ms": 31.98,
+      "wall_ms": 29.81,
       "result": {
         "ok": false,
         "type": "zip",
@@ -392,21 +405,22 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 0.7082,
+        "ms": 0.6484,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "explicit document container extraction",
       "ok": true,
-      "wall_ms": 44.18,
+      "wall_ms": 41.02,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\normal (3)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\normal (3)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -419,19 +433,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 14.2612,
+        "ms": 13.6342,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\normal.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\normal.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "path traversal rejected",
       "ok": true,
-      "wall_ms": 31.32,
+      "wall_ms": 26.66,
       "result": {
         "ok": false,
         "type": "zip",
@@ -448,17 +463,18 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.3855,
+        "ms": 1.4499,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "case-insensitive duplicate paths rejected",
       "ok": true,
-      "wall_ms": 30.12,
+      "wall_ms": 27.4,
       "result": {
         "ok": false,
         "type": "zip",
@@ -475,21 +491,22 @@
         "status": "identified",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.5342,
+        "ms": 1.6533,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "nested extraction retains normal documents",
       "ok": true,
-      "wall_ms": 45.55,
+      "wall_ms": 43.02,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\outer",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\outer",
         "note": "解压完成，已保留原包",
         "archives": 2,
         "attempts": 0,
@@ -502,24 +519,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 16.3549,
+        "ms": 17.3396,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\outer\\inner.zip",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outer.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\outer\\inner.zip",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outer.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "nested carrier detected",
       "ok": true,
-      "wall_ms": 47.96,
+      "wall_ms": 42.39,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\outer-hidden",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\outer-hidden",
         "note": "解压完成，已保留原包",
         "archives": 2,
         "attempts": 0,
@@ -532,24 +550,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 16.1881,
+        "ms": 16.7102,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\outer-hidden\\hidden.mp4",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outer-hidden.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\outer-hidden\\hidden.mp4",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outer-hidden.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "manually ordered renamed raw volumes",
       "ok": true,
-      "wall_ms": 333.72,
+      "wall_ms": 253.96,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\ordered-0",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\ordered-0",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -562,25 +581,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 10.6246,
+        "ms": 11.1975,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\ordered-0.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\ordered-1.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\ordered-2.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\ordered-0.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\ordered-1.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\ordered-2.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "tail-located archive never marks skipped concatenated files for cleanup",
       "ok": true,
-      "wall_ms": 35.6,
+      "wall_ms": 32.65,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\independent-a",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\independent-a",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -593,23 +613,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.6788,
+        "ms": 6.0063,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\independent-b.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\independent-b.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "auto resolve .003 to first volume",
       "ok": true,
-      "wall_ms": 132.95,
+      "wall_ms": 137.23,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\split",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\split",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -622,21 +643,22 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.3487,
+        "ms": 13.1596,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\split.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\split.7z.002",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\split.7z.003"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\split.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\split.7z.002",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\split.7z.003"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "missing first volume reported",
       "ok": true,
-      "wall_ms": 123.36,
+      "wall_ms": 147.53,
       "result": {
         "ok": false,
         "type": "",
@@ -653,17 +675,18 @@
         "status": "missing_volume",
         "engine_error": "bit7z 14",
         "failed_file": "",
-        "ms": 3.8364,
+        "ms": 4.7117,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ordinary media is not an archive",
       "ok": true,
-      "wall_ms": 68.22,
+      "wall_ms": 66.98,
       "result": {
         "ok": false,
         "type": "",
@@ -680,17 +703,18 @@
         "status": "not_archive",
         "engine_error": "bit7z 14",
         "failed_file": "",
-        "ms": 8.0765,
+        "ms": 8.1696,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted 7z wrong password",
       "ok": true,
-      "wall_ms": 139.48,
+      "wall_ms": 34.14,
       "result": {
         "ok": false,
         "type": "7z",
@@ -707,21 +731,22 @@
         "status": "password_required",
         "engine_error": "operation 20",
         "failed_file": "",
-        "ms": 4.0463,
+        "ms": 3.8774,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted 7z special-character password",
       "ok": true,
-      "wall_ms": 46.41,
+      "wall_ms": 45.96,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -734,23 +759,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 14.9787,
+        "ms": 13.9322,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\encrypted.7z"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\encrypted.7z"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "saved 7z password reused",
       "ok": true,
-      "wall_ms": 140.07,
+      "wall_ms": 140.46,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -763,19 +789,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.3003,
+        "ms": 11.9168,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\encrypted.7z"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\encrypted.7z"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted zip wrong password",
       "ok": true,
-      "wall_ms": 32.7,
+      "wall_ms": 32.11,
       "result": {
         "ok": false,
         "type": "zip",
@@ -792,21 +819,22 @@
         "status": "password_required",
         "engine_error": "",
         "failed_file": "",
-        "ms": 2.5322,
+        "ms": 2.4448,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted zip special-character password",
       "ok": true,
-      "wall_ms": 44.73,
+      "wall_ms": 38.12,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted (3)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted (3)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -819,23 +847,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 8.1584,
+        "ms": 8.4992,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\encrypted.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\encrypted.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "saved zip password reused",
       "ok": true,
-      "wall_ms": 41.58,
+      "wall_ms": 37.71,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted (4)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted (4)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -848,19 +877,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 9.575,
+        "ms": 8.3468,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\encrypted.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\encrypted.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "valid 7z first piece reports exact missing bytes without password attempts",
       "ok": true,
-      "wall_ms": 37.58,
+      "wall_ms": 32.31,
       "result": {
         "ok": false,
         "type": "7z",
@@ -877,21 +907,22 @@
         "status": "missing_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 2.7982,
+        "ms": 2.8323,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "reversed encrypted 7z with truncated signature and CRC trailer",
       "ok": true,
-      "wall_ms": 49.59,
+      "wall_ms": 47.65,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\reversed-partial",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\reversed-partial",
         "note": "解压完成，已保留原包；已重建压缩包头",
         "archives": 1,
         "attempts": 1,
@@ -904,23 +935,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.3606,
+        "ms": 13.6291,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\reversed-partial.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\reversed-partial.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "recovery never fabricates missing compressed body bytes",
       "ok": true,
-      "wall_ms": 49.81,
+      "wall_ms": 44.71,
       "result": {
         "ok": false,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\reversed-missing-body",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\reversed-missing-body",
         "note": "密码验证已通过，但正文校验失败。可能存在数据损坏或正文使用了不同密码；原包和已生成内容均保留。",
         "archives": 0,
         "attempts": 1,
@@ -933,21 +965,22 @@
         "status": "verification_failed",
         "engine_error": "operation 18",
         "failed_file": "",
-        "ms": 10.8516,
+        "ms": 10.1252,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "content validated numeric MP4 volumes from first piece",
       "ok": true,
-      "wall_ms": 150.85,
+      "wall_ms": 46.04,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\scene01",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\scene01",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -960,24 +993,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 14.8381,
+        "ms": 14.4233,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\scene01.mp4",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\scene02.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\scene01.mp4",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\scene02.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "content validated numeric MP4 volumes from second piece",
       "ok": true,
-      "wall_ms": 51.2,
+      "wall_ms": 44.98,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\scene01 (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\scene01 (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -990,20 +1024,21 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.4439,
+        "ms": 11.7227,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\scene01.mp4",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\scene02.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\scene01.mp4",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\scene02.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "same size numbered decoy never accepted without header CRC",
       "ok": true,
-      "wall_ms": 36.54,
+      "wall_ms": 32.01,
       "result": {
         "ok": false,
         "type": "7z",
@@ -1020,17 +1055,18 @@
         "status": "password_required",
         "engine_error": "operation 20",
         "failed_file": "",
-        "ms": 3.9683,
+        "ms": 3.4182,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "numeric filename outside closed group is not silently replaced with first piece",
       "ok": true,
-      "wall_ms": 36.03,
+      "wall_ms": 35.12,
       "result": {
         "ok": false,
         "type": "",
@@ -1047,21 +1083,22 @@
         "status": "not_archive",
         "engine_error": "bit7z 14",
         "failed_file": "",
-        "ms": 3.4774,
+        "ms": 3.1663,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "first volume discovers unique renamed .003 by size and header CRC",
       "ok": true,
-      "wall_ms": 45.4,
+      "wall_ms": 44.59,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\original",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\original",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1074,25 +1111,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.3441,
+        "ms": 12.5567,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.002",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\renamed.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.002",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\renamed.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "renamed DOCX continuation discovers first and second volumes",
       "ok": true,
-      "wall_ms": 132.38,
+      "wall_ms": 134.61,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\original (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\original (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1105,21 +1143,22 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.4099,
+        "ms": 13.2983,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.002",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\renamed.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.002",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\renamed.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "multiple matching renamed tails require explicit selection",
       "ok": true,
-      "wall_ms": 29.9,
+      "wall_ms": 28.92,
       "result": {
         "ok": false,
         "type": "7z",
@@ -1136,21 +1175,22 @@
         "status": "ambiguous_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.6262,
+        "ms": 1.6198,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "explicit renamed tail disambiguates identical alternatives",
       "ok": true,
-      "wall_ms": 79.78,
+      "wall_ms": 43.08,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\original (3)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\original (3)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1163,25 +1203,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 46.2911,
+        "ms": 13.0827,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\original.7z.002",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\cross-suffix\\renamed.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\original.7z.002",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\cross-suffix\\renamed.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "numbered volumes may each use a different disguise extension",
       "ok": true,
-      "wall_ms": 128.84,
+      "wall_ms": 134.58,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\set",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\set",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1194,25 +1235,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.5186,
+        "ms": 14.0404,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\numbered-cross\\set.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\numbered-cross\\set.7z.002.pdf",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\numbered-cross\\set.7z.003.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\numbered-cross\\set.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\numbered-cross\\set.7z.002.pdf",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\numbered-cross\\set.7z.003.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "unique renamed middle .003 is inserted before known .004",
       "ok": true,
-      "wall_ms": 253.7,
+      "wall_ms": 154.13,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\middle",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\middle",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1225,22 +1267,23 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.5281,
+        "ms": 13.1904,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-middle\\middle.7z.001",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-middle\\middle.7z.002",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-middle\\opaque.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-middle\\middle.7z.004"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-middle\\middle.7z.001",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-middle\\middle.7z.002",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-middle\\opaque.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-middle\\middle.7z.004"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "renamed tail matching multiple first volumes is ambiguous",
       "ok": true,
-      "wall_ms": 139.3,
+      "wall_ms": 136.78,
       "result": {
         "ok": false,
         "type": "7z",
@@ -1257,17 +1300,18 @@
         "status": "ambiguous_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.5524,
+        "ms": 1.5429,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "selected unrelated .002 never processes a complete .001 instead",
       "ok": true,
-      "wall_ms": 140.39,
+      "wall_ms": 136.8,
       "result": {
         "ok": false,
         "type": "",
@@ -1284,21 +1328,22 @@
         "status": "",
         "engine_error": "",
         "failed_file": "",
-        "ms": 0.5693,
+        "ms": 0.6102,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "complete ZIP content overrides misleading numeric extension",
       "ok": true,
-      "wall_ms": 92.39,
+      "wall_ms": 128.17,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\standalone",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\standalone",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1311,19 +1356,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 12.4345,
+        "ms": 10.9374,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\standalone.003"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\standalone.003"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "multiple same-size middle candidates are never chosen arbitrarily",
       "ok": true,
-      "wall_ms": 32.84,
+      "wall_ms": 29.82,
       "result": {
         "ok": false,
         "type": "7z",
@@ -1340,21 +1386,22 @@
         "status": "ambiguous_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.9023,
+        "ms": 1.9394,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "body password errors never bypass later candidate validation",
       "ok": true,
-      "wall_ms": 49.93,
+      "wall_ms": 45.74,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\body-only",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\body-only",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 3,
@@ -1367,19 +1414,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 20.4951,
+        "ms": 18.9087,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\body-only.7z"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\body-only.7z"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "7z continuation tail identifies original format and exact missing prefix",
       "ok": true,
-      "wall_ms": 39.15,
+      "wall_ms": 34.24,
       "result": {
         "ok": false,
         "type": "7z",
@@ -1396,21 +1444,22 @@
         "status": "missing_volume",
         "engine_error": "bit7z 14",
         "failed_file": "",
-        "ms": 3.9156,
+        "ms": 4.3638,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "missing signature block is rebuilt using intact encoded tail",
       "ok": true,
-      "wall_ms": 145.89,
+      "wall_ms": 157.16,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\headless-encrypted",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\headless-encrypted",
         "note": "解压完成，已保留原包；已重建压缩包头",
         "archives": 1,
         "attempts": 2,
@@ -1423,23 +1472,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 20.8203,
+        "ms": 21.1644,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\headless-encrypted.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\headless-encrypted.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "overwritten 32-byte archive header rebuilt from intact tail",
       "ok": true,
-      "wall_ms": 251.65,
+      "wall_ms": 133.72,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\covered-header",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\covered-header",
         "note": "解压完成，已保留原包；已重建压缩包头",
         "archives": 1,
         "attempts": 1,
@@ -1452,23 +1502,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 15.3419,
+        "ms": 14.5515,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\covered-header.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\covered-header.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "tail metadata locates header-covered archive inside carrier",
       "ok": true,
-      "wall_ms": 49.99,
+      "wall_ms": 52.06,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\covered-carrier",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\covered-carrier",
         "note": "解压完成，已保留原包；已重建压缩包头",
         "archives": 1,
         "attempts": 1,
@@ -1481,23 +1532,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 14.6407,
+        "ms": 14.9778,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\covered-carrier.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\covered-carrier.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "automatic nesting shares header recovery without changing source",
       "ok": true,
-      "wall_ms": 48.6,
+      "wall_ms": 47.45,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\covered-nested",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\covered-nested",
         "note": "解压完成，已保留原包；已重建压缩包头",
         "archives": 2,
         "attempts": 1,
@@ -1510,24 +1562,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 17.0751,
+        "ms": 18.0887,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\covered-nested\\covered.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\covered-nested.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\covered-nested\\covered.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\covered-nested.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted empty-only archive can use a later saved candidate",
       "ok": true,
-      "wall_ms": 40.7,
+      "wall_ms": 40.04,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\empty-encrypted",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\empty-encrypted",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1540,23 +1593,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 8.0294,
+        "ms": 9.0067,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\empty-encrypted.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\empty-encrypted.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "UTF8 Chinese ZIP password without UTF8 flag and with media trailer",
       "ok": true,
-      "wall_ms": 43.79,
+      "wall_ms": 44.62,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\utf8-password",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\utf8-password",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1569,23 +1623,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 9.6032,
+        "ms": 9.3589,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\utf8-password.jpg"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\utf8-password.jpg"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ZIP remembers original Unicode password after native encoding adaptation",
       "ok": true,
-      "wall_ms": 38.94,
+      "wall_ms": 40.07,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\utf8-password (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\utf8-password (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1598,23 +1653,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 8.8855,
+        "ms": 9.4667,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\utf8-password.jpg"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\utf8-password.jpg"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "system-codepage Chinese ZIP password remains compatible",
       "ok": true,
-      "wall_ms": 140.6,
+      "wall_ms": 37.86,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\legacy-unicode",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\legacy-unicode",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1627,23 +1683,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.2568,
+        "ms": 9.6804,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\legacy-unicode.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\legacy-unicode.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "central directory locates encrypted item after unencrypted descriptor",
       "ok": true,
-      "wall_ms": 254.06,
+      "wall_ms": 262.72,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\descriptor-first",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\descriptor-first",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -1656,23 +1713,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.4045,
+        "ms": 11.8639,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\descriptor-first.mp4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\descriptor-first.mp4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ZIP64 tail directory locates prefix and ignores appended media",
       "ok": true,
-      "wall_ms": 45.86,
+      "wall_ms": 52.99,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\zip64-carrier",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\zip64-carrier",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1685,19 +1743,20 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 13.1657,
+        "ms": 15.2043,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\zip64-carrier.jpg"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\zip64-carrier.jpg"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "folder scan identifies content, skips documents and signature literals",
       "ok": true,
-      "wall_ms": 40.9,
+      "wall_ms": 38.16,
       "result": {
         "ok": true,
         "type": "",
@@ -1714,14 +1773,14 @@
         "status": "scanned",
         "engine_error": "",
         "failed_file": "",
-        "ms": 9.556,
+        "ms": 9.2586,
         "sources": [],
         "scanned_files": 4,
         "skipped_files": 3,
         "entries": [
           {
             "files": [
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\content-scan\\changed.jpg"
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\content-scan\\changed.jpg"
             ],
             "ok": true,
             "type": "zip",
@@ -1732,13 +1791,14 @@
             "recovered": false,
             "encrypted": false
           }
-        ]
+        ],
+        "items": []
       }
     },
     {
       "name": "recursive scan shares the same content detection",
       "ok": true,
-      "wall_ms": 42.54,
+      "wall_ms": 39.28,
       "result": {
         "ok": true,
         "type": "",
@@ -1755,14 +1815,14 @@
         "status": "scanned",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.3863,
+        "ms": 9.7116,
         "sources": [],
         "scanned_files": 5,
         "skipped_files": 3,
         "entries": [
           {
             "files": [
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\content-scan\\nested\\second.pdf"
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\content-scan\\nested\\second.pdf"
             ],
             "ok": true,
             "type": "zip",
@@ -1775,7 +1835,7 @@
           },
           {
             "files": [
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\content-scan\\changed.jpg"
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\content-scan\\changed.jpg"
             ],
             "ok": true,
             "type": "zip",
@@ -1786,13 +1846,14 @@
             "recovered": false,
             "encrypted": false
           }
-        ]
+        ],
+        "items": []
       }
     },
     {
       "name": "batch scan isolates directories and skips locked unrelated candidates",
       "ok": true,
-      "wall_ms": 164.18,
+      "wall_ms": 148.0,
       "result": {
         "ok": true,
         "type": "",
@@ -1809,16 +1870,16 @@
         "status": "scanned",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.057,
+        "ms": 10.7185,
         "sources": [],
         "scanned_files": 10,
         "skipped_files": 8,
         "entries": [
           {
             "files": [
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\a\\same.7z.001",
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\a\\same.7z.002",
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\a\\renamed.docx"
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\a\\same.7z.001",
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\a\\same.7z.002",
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\a\\renamed.docx"
             ],
             "ok": true,
             "type": "7z",
@@ -1831,9 +1892,9 @@
           },
           {
             "files": [
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\b\\same.7z.001",
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\b\\same.7z.002",
-              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\volume-batch\\b\\renamed.docx"
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\b\\same.7z.001",
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\b\\same.7z.002",
+              "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\volume-batch\\b\\renamed.docx"
             ],
             "ok": true,
             "type": "7z",
@@ -1844,17 +1905,18 @@
             "recovered": false,
             "encrypted": true
           }
-        ]
+        ],
+        "items": []
       }
     },
     {
       "name": "nested scan never treats binary signature constants as an archive",
       "ok": true,
-      "wall_ms": 36.34,
+      "wall_ms": 33.73,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\literal-library",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\literal-library",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1867,23 +1929,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 6.9392,
+        "ms": 5.6702,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\literal-library.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\literal-library.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "create and read back 7z",
       "ok": true,
-      "wall_ms": 168.77,
+      "wall_ms": 167.3,
       "result": {
         "ok": true,
         "type": "7z",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\created",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\created",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1896,23 +1959,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.8373,
+        "ms": 6.417,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\created.7z"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\created.7z"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "create and read back zip",
       "ok": true,
-      "wall_ms": 67.29,
+      "wall_ms": 63.67,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\created (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\created (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1925,23 +1989,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 6.5363,
+        "ms": 6.8295,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\created.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\created.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "RAR4 single archive",
       "ok": true,
-      "wall_ms": 45.29,
+      "wall_ms": 45.76,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\clouds.jpg.rar4",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\clouds.jpg.rar4",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -1954,23 +2019,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 16.8735,
+        "ms": 17.8098,
         "sources": [
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\single_file\\clouds.jpg.rar4.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted/encrypted.rar4.rar",
       "ok": true,
-      "wall_ms": 95.67,
+      "wall_ms": 93.57,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted.rar4",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted.rar4",
         "note": "解压完成，已保留原包",
         "archives": 2,
         "attempts": 1,
@@ -1983,24 +2049,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 64.6525,
+        "ms": 62.901,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted.rar4\\folder\\subfolder2\\homework.doc",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted.rar4\\folder\\subfolder2\\homework.doc",
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\encrypted\\encrypted.rar4.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "encrypted/encrypted.rar5.rar",
       "ok": true,
-      "wall_ms": 98.98,
+      "wall_ms": 101.63,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted.rar5",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted.rar5",
         "note": "解压完成，已保留原包",
         "archives": 2,
         "attempts": 1,
@@ -2013,24 +2080,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 65.162,
+        "ms": 66.3359,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\encrypted.rar5\\folder\\subfolder2\\homework.doc",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\encrypted.rar5\\folder\\subfolder2\\homework.doc",
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\encrypted\\encrypted.rar5.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "header_encrypted/header_encrypted.rar5.rar",
       "ok": true,
-      "wall_ms": 97.85,
+      "wall_ms": 92.16,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\header_encrypted.rar5",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\header_encrypted.rar5",
         "note": "解压完成，已保留原包",
         "archives": 2,
         "attempts": 1,
@@ -2043,24 +2111,25 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 64.5443,
+        "ms": 60.4943,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\header_encrypted.rar5\\folder\\subfolder2\\homework.doc",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\header_encrypted.rar5\\folder\\subfolder2\\homework.doc",
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\header_encrypted\\header_encrypted.rar5.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "RAR5 native volumes from part3",
       "ok": true,
-      "wall_ms": 45.65,
+      "wall_ms": 38.84,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\clouds.jpg.part1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\clouds.jpg.part1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2073,7 +2142,7 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.0038,
+        "ms": 9.9479,
         "sources": [
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\split\\clouds.jpg.part1.rar",
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\split\\clouds.jpg.part2.rar",
@@ -2081,17 +2150,18 @@
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "RAR4 native volumes from r01",
       "ok": true,
-      "wall_ms": 233.3,
+      "wall_ms": 125.75,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\clouds.jpg",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\clouds.jpg",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2104,7 +2174,7 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.096,
+        "ms": 7.3639,
         "sources": [
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\split\\clouds.jpg.rar",
           "D:\\CodexBuilds\\TUnpack\\tests\\fixtures\\split\\clouds.jpg.r00",
@@ -2112,17 +2182,18 @@
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "renamed RAR native volume mapping",
       "ok": true,
-      "wall_ms": 67.49,
+      "wall_ms": 46.79,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-rar-1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-rar-1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2135,25 +2206,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 8.2734,
+        "ms": 8.0112,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-rar-1.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-rar-2.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-rar-3.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-rar-1.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-rar-2.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-rar-3.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "auto group renamed RAR parts from first volume",
       "ok": true,
-      "wall_ms": 46.61,
+      "wall_ms": 40.42,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\auto.part1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\auto.part1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2166,25 +2238,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 11.1058,
+        "ms": 9.7058,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part1.jpg",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part2.txt",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part3.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part1.jpg",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part2.txt",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part3.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "auto group renamed RAR parts from last volume",
       "ok": true,
-      "wall_ms": 53.56,
+      "wall_ms": 39.78,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\auto (2).part1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\auto (2).part1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2197,21 +2270,22 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 9.8763,
+        "ms": 9.6053,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part1.jpg",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part2.txt",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\auto.part3.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part1.jpg",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part2.txt",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\auto.part3.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ambiguous renamed RAR part number requires explicit selection",
       "ok": true,
-      "wall_ms": 33.83,
+      "wall_ms": 47.19,
       "result": {
         "ok": false,
         "type": "rar",
@@ -2228,17 +2302,18 @@
         "status": "ambiguous_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.9057,
+        "ms": 2.188,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "missing middle renamed RAR volume reported",
       "ok": true,
-      "wall_ms": 36.1,
+      "wall_ms": 33.81,
       "result": {
         "ok": false,
         "type": "",
@@ -2255,21 +2330,22 @@
         "status": "missing_volume",
         "engine_error": "",
         "failed_file": "",
-        "ms": 2.0636,
+        "ms": 2.0335,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "renamed RAR4 old-style native volumes",
       "ok": true,
-      "wall_ms": 154.29,
+      "wall_ms": 230.12,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-old-rar-0",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-old-rar-0",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2282,25 +2358,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.484,
+        "ms": 8.3658,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-old-rar-0.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-old-rar-1.docx",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\renamed-old-rar-2.docx"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-old-rar-0.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-old-rar-1.docx",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\renamed-old-rar-2.docx"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "native RAR records real volume paths instead of guessed decoys",
       "ok": true,
-      "wall_ms": 39.51,
+      "wall_ms": 36.08,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\data1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\data1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2313,25 +2390,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.9073,
+        "ms": 7.2206,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\data1.rar",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\data2.rar",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\data3.rar"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\data1.rar",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\data2.rar",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\data3.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "restore complete native volume set RAR5",
       "ok": true,
-      "wall_ms": 175.07,
+      "wall_ms": 74.81,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\archive.part1",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\archive.part1",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2344,25 +2422,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.6434,
+        "ms": 8.8586,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-rar-1.restored\\archive.part1.rar",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-rar-1.restored\\archive.part2.rar",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-rar-1.restored\\archive.part3.rar"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-rar-1.restored\\archive.part1.rar",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-rar-1.restored\\archive.part2.rar",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-rar-1.restored\\archive.part3.rar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "restore complete native volume set RAR4",
       "ok": true,
-      "wall_ms": 74.97,
+      "wall_ms": 70.15,
       "result": {
         "ok": true,
         "type": "rar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\archive",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\archive",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2375,25 +2454,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.3089,
+        "ms": 6.6186,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-old-rar-0.restored\\archive.rar",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-old-rar-0.restored\\archive.r00",
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\renamed-old-rar-0.restored\\archive.r01"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-old-rar-0.restored\\archive.rar",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-old-rar-0.restored\\archive.r00",
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\renamed-old-rar-0.restored\\archive.r01"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec gzip",
       "ok": true,
-      "wall_ms": 39.48,
+      "wall_ms": 40.64,
       "result": {
         "ok": true,
         "type": "gz",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2406,23 +2486,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.8642,
+        "ms": 5.7001,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.gzip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.gzip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec bzip2",
       "ok": true,
-      "wall_ms": 137.71,
+      "wall_ms": 120.43,
       "result": {
         "ok": true,
         "type": "bz2",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2435,23 +2516,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.7881,
+        "ms": 5.0674,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.bzip2"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.bzip2"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec xz",
       "ok": true,
-      "wall_ms": 41.02,
+      "wall_ms": 38.0,
       "result": {
         "ok": true,
         "type": "xz",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (3)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (3)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2464,23 +2546,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 4.9958,
+        "ms": 5.1857,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.xz"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.xz"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec zstd",
       "ok": true,
-      "wall_ms": 129.24,
+      "wall_ms": 129.39,
       "result": {
         "ok": true,
         "type": "zst",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (4)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (4)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2493,23 +2576,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.385,
+        "ms": 6.0513,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.zstd"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.zstd"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec lz4",
       "ok": true,
-      "wall_ms": 39.46,
+      "wall_ms": 40.22,
       "result": {
         "ok": true,
         "type": "lz4",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (5)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (5)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2522,23 +2606,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.0364,
+        "ms": 5.0979,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.lz4"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.lz4"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec lz5",
       "ok": true,
-      "wall_ms": 137.44,
+      "wall_ms": 131.45,
       "result": {
         "ok": true,
         "type": "lz5",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (6)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (6)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2551,23 +2636,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.8021,
+        "ms": 5.9739,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.lz5"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.lz5"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "codec lizard",
       "ok": true,
-      "wall_ms": 139.4,
+      "wall_ms": 148.05,
       "result": {
         "ok": true,
         "type": "liz",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\codec (7)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\codec (7)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2580,25 +2666,26 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.4289,
+        "ms": 7.1599,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\codec.lizard"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\codec.lizard"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "cancellation during scan and before completion",
       "ok": true,
-      "wall_ms": 314.46,
+      "wall_ms": 370.04,
       "result": "Cancellation during scan and before completion passed; all original fixtures retained."
     },
     {
       "name": "ZipCrypto wrong candidate rejected",
       "ok": true,
-      "wall_ms": 29.99,
+      "wall_ms": 31.01,
       "result": {
         "ok": false,
         "type": "zip",
@@ -2615,21 +2702,22 @@
         "status": "password_required",
         "engine_error": "",
         "failed_file": "",
-        "ms": 1.4806,
+        "ms": 1.7977,
         "sources": [],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "ZipCrypto header precheck with full validation",
       "ok": true,
-      "wall_ms": 37.67,
+      "wall_ms": 37.6,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\zipcrypto",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\zipcrypto",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -2642,23 +2730,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 9.0047,
+        "ms": 8.5056,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\zipcrypto.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\zipcrypto.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "UTF-8 BOM password input",
       "ok": true,
-      "wall_ms": 36.92,
+      "wall_ms": 36.56,
       "result": {
         "ok": true,
         "type": "zip",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\zipcrypto (2)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\zipcrypto (2)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 1,
@@ -2671,23 +2760,24 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 7.9244,
+        "ms": 8.3982,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\zipcrypto.zip"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\zipcrypto.zip"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     },
     {
       "name": "TAR content recognition and extraction",
       "ok": true,
-      "wall_ms": 43.51,
+      "wall_ms": 41.4,
       "result": {
         "ok": true,
         "type": "tar",
-        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\outputs\\normal (4)",
+        "output": "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\outputs\\normal (4)",
         "note": "解压完成，已保留原包",
         "archives": 1,
         "attempts": 0,
@@ -2700,13 +2790,14 @@
         "status": "extracted",
         "engine_error": "",
         "failed_file": "",
-        "ms": 5.5472,
+        "ms": 5.8179,
         "sources": [
-          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-013455\\normal.tar"
+          "D:\\CodexBuilds\\TUnpack\\test-data\\20261125-030033\\normal.tar"
         ],
         "scanned_files": 0,
         "skipped_files": 0,
-        "entries": []
+        "entries": [],
+        "items": []
       }
     }
   ]
