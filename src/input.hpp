@@ -8,7 +8,7 @@
 #include <functional>
 #include <optional>
 #include <array>
-#include <map>
+#include <unordered_map>
 #include <stdexcept>
 #include <chrono>
 
@@ -94,7 +94,7 @@ public:
 struct VolumeDirectory;
 // A batch shares directory metadata; the snapshot dies with this resolver.
 class VolumeResolver {
-    std::map<std::wstring,std::shared_ptr<VolumeDirectory>> directories_;
+    std::unordered_map<std::wstring,std::shared_ptr<VolumeDirectory>> directories_;
     const VolumeDirectory& directory(const fs::path& path,const Progress& progress);
     std::optional<std::vector<fs::path>> findRenamed(const fs::path& requested,const Progress& progress);
 public:
@@ -102,6 +102,7 @@ public:
 };
 std::vector<fs::path> resolveVolumes(const fs::path& file,const Progress& progress={});
 std::vector<Input> identifyInputs(const Input& raw, const Progress& progress, bool deep);
+bool hasArchiveCandidate(const Input& raw, const Progress& progress, bool deep);
 bool findEmbedded(const Input& raw,const Progress& progress,const std::function<bool(const Input&)>& accept);
 std::wstring signature(const Input& input);
 uint32_t crc32(const void* data,size_t size);

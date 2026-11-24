@@ -7,12 +7,12 @@
 #include <shellapi.h>
 #include <algorithm>
 #include <cstring>
+#include <cwctype>
 #include <fstream>
 #include <optional>
-#include <regex>
-#include <set>
 #include <stdexcept>
 #include <sstream>
+#include <unordered_set>
 
 namespace lu {
 using namespace bit7z;
@@ -47,6 +47,41 @@ std::wstring errorText(const std::exception& error){
     return wide(message);
 }
 static const BitInFormat Lz4{0x0f},Lz5{0x10},Lizard{0x11};
+static bool parseDigits(const std::wstring& s,size_t from,size_t to,unsigned long long& value){
+    if(from>=to||to>s.size())return false;
+    unsigned long long acc=0;
+    for(size_t i=from;i<to;++i){
+        if(s[i]<L'0'||s[i]>L'9')return false;
+        if(acc>(UINT64_MAX-9)/10)return false;
+        acc=acc*10+unsigned(s[i]-L'0');
+    }
+    value=acc;
+    return true;
+}
+static std::optional<size_t> parseManualRarVolumeIndex(const std::wstring& rawName){
+    auto name=lower(rawName);
+    if(name.starts_with(L"archive.part")&&name.ends_with(L".rar")&&name.size()>16){
+        unsigned long long number=0;
+        if(parseDigits(name,12,name.size()-4,number)&&number>0)return size_t(number-1);
+        return {};
+    }
+    size_t extPos=0;
+    if(name.starts_with(L"archive.part1."))extPos=14;
+    else if(name.starts_with(L"archive."))extPos=8;
+    else return {};
+    if(name.size()==extPos+3&&name[extPos]>=L'r'&&name[extPos]<=L'z'){
+        unsigned long long num=0;
+        if(parseDigits(name,extPos+1,extPos+3,num))return size_t(name[extPos]-L'r')*100+size_t(num)+1;
+    }
+    return {};
+}
+static std::optional<unsigned long long> parseZipVolumeNumber(const std::wstring& rawName){
+    auto name=lower(rawName);
+    if(!name.starts_with(L"archive.z")||name.size()<=9)return {};
+    unsigned long long number=0;
+    if(!parseDigits(name,9,name.size(),number))return {};
+    return number;
+}
 struct Opened {
     Bit7zLibrary& library;
     Input source;
@@ -66,12 +101,11 @@ struct Opened {
         if(manualRar){
             auto paths=source.paths();
             library.setVolumeResolver([paths](const std::wstring& name)->std::wstring{
-                std::wsmatch match;size_t index=0;
+                size_t index=0;
                 if(!name.empty()){
-                    if(std::regex_match(name,match,std::wregex(L"archive\\.part([0-9]+)\\.rar",std::regex::icase))){auto number=std::stoul(match[1]);if(number==0)return{};index=number-1;}
-                    else if(std::regex_match(name,match,std::wregex(L"archive(?:\\.part1)?\\.([r-z])([0-9]{2})",std::regex::icase)))index=size_t(towlower(match[1].str()[0])-L'r')*100+std::stoul(match[2])+1;
-                    else return{};
-                    if(index>=paths.size())return{};
+                    auto parsed=parseManualRarVolumeIndex(name);
+                    if(!parsed||*parsed>=paths.size())return{};
+                    index=*parsed;
                 }
                 return paths[index].wstring();
             },L"archive.part1.rar");
@@ -80,10 +114,8 @@ struct Opened {
             auto paths=source.paths();
             library.setVolumeResolver([paths](const std::wstring& name)->std::wstring{
                 if(name.empty()||lower(name)==L"archive.zip")return paths.back().wstring();
-                std::wsmatch match;
-                if(!std::regex_match(name,match,std::wregex(L"archive\\.z([0-9]+)",std::regex::icase)))return {};
-                auto number=std::stoull(match[1]);
-                return number&&number<paths.size()?paths[size_t(number-1)].wstring():std::wstring{};
+                auto number=parseZipVolumeNumber(name);
+                return number&&*number&&*number<paths.size()?paths[size_t(*number-1)].wstring():std::wstring{};
             },L"archive.zip");
         }
         try {
@@ -280,7 +312,8 @@ static std::unique_ptr<Opened> selectArchive(Bit7zLibrary& lib,const Input& raw,
     throw std::runtime_error("Cannot open archive: "+lastError+". Password not matched, missing volume, damaged file or unsupported disguise. For renamed split files, add all volumes in order.");
 }
 static void validatePaths(const BitArchiveReader& reader) {
-    std::set<std::wstring> paths;
+    std::unordered_set<std::wstring> paths;
+    paths.reserve(reader.itemsCount());
     for(const auto& item:reader) {
         auto name=item.path(); std::replace(name.begin(),name.end(),L'/',L'\\');
         fs::path p(name);
@@ -353,7 +386,7 @@ static fs::path outputFolder(const fs::path& source,const fs::path& parent) {
 }
 Result Engine::scan(const fs::path& directory,const Options& options,const Progress& progress,
                     const std::function<void(const std::vector<fs::path>&,const Result&)>& found){
-    Result summary;std::set<std::wstring> handled;VolumeResolver volumes;unsigned unreadable=0;
+    Result summary;std::unordered_set<std::wstring> handled;VolumeResolver volumes;unsigned unreadable=0;
     try{
         auto skipProblem=[&](const fs::path& path){++unreadable;++summary.skippedFiles;if(summary.failedFile.empty())summary.failedFile=path;};
         auto visit=[&](const fs::directory_entry& entry){
@@ -364,6 +397,12 @@ Result Engine::scan(const fs::path& directory,const Options& options,const Progr
             bool resolved=false;
             try{files=volumes.resolve(entry.path(),progress);resolved=true;}catch(const Cancelled&){throw;}catch(const std::exception&){}
             if(!handled.insert(lower(files.front().wstring())).second){++summary.skippedFiles;return;}
+            if(resolved&&files.size()==1&&!archiveExtension(entry.path())){
+                try{
+                    Input probe(files);
+                    if(!hasArchiveCandidate(probe,progress,options.deep)){++summary.skippedFiles;return;}
+                }catch(const Cancelled&){throw;}catch(const std::exception&){}
+            }
             auto check=inspectInput(files,options,progress,resolved);if(check.status==L"cancelled")throw Cancelled();
             if(progress&&!progress(L"扫描目录",summary.scannedFiles,0,ProgressUnit::Files))throw Cancelled();
             bool document=check.ok&&check.note==L"正常文档或应用容器";
@@ -455,21 +494,28 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
         }
     }
     // Only inspect files created by this extraction, never rescan an existing destination tree.
-    std::set<fs::path> handled;VolumeResolver childVolumes;
+    std::unordered_set<std::wstring> handled;VolumeResolver childVolumes;
     for(const auto& child:children) {
         if(progress && !progress(L"检查嵌套压缩包",0,0,ProgressUnit::None)) throw Cancelled();
         std::vector<fs::path> volumes{child};bool resolved=false;
         try{volumes=childVolumes.resolve(child,progress);resolved=true;}catch(const Cancelled&){throw;}catch(const std::exception&){}
         Options nested=options;nested.output=child.parent_path();nested.volumesResolved=resolved;
-        if(handled.contains(volumes.front()))continue;
-        Input probe({child});
-        bool likely=archiveExtension(child)||!signature(probe).empty();
+        auto volumeKey=lower(volumes.front().wstring());
+        if(handled.contains(volumeKey))continue;
+        bool likely=archiveExtension(child)||volumes.size()>1;
         if(!likely){
-            auto check=inspect(volumes,nested,progress);if(check.status==L"cancelled")throw Cancelled();
-            likely=check.ok||(!check.type.empty()&&check.status==L"password_required")||check.status==L"missing_volume";
+            Input probe({child});
+            likely=!signature(probe).empty();
+            if(!likely&&resolved){
+                if(!hasArchiveCandidate(probe,progress,options.deep))continue;
+            }
+            if(!likely){
+                auto check=inspect(volumes,nested,progress);if(check.status==L"cancelled")throw Cancelled();
+                likely=check.ok||(!check.type.empty()&&check.status==L"password_required")||check.status==L"missing_volume";
+            }
         }
         if(!likely) continue;
-        handled.insert(volumes.front());
+        handled.insert(volumeKey);
         result.failedFile=child;
         try{extractOne(volumes,nested,progress,used,depth+1,result,cleanup,rootVolumes);}
         catch(...){if(result.failedFile.empty())result.failedFile=child;throw;}

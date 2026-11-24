@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <cstring>
 #include <cwctype>
-#include <regex>
 #include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace lu {
 bool ProgressGate::accept(const std::wstring& phase,uint64_t done,uint64_t total,ProgressUnit unit,std::chrono::steady_clock::time_point now){
@@ -129,7 +129,8 @@ size_t Input::read(uint64_t pos,void* out,size_t count) const {
         uint64_t at=std::max<uint64_t>(mask,original);
         if (pos<saved) {
             done=size_t(std::min<uint64_t>(count,saved-pos));
-            for (size_t i=0;i<done;++i) static_cast<unsigned char*>(out)[i]=files[0]->data[at+saved-pos-i-1];
+            const auto* src=files[0]->data+at+saved-pos-done;
+            std::reverse_copy(src,src+done,static_cast<unsigned char*>(out));
             pos+=done;
         }
     }
@@ -178,7 +179,16 @@ static std::optional<uint32_t> splitZipDisks(const MappedFile& file){
     return {};
 }
 static uint32_t crcUpdate(uint32_t crc,const unsigned char* data,size_t size) {
-    for(size_t i=0;i<size;++i){crc^=data[i];for(unsigned bit=0;bit<8;++bit)crc=(crc>>1)^(0xedb88320u&uint32_t(-int32_t(crc&1)));}
+    static const auto table=[]{
+        std::array<uint32_t,256> t{};
+        for(uint32_t i=0;i<256;++i){
+            uint32_t c=i;
+            for(unsigned bit=0;bit<8;++bit)c=(c>>1)^(0xedb88320u&uint32_t(-int32_t(c&1)));
+            t[i]=c;
+        }
+        return t;
+    }();
+    for(size_t i=0;i<size;++i)crc=(crc>>8)^table[(crc^data[i])&0xffu];
     return crc;
 }
 uint32_t crc32(const void* data,size_t size){return crcUpdate(0xffffffffu,static_cast<const unsigned char*>(data),size)^0xffffffffu;}
@@ -187,11 +197,20 @@ static void sevenZipHeader(unsigned char* header,uint64_t offset,const std::vect
     auto put=[&](size_t at,uint64_t value,unsigned bytes){for(unsigned i=0;i<bytes;++i)header[at+i]=static_cast<unsigned char>(value>>(i*8));};
     put(12,offset,8);put(20,tail.size(),8);put(28,crc32(tail.data(),tail.size()),4);put(8,crc32(header+12,20),4);
 }
+static bool contiguousSingleFile(const Input& raw){
+    return raw.files.size()==1&&!raw.apate&&!raw.recoveryPrefix&&!raw.headerPatched&&raw.files[0]->data;
+}
 static std::optional<Input> recoverSevenZipContinuation(const Input& raw){
     if(raw.files.size()!=1||raw.offset||raw.apate||raw.size<32)return {};
     auto length=size_t(std::min<uint64_t>(1024*1024,raw.size));auto start=raw.size-length;
-    std::vector<unsigned char> tail(length);raw.read(start,tail.data(),length);
-    if(tail.back()!=0||tail[length-2]!=0)return {};
+    std::vector<unsigned char> owned;
+    const unsigned char* tail=nullptr;
+    if(contiguousSingleFile(raw)){
+        tail=raw.files[0]->data+start;
+    }else{
+        owned.resize(length);raw.read(start,owned.data(),length);tail=owned.data();
+    }
+    if(tail[length-1]!=0||tail[length-2]!=0)return {};
     for(size_t index=length-3;index-->0;){
         bool plain=tail[index]==1&&tail[index+1]==4&&tail[index+2]==6;
         bool encoded=tail[index]==0x17&&tail[index+1]==6;
@@ -209,13 +228,13 @@ static std::optional<Input> recoverSevenZipContinuation(const Input& raw){
             if(sevenZipLayout(raw))continue;
             auto base=physical-logical;auto input=raw.slice(base);
             input.headerPatched=true;input.headerPatchAt=base;input.recoveryReverse=false;input.formatHint=L"7z";
-            std::vector<unsigned char> header(tail.begin()+ptrdiff_t(index),tail.end());
+            std::vector<unsigned char> header(tail+index,tail+length);
             sevenZipHeader(input.recoveryHeader.data(),logical-32,header);
             return input;
         }
         auto input=raw;input.recoveryPrefix=logical-physical;input.recoveryBytes=physical;
         input.recoveryReverse=false;input.missingVolume=input.recoveryPrefix>32;input.formatHint=L"7z";
-        input.recoveryTail.assign(tail.begin()+ptrdiff_t(index),tail.end());
+        input.recoveryTail.assign(tail+index,tail+length);
         input.size=logical+input.recoveryTail.size();sevenZipHeader(input.recoveryHeader.data(),logical-32,input.recoveryTail);
         return input;
     }
@@ -335,10 +354,26 @@ static std::optional<VolumeNumber> volumeNumber(const fs::path& file){
     return VolumeNumber{lower(token.substr(0,at)),unsigned(std::stoul(token.substr(at)))};
 }
 static void volumeProgress(const Progress& progress,const wchar_t* phase,uint64_t done,uint64_t total=0,ProgressUnit unit=ProgressUnit::Files){if(progress&&!progress(phase,done,total,unit))throw Cancelled();}
+static size_t readFileHead(const fs::path& file,unsigned char* out,size_t maxBytes){
+    HANDLE h=CreateFileW(file.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(h==INVALID_HANDLE_VALUE)return 0;
+    DWORD read=0;
+    BOOL ok=ReadFile(h,out,DWORD(maxBytes),&read,nullptr);
+    CloseHandle(h);
+    return ok?size_t(read):0;
+}
+static std::optional<SevenZipLayout> sevenZipLayoutFromBytes(const unsigned char* h,size_t n){
+    if(n<32||std::memcmp(h,"7z\xBC\xAF\x27\x1C",6))return {};
+    if((crcUpdate(0xffffffffu,h+12,20)^0xffffffffu)!=u32(h+8))return {};
+    auto u64=[](const unsigned char* p){uint64_t v=0;for(unsigned i=0;i<8;++i)v|=uint64_t(p[i])<<(i*8);return v;};
+    auto offset=u64(h+12),size=u64(h+20);
+    if(offset>UINT64_MAX-32||size>UINT64_MAX-32-offset)return {};
+    return SevenZipLayout{32+offset+size,32+offset,size,u32(h+28)};
+}
 struct VolumeDirectory {
-    std::map<std::wstring,std::map<unsigned,std::vector<fs::path>>> numbered;
-    std::map<uint64_t,std::vector<fs::path>> bySize;
-    std::map<std::wstring,uint64_t> lengths;
+    std::unordered_map<std::wstring,std::map<unsigned,std::vector<fs::path>>> numbered;
+    std::unordered_map<uint64_t,std::vector<fs::path>> bySize;
+    std::unordered_map<std::wstring,uint64_t> lengths;
     std::vector<fs::path> firsts;
     explicit VolumeDirectory(const fs::path& directory,const Progress& progress){
         uint64_t visited=0;volumeProgress(progress,L"读取同目录分卷",0,0,ProgressUnit::Items);
@@ -349,9 +384,12 @@ struct VolumeDirectory {
             lengths.emplace(pathKey(file),bytes);bySize[bytes].push_back(file);
             if(auto number=volumeNumber(file)){
                 numbered[number->prefix][number->index].push_back(file);
-                if(number->index==1){
-                    try{Input raw({file});auto layout=sevenZipLayout(raw);if(layout&&layout->end>raw.size)firsts.push_back(file);}
-                    catch(const std::exception&){} // An unreadable unrelated candidate must not block the directory.
+                if(number->index==1&&bytes>=32){
+                    unsigned char h[32];
+                    if(readFileHead(file,h,sizeof(h))==sizeof(h)){
+                        auto layout=sevenZipLayoutFromBytes(h,sizeof(h));
+                        if(layout&&layout->end>bytes)firsts.push_back(file);
+                    }
                 }
             }
         }
@@ -420,16 +458,63 @@ static std::optional<std::vector<fs::path>> completeSevenZipGroup(const fs::path
     if(gaps!=1)return {};
     return finish(parts,total,missingAt);
 }
+static bool isAsciiDigits(const std::wstring& s,size_t from,size_t to){
+    if(from>=to||to>s.size())return false;
+    for(size_t i=from;i<to;++i)if(s[i]<L'0'||s[i]>L'9')return false;
+    return true;
+}
+static bool isNumberedZipExt(const std::wstring& ext){
+    return ext.size()>=3&&ext[0]==L'.'&&(ext[1]==L'z'||ext[1]==L'Z')&&isAsciiDigits(ext,2,ext.size());
+}
+static bool isOldRarExt(const std::wstring& ext){
+    if(ext.size()!=4||ext[0]!=L'.')return false;
+    wchar_t c=towlower(ext[1]);
+    return c>=L'r'&&c<=L'z'&&isAsciiDigits(ext,2,4);
+}
+static bool parsePartRar(const std::wstring& filename,std::wstring& prefixOut,std::wstring& digitsOut){
+    auto dot=filename.rfind(L'.');
+    if(dot==std::wstring::npos||dot<6)return false;
+    size_t numStart=dot;
+    while(numStart>0&&filename[numStart-1]>=L'0'&&filename[numStart-1]<=L'9')--numStart;
+    if(numStart==dot||numStart<5)return false;
+    if(filename[numStart-5]!=L'.'||towlower(filename[numStart-4])!=L'p'||towlower(filename[numStart-3])!=L'a'||towlower(filename[numStart-2])!=L'r'||towlower(filename[numStart-1])!=L't')return false;
+    prefixOut=lower(filename.substr(0,numStart));
+    digitsOut=filename.substr(numStart,dot-numStart);
+    return true;
+}
+static bool splitTrailingDigits(const std::wstring& stem,std::wstring& prefixOut,size_t& widthOut){
+    size_t at=stem.size();
+    while(at>0&&stem[at-1]>=L'0'&&stem[at-1]<=L'9')--at;
+    if(at==stem.size())return false;
+    prefixOut=stem.substr(0,at);
+    widthOut=stem.size()-at;
+    return true;
+}
+static bool signatureInBytes(const unsigned char* h,size_t n){
+    auto match=[&](const char* s,size_t len){return n>=len&&!std::memcmp(h,s,len);};
+    return match("7z\xBC\xAF\x27\x1C",6)||match("Rar!\x1A\x07",6)
+        ||match("PK\x03\x04",4)||match("PK\x05\x06",4)||match("PK\x07\x08",4)
+        ||match("\x1F\x8B",2)||match("BZh",3)||match("\xFD" "7zXZ\0",6)
+        ||match("\x28\xB5\x2F\xFD",4)||match("\x04\x22\x4D\x18",4)
+        ||match("\x05\x22\x4D\x18",4)||match("\x06\x22\x4D\x18",4)
+        ||match("MSCF",4)||match("MSWIM\0\0\0",8)
+        ||(n>262&&!std::memcmp(h+257,"ustar",5));
+}
 std::optional<std::vector<fs::path>> VolumeResolver::findRenamed(const fs::path& requested,const Progress& progress){
     volumeProgress(progress,L"分析分卷",0);
-    Input input({requested});unsigned char h[32]{};auto count=input.read(0,h,sizeof(h));auto ext=lower(requested.extension().wstring());
+    unsigned char h[560]{};auto count=readFileHead(requested,h,sizeof(h));auto ext=lower(requested.extension().wstring());
     bool executable=(ext==L".exe"||ext==L".dll"||ext==L".mui")&&count>=2&&h[0]=='M'&&h[1]=='Z';
     bool image=(ext==L".png"&&count>=8&&!std::memcmp(h,"\x89PNG\r\n\x1a\n",8))
         ||((ext==L".jpg"||ext==L".jpeg")&&count>=12&&h[0]==0xff&&h[1]==0xd8&&h[2]==0xff)
         ||(ext==L".webp"&&count>=12&&!std::memcmp(h,"RIFF",4)&&!std::memcmp(h+8,"WEBP",4));
     if(executable||image||(count>=8&&!std::memcmp(h,"UnityFS",7)))return {};
-    if(!signature(input).empty())return {};
+    if(signatureInBytes(h,count))return {};
+    if(count>=8&&(u32(h)&0xfffffff0u)==0x184d2a50u){
+        Input input({requested});
+        if(!signature(input).empty())return {};
+    }
     const auto& snapshot=directory(requested.parent_path(),progress);
+    if(snapshot.firsts.empty())return {};
     std::optional<std::vector<fs::path>> found;
     uint64_t checked=0;for(const auto& first:snapshot.firsts){
         volumeProgress(progress,L"匹配分卷候选",checked++,snapshot.firsts.size());
@@ -447,7 +532,7 @@ std::vector<fs::path> VolumeResolver::resolve(const fs::path& file,const Progres
     volumeProgress(progress,L"分析分卷",0);
     auto path=fs::absolute(file);
     auto ext=path.extension().wstring();
-    bool numberedZip=std::regex_match(lower(ext),std::wregex(L"\\.z[0-9]+"));
+    bool numberedZip=isNumberedZipExt(ext);
     if(lower(ext)==L".zip"||numberedZip){
         auto last=path;last.replace_extension(L".zip");
         if(fs::is_regular_file(last)){
@@ -467,12 +552,22 @@ std::vector<fs::path> VolumeResolver::resolve(const fs::path& file,const Progres
             }
         }else if(numberedZip){
             auto firstPath=path;firstPath.replace_extension(L".z01");
-            Input first({fs::is_regular_file(firstPath)?firstPath:path});
-            if(first.size>=4&&!std::memcmp(first.files.front()->data,"PK\x07\x08",4))throw std::runtime_error("Missing ZIP volume ("+utf8(last.filename().wstring())+")");
+            unsigned char magic[4]{};
+            if(readFileHead(fs::is_regular_file(firstPath)?firstPath:path,magic,4)==4&&!std::memcmp(magic,"PK\x07\x08",4))
+                throw std::runtime_error("Missing ZIP volume ("+utf8(last.filename().wstring())+")");
         }
     }
-    {Input raw({path});if(auto layout=sevenZipLayout(raw)){if(layout->end<=raw.size)return {path};if(auto group=completeSevenZipGroup(path,path,directory(path.parent_path(),progress),progress))return *group;}}
-    if (ext.size()==4 && std::all_of(ext.begin()+1,ext.end(),iswdigit)) {
+    {
+        unsigned char head[32]{};
+        if(readFileHead(path,head,sizeof(head))==sizeof(head)){
+            if(auto layout=sevenZipLayoutFromBytes(head,sizeof(head))){
+                std::error_code ec;auto fsize=fs::file_size(path,ec);
+                if(!ec&&layout->end<=fsize)return {path};
+                if(auto group=completeSevenZipGroup(path,path,directory(path.parent_path(),progress),progress))return *group;
+            }
+        }
+    }
+    if (ext.size()==4 && isAsciiDigits(ext,1,4)) {
         auto first=path; first.replace_extension(L".001");
         if (!fs::exists(first)){if(zipFromTail(Input({path})))return {path};if(auto group=findRenamed(path,progress))return *group;throw std::runtime_error("Missing first volume (.001). Add all volumes in order.");}
         if(auto group=completeSevenZipGroup(first,path,directory(path.parent_path(),progress),progress))return *group;
@@ -500,50 +595,56 @@ std::vector<fs::path> VolumeResolver::resolve(const fs::path& file,const Progres
         }
         return out;
     }
-    std::wsmatch match;
-    if(std::regex_match(lower(ext),std::wregex(L"\\.[r-z][0-9]{2}"))) {
+    if(isOldRarExt(ext)) {
         auto first=path;first.replace_extension(L".rar");
         if(!fs::exists(first))throw std::runtime_error("Missing first RAR volume (.rar)");
         return {first};
     }
     auto filename=path.filename().wstring();
-    const std::wregex partName(L"(.*\\.part)([0-9]+)(\\.[^.]*)",std::regex::icase);
-    if (std::regex_match(filename,match,partName) && signature(Input({path}))==L"rar") {
-        auto prefix=lower(match[1]);
-        std::vector<std::pair<unsigned,fs::path>> parts;
-        uint64_t checked=0;for(const auto& entry:fs::directory_iterator(path.parent_path())) {
-            volumeProgress(progress,L"读取同目录分卷",checked++,0,ProgressUnit::Items);
-            std::wsmatch other;auto name=entry.path().filename().wstring();
-            std::error_code error;if(!entry.is_regular_file(error)||error||!std::regex_match(name,other,partName)||lower(other[1])!=prefix)continue;
-            if(signature(Input({entry.path()}))!=L"rar")continue;
-            auto index=std::stoul(other[2]);
-            if(index==0||index>999999)throw std::runtime_error("Invalid RAR volume number");
-            parts.emplace_back(unsigned(index),entry.path());
+    std::wstring partPrefix,partDigits;
+    if (parsePartRar(filename,partPrefix,partDigits)) {
+        unsigned char magic[6]{};
+        if(readFileHead(path,magic,6)==6&&!std::memcmp(magic,"Rar!\x1A\x07",6)){
+            std::vector<std::pair<unsigned,fs::path>> parts;
+            uint64_t checked=0;for(const auto& entry:fs::directory_iterator(path.parent_path())) {
+                volumeProgress(progress,L"读取同目录分卷",checked++,0,ProgressUnit::Items);
+                std::wstring otherPrefix,otherDigits;auto name=entry.path().filename().wstring();
+                std::error_code error;if(!entry.is_regular_file(error)||error||!parsePartRar(name,otherPrefix,otherDigits)||otherPrefix!=partPrefix)continue;
+                unsigned char otherMagic[6]{};
+                if(readFileHead(entry.path(),otherMagic,6)!=6||std::memcmp(otherMagic,"Rar!\x1A\x07",6))continue;
+                unsigned long index=0;
+                try{index=std::stoul(otherDigits);}catch(...){throw std::runtime_error("Invalid RAR volume number");}
+                if(index==0||index>999999)throw std::runtime_error("Invalid RAR volume number");
+                parts.emplace_back(unsigned(index),entry.path());
+            }
+            std::sort(parts.begin(),parts.end());
+            if(parts.empty()||parts.front().first!=1)throw std::runtime_error("Missing first RAR volume");
+            std::vector<fs::path> out;
+            for(const auto& [index,p]:parts) {
+                volumeProgress(progress,L"核对分卷顺序",out.size(),parts.size());
+                if(index<out.size()+1)throw std::runtime_error("Ambiguous RAR volumes: multiple files have the same part number");
+                if(index!=out.size()+1)throw std::runtime_error("Missing RAR volume "+std::to_string(out.size()+1));
+                out.push_back(p);
+            }
+            return out; // Native volume resolver maps the real files without renaming or copying.
         }
-        std::sort(parts.begin(),parts.end());
-        if(parts.empty()||parts.front().first!=1)throw std::runtime_error("Missing first RAR volume");
-        std::vector<fs::path> out;
-        for(const auto& [index,p]:parts) {
-            volumeProgress(progress,L"核对分卷顺序",out.size(),parts.size());
-            if(index<out.size()+1)throw std::runtime_error("Ambiguous RAR volumes: multiple files have the same part number");
-            if(index!=out.size()+1)throw std::runtime_error("Missing RAR volume "+std::to_string(out.size()+1));
-            out.push_back(p);
-        }
-        return out; // Native volume resolver maps the real files without renaming or copying.
     }
     // A renamed raw 7z split can keep a numeric stem (scene01.mp4, scene02.mp4).
     // Accept it only when both 7z metadata CRCs validate across the assembled view.
     auto stem=path.stem().wstring();
-    if(std::regex_match(stem,match,std::wregex(L"(.*?)([0-9]+)"))) {
-        auto prefix=match[1].str();auto width=match[2].str().size();
-        auto numbered=[&](unsigned index){auto digits=std::to_wstring(index);if(digits.size()<width)digits.insert(0,width-digits.size(),L'0');return path.parent_path()/(prefix+digits+ext);};
+    std::wstring stemPrefix;size_t stemWidth=0;
+    if(splitTrailingDigits(stem,stemPrefix,stemWidth)) {
+        auto numbered=[&](unsigned index){auto digits=std::to_wstring(index);if(digits.size()<stemWidth)digits.insert(0,stemWidth-digits.size(),L'0');return path.parent_path()/(stemPrefix+digits+ext);};
         auto first=numbered(1);
         if(fs::is_regular_file(first)) {
-            auto layout=sevenZipLayout(Input({first}));
-            if(layout&&layout->end>fs::file_size(first)) {
-                std::vector<fs::path> parts;uint64_t total=0;
-                for(unsigned index=1;index<=999999&&total<layout->end;++index){volumeProgress(progress,L"核对分卷顺序",parts.size());auto next=numbered(index);if(!fs::is_regular_file(next))break;parts.push_back(next);total+=fs::file_size(next);}
-                if(total==layout->end&&std::find(parts.begin(),parts.end(),path)!=parts.end()&&validNextHeader(Input(parts),*layout))return parts;
+            unsigned char firstHead[32]{};
+            if(readFileHead(first,firstHead,sizeof(firstHead))==sizeof(firstHead)){
+                auto layout=sevenZipLayoutFromBytes(firstHead,sizeof(firstHead));
+                if(layout&&layout->end>fs::file_size(first)) {
+                    std::vector<fs::path> parts;uint64_t total=0;
+                    for(unsigned index=1;index<=999999&&total<layout->end;++index){volumeProgress(progress,L"核对分卷顺序",parts.size());auto next=numbered(index);if(!fs::is_regular_file(next))break;parts.push_back(next);total+=fs::file_size(next);}
+                    if(total==layout->end&&std::find(parts.begin(),parts.end(),path)!=parts.end()&&validNextHeader(Input(parts),*layout))return parts;
+                }
             }
         }
     }
@@ -553,13 +654,19 @@ std::vector<fs::path> VolumeResolver::resolve(const fs::path& file,const Progres
 static std::optional<Input> zipFromTail(const Input& raw) {
     if(raw.size<22)return {};
     const auto length=size_t(std::min<uint64_t>(raw.size,1024*1024));
-    std::vector<unsigned char> tail(length);auto start=raw.size-length;
-    raw.read(start,tail.data(),length);
+    auto start=raw.size-length;
+    std::vector<unsigned char> owned;
+    const unsigned char* tail=nullptr;
+    if(contiguousSingleFile(raw)){
+        tail=raw.files[0]->data+raw.offset+start;
+    }else{
+        owned.resize(length);raw.read(start,owned.data(),length);tail=owned.data();
+    }
     auto u16=[](const unsigned char* p){return unsigned(p[0])|(unsigned(p[1])<<8);};
     auto u64=[](const unsigned char* p){return uint64_t(u32(p))|(uint64_t(u32(p+4))<<32);};
     for(size_t index=length-22+1;index-->0;) {
-        auto h=tail.data()+index;
-        if(u32(h)!=0x06054b50||u16(h+4)||u16(h+6)||u16(h+8)!=u16(h+10))continue;
+        auto h=tail+index;
+        if(h[0]!='P'||u32(h)!=0x06054b50||u16(h+4)||u16(h+6)||u16(h+8)!=u16(h+10))continue;
         auto end=start+index+22+u16(h+20);
         if(end>raw.size)continue;
         uint64_t directorySize=u32(h+12),directoryOffset=u32(h+16),directoryEnd=start+index,base=0;
@@ -569,8 +676,8 @@ static std::optional<Input> zipFromTail(const Input& raw) {
             auto locator=h-20;bool found=false;
             if(u32(locator+4)||u32(locator+16)!=1)continue;
             for(size_t z=index-20;z-->0;) {
-                if(z+56>length||u32(tail.data()+z)!=0x06064b50)continue;
-                auto record=tail.data()+z;auto bytes=u64(record+4);
+                if(z+56>length||u32(tail+z)!=0x06064b50)continue;
+                auto record=tail+z;auto bytes=u64(record+4);
                 if(bytes<44||bytes>index-20-z||z+12+bytes!=index-20||u32(record+16)||u32(record+20))continue;
                 if(start+z<u64(locator+8))continue;
                 base=start+z-u64(locator+8);entries=u64(record+32);
@@ -587,27 +694,47 @@ static std::optional<Input> zipFromTail(const Input& raw) {
             if(raw.read(base,magic,4)!=4||u32(magic)!=0x04034b50)continue;
         }else if(directorySize||directoryOffset)continue;
         auto input=raw.slice(base);input.size=end-base;input.formatHint=L"zip";input.zipPasswordOffset.reset();
+        std::optional<uint64_t> fallbackOffset;
         for(uint64_t at=base+directoryOffset;at+46<=directoryEnd;){
             unsigned char record[46];if(raw.read(at,record,sizeof(record))!=sizeof(record)||u32(record)!=0x02014b50)break;
             auto name=u16(record+28),extra=u16(record+30),comment=u16(record+32);
             if(uint64_t(46)+name+extra+comment>directoryEnd-at)break;
             if(u16(record+8)&1){
                 uint64_t offset=u32(record+42);
-                if(offset==0xffffffffu){
+                uint64_t uncomp=u32(record+24);
+                if(offset==0xffffffffu||uncomp==0xffffffffu){
                     std::vector<unsigned char> fields(extra);raw.read(at+46+name,fields.data(),fields.size());
                     for(size_t p=0;p+4<=fields.size();){
                         auto bytes=u16(fields.data()+p+2);if(bytes>fields.size()-p-4)break;
-                        if(u16(fields.data()+p)==1){auto index=p+4;if(u32(record+24)==0xffffffffu)index+=8;if(u32(record+20)==0xffffffffu)index+=8;if(index+8<=p+4+bytes)offset=u64(fields.data()+index);break;}p+=4+bytes;
+                        if(u16(fields.data()+p)==1){
+                            auto idx=p+4;
+                            if(u32(record+24)==0xffffffffu){if(idx+8<=p+4+bytes)uncomp=u64(fields.data()+idx);idx+=8;}
+                            if(u32(record+20)==0xffffffffu)idx+=8;
+                            if(offset==0xffffffffu&&idx+8<=p+4+bytes)offset=u64(fields.data()+idx);
+                            break;
+                        }
+                        p+=4+bytes;
                     }
                 }
-                if(offset<input.size)input.zipPasswordOffset=offset;
-                break;
+                if(offset<input.size){
+                    if(uncomp>0){input.zipPasswordOffset=offset;break;}
+                    if(!fallbackOffset)fallbackOffset=offset;
+                }
             }
             at+=46+name+extra+comment;
         }
+        if(!input.zipPasswordOffset&&fallbackOffset)input.zipPasswordOffset=fallbackOffset;
         return input; // Directory offsets locate the archive without reading a multi-GB carrier.
     }
     return {};
+}
+static bool hasApateSignature(const Input& raw){
+    if(raw.files.size()!=1||raw.size<12)return false;
+    unsigned char footer[4];raw.read(raw.size-4,footer,4);
+    uint32_t mask=u32(footer);
+    if(!mask||uint64_t(mask)+4>=raw.size)return false;
+    auto restored=raw;restored.apate=true;restored.mask=mask;restored.size=raw.size-mask-4;
+    return !signature(restored).empty();
 }
 std::vector<Input> identifyInputs(const Input& raw,const Progress& progress,bool deep) {
     if(raw.nativeVolumes)return {raw};
@@ -625,6 +752,7 @@ std::vector<Input> identifyInputs(const Input& raw,const Progress& progress,bool
     inputs.push_back(raw);
     if(auto continuation=recoverSevenZipContinuation(raw))inputs.push_back(std::move(*continuation));
     std::vector<Input> located;
+    located.reserve(inputs.size()*2);
     for(const auto& input:inputs) {
         if(auto zip=zipFromTail(input))located.push_back(std::move(*zip));
         located.push_back(input);
@@ -634,20 +762,52 @@ std::vector<Input> identifyInputs(const Input& raw,const Progress& progress,bool
     findEmbedded(raw,progress,[&](const Input& candidate){inputs.push_back(candidate);return false;});
     return inputs;
 }
+bool hasArchiveCandidate(const Input& raw,const Progress& progress,bool deep) {
+    if(raw.nativeVolumes||!signature(raw).empty())return true;
+    if(raw.size>=0x8006){
+        unsigned char iso[5];
+        if(raw.read(0x8001,iso,5)==5&&!std::memcmp(iso,"CD001",5))return true;
+    }
+    if(raw.size>=8){
+        unsigned char h[8];
+        if(raw.read(0,h,8)==8&&(!std::memcmp(h,"!<arch>\n",8)||!std::memcmp(h,"xar!",4)||(h[0]==0x60&&h[1]==0xea)||(h[0]==0xed&&h[1]==0xab&&h[2]==0xee&&h[3]==0xdb)))return true;
+    }
+    if(hasApateSignature(raw))return true;
+    if(zipFromTail(raw).has_value())return true;
+    if(recoverReversedSevenZip(raw).has_value())return true;
+    if(recoverSevenZipContinuation(raw).has_value())return true;
+    if(!deep)return false;
+    return findEmbedded(raw,progress,[](const Input&){return true;});
+}
 bool findEmbedded(const Input& raw,const Progress& progress,const std::function<bool(const Input&)>& accept) {
     // Scan sequentially, including archives beyond bit7z's SFX window. No content hashes.
     constexpr size_t block=4*1024*1024;
-    std::vector<unsigned char> buffer(block+8);
+    auto scanRange=[&](const unsigned char* data,size_t n,size_t limit,uint64_t start)->bool{
+        for(size_t i=(start==0?1:0);i<limit;++i){
+            unsigned char b=data[i];
+            if(b!='7'&&b!='R'&&b!='P')continue;
+            bool hit=(b=='7' && i+6<=n && !std::memcmp(data+i,"7z\xBC\xAF\x27\x1C",6))
+                ||(b=='R' && i+7<=n && !std::memcmp(data+i,"Rar!\x1A\x07",6))
+                ||(b=='P' && i+4<=n && !std::memcmp(data+i,"PK\x03\x04",4));
+            if(hit && accept(raw.slice(start+i))) return true;
+        }
+        return false;
+    };
+    if(contiguousSingleFile(raw)){
+        const unsigned char* base=raw.files[0]->data+raw.offset;
+        for(uint64_t start=0;start<raw.size;start+=block){
+            if(progress && !progress(L"深度识别",start,raw.size,ProgressUnit::Bytes)) throw Cancelled();
+            size_t avail=size_t(raw.size-start);
+            size_t limit=std::min(avail,block);
+            if(scanRange(base+start,avail,limit,start))return true;
+        }
+        return false;
+    }
+    std::vector<unsigned char> buffer(std::min<uint64_t>(raw.size,block+8));
     for(uint64_t start=0;start<raw.size;start+=block) {
         if(progress && !progress(L"深度识别",start,raw.size,ProgressUnit::Bytes)) throw Cancelled();
         size_t n=raw.read(start,buffer.data(),buffer.size());
-        for(size_t i=0;i<std::min(n,block);++i) {
-            if(start+i==0) continue;
-            bool hit=(i+6<=n && buffer[i]=='7' && !std::memcmp(buffer.data()+i,"7z\xBC\xAF\x27\x1C",6))
-                ||(i+7<=n && buffer[i]=='R' && !std::memcmp(buffer.data()+i,"Rar!\x1A\x07",6))
-                ||(i+4<=n && buffer[i]=='P' && !std::memcmp(buffer.data()+i,"PK\x03\x04",4));
-            if(hit && accept(raw.slice(start+i))) return true;
-        }
+        if(scanRange(buffer.data(),n,std::min(n,block),start))return true;
     }
     return false;
 }

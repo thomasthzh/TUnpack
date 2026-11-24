@@ -4,11 +4,11 @@
 #include <shlobj.h>
 #include <algorithm>
 #include <chrono>
+#include <cwctype>
 #include <fstream>
 #include <iterator>
-#include <regex>
 #include <stdexcept>
-#include <set>
+#include <unordered_set>
 
 namespace lu {
 std::vector<std::wstring> splitLines(const std::wstring& text) {
@@ -73,7 +73,7 @@ static std::wstring filenameHint(const fs::path& file){
     }return name.wstring();
 }
 static PasswordChanges classify(const std::vector<Password>& entries,const std::vector<std::wstring>& values){
-    PasswordChanges changes;std::set<std::wstring> existing;for(const auto& p:entries)existing.insert(p.value);
+    PasswordChanges changes;std::unordered_set<std::wstring> existing;existing.reserve(entries.size()+values.size());for(const auto& p:entries)existing.insert(p.value);
     for(const auto& value:values)if(!value.empty()){if(existing.insert(value).second){changes.additions.push_back(value);++changes.counts.added;}else ++changes.counts.duplicates;}
     return changes;
 }
@@ -95,12 +95,30 @@ void PasswordBook::success(const std::wstring& value,const fs::path& file) {
     it->directory=lower(fs::absolute(file).parent_path().wstring()); saveLocked();
 }
 std::vector<std::wstring> PasswordBook::ranked(const fs::path& file,const std::wstring& preferred) const {
-    std::vector<std::wstring> out;std::set<std::wstring> seen;
+    std::vector<std::wstring> out;std::unordered_set<std::wstring> seen;
     auto append=[&](const std::wstring& value){if(!value.empty()&&seen.insert(value).second)out.push_back(value);};
     append(preferred);
     auto hint=[&](const std::wstring& text) {
-        static const std::wregex re(L"(?:密码|解压码|password|passwd|pwd|pass)[\\s:：=._-]*([^\\s\\[\\]【】()（）,，;；]+)",std::regex::icase);
-        for(auto it=std::wsregex_iterator(text.begin(),text.end(),re);it!=std::wsregex_iterator();++it) append((*it)[1].str());
+        static const wchar_t* const keywords[]={L"密码",L"解压码",L"password",L"passwd",L"pwd",L"pass"};
+        auto isSep=[](wchar_t c){return iswspace(c)||c==L':'||c==L'：'||c==L'='||c==L'.'||c==L'_'||c==L'-';};
+        auto isStop=[](wchar_t c){return iswspace(c)||c==L'['||c==L']'||c==L'【'||c==L'】'||c==L'('||c==L')'||c==L'（'||c==L'）'||c==L','||c==L'，'||c==L';'||c==L'；';};
+        for(size_t i=0;i<text.size();){
+            size_t matched=0;
+            for(const wchar_t* kw:keywords){
+                size_t len=0;while(kw[len])++len;
+                if(i+len>text.size())continue;
+                bool ok=true;
+                for(size_t j=0;j<len;++j){if(towlower(text[i+j])!=kw[j]){ok=false;break;}}
+                if(ok){matched=len;break;}
+            }
+            if(!matched){++i;continue;}
+            size_t p=i+matched;
+            while(p<text.size()&&isSep(text[p]))++p;
+            size_t start=p;
+            while(p<text.size()&&!isStop(text[p]))++p;
+            if(p>start){append(text.substr(start,p-start));i=p;}
+            else i+=matched;
+        }
     };
     hint(filenameHint(file));hint(file.stem().wstring());
     for(const auto* name:{L"password.txt",L"密码.txt",L"解压密码.txt",L"说明.txt"}) {
