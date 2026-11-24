@@ -284,7 +284,91 @@ static std::unique_ptr<Opened> selectArchive(Bit7zLibrary& lib,const Input& raw,
                 return {};
             };
             if(kind!=L"zip"){
-                if(auto opened=tryCandidates(zipPasswordCandidates(input,passwords,progress),false))return opened;
+                auto all=zipPasswordCandidates(input,passwords,progress);
+                if(metadataOnly||all.size()<=5){
+                    if(auto opened=tryCandidates(all,false))return opened;
+                    continue;
+                }
+                // Try empty + top 2 priority candidates serially; parallelize bulk tail for 7z/RAR.
+                size_t serialCount=std::min<size_t>(3,all.size());
+                std::vector<PasswordCandidate> head(all.begin(),all.begin()+ptrdiff_t(serialCount));
+                if(auto opened=tryCandidates(head,false))return opened;
+                if(stopInput||serialCount>=all.size())continue;
+                if(!encryptedHeader&&result.status!=L"password_required")continue;
+
+                std::vector<PasswordCandidate> tail(all.begin()+ptrdiff_t(serialCount),all.end());
+                unsigned hw=std::max(1u,std::thread::hardware_concurrency());
+                unsigned workers=std::min<unsigned>({8u,hw,unsigned(tail.size())});
+                if(workers<=1){
+                    if(auto opened=tryCandidates(tail,false))return opened;
+                    continue;
+                }
+                std::atomic_size_t next{0},done{0},attempts{0};
+                std::atomic_bool found{false},cancel{false};
+                std::mutex matchMutex,progressMutex;
+                std::unique_ptr<Opened> matched;
+                std::wstring matchedPassword;
+                std::wstring matchedType;
+                bool matchedEncrypted=encryptedHeader;
+                std::vector<std::jthread> threads;
+                threads.reserve(workers);
+                for(unsigned w=0;w<workers;++w){
+                    threads.emplace_back([&]{
+                        while(!found.load(std::memory_order_acquire)&&!cancel.load(std::memory_order_relaxed)){
+                            size_t idx=next.fetch_add(1,std::memory_order_relaxed);
+                            if(idx>=tail.size())break;
+                            const auto& cand=tail[idx];
+                            if(!cand.usable||cand.value.empty()){done.fetch_add(1,std::memory_order_relaxed);continue;}
+                            if(progress){
+                                std::unique_lock plock(progressMutex,std::try_to_lock);
+                                if(plock.owns_lock()&&!progress(L"验证密码",serialCount+done.load(std::memory_order_relaxed),all.size(),ProgressUnit::Candidates)){
+                                    cancel.store(true,std::memory_order_relaxed);break;
+                                }
+                            }
+                            attempts.fetch_add(1,std::memory_order_relaxed);
+                            try{
+                                if(!input.recoveryProbe.empty()){
+                                    std::string bytes(reinterpret_cast<const char*>(input.recoveryProbe.data()),input.recoveryProbe.size());
+                                    std::istringstream stream(bytes);BitArchiveReader probeReader(lib,stream,BitFormat::SevenZip,cand.engineValue);
+                                    if(probeReader.itemsCount()!=1||propertyUInt(probeReader.itemProperty(0,BitProperty::Size))>64*1024*1024){done.fetch_add(1,std::memory_order_relaxed);continue;}
+                                    std::ostringstream decoded;probeReader.extractTo(decoded,0);auto header=decoded.str();
+                                    if((crc32(header.data(),header.size())&input.recoveryCrcMask)!=input.recoveryCrc){done.fetch_add(1,std::memory_order_relaxed);continue;}
+                                }
+                                auto candOpened=std::make_unique<Opened>(lib,input,cand.engineValue);
+                                auto& candReader=*candOpened->reader;
+                                auto ctype=formatName(candReader.detectedFormat());
+                                if(ctype.empty()||propertyUInt(candReader.archiveProperty(BitProperty::ErrorFlags))){done.fetch_add(1,std::memory_order_relaxed);continue;}
+                                if((input.recoveryPrefix||input.headerPatched)&&!candReader.itemsCount()){done.fetch_add(1,std::memory_order_relaxed);continue;}
+                                auto cprobe=encryptedProbe(candReader);
+                                if(cprobe&&!encryptedHeader){
+                                    candReader.setProgressCallback([&](uint64_t){return !found.load(std::memory_order_relaxed)&&!cancel.load(std::memory_order_relaxed);});
+                                    candReader.testItem(*cprobe);
+                                }
+                                std::scoped_lock lock(matchMutex);
+                                if(!found.exchange(true,std::memory_order_acq_rel)){
+                                    matched=std::move(candOpened);
+                                    matchedPassword=cand.value;
+                                    matchedType=ctype;
+                                    matchedEncrypted=cprobe.has_value()||encryptedHeader;
+                                }
+                                break;
+                            }catch(const BitException& e){
+                                if(isCancelled(e))break;
+                            }catch(...){}
+                            done.fetch_add(1,std::memory_order_relaxed);
+                        }
+                    });
+                }
+                for(auto& t:threads)t.join();
+                result.attempts+=unsigned(attempts.load(std::memory_order_relaxed));
+                if(cancel)throw Cancelled();
+                if(matched){
+                    result.type=matchedType;result.offset=input.offset;result.apate=input.apate;
+                    result.encrypted=matchedEncrypted;result.recovered=input.recoveryPrefix!=0||input.headerPatched;
+                    result.passwordVerified=true;result.status=L"identified";result.engineError.clear();
+                    used=matchedPassword;
+                    return matched;
+                }
                 continue;
             }
             // Opening ZIP metadata needs no key. Keep expensive prechecks lazy.
@@ -352,6 +436,33 @@ static void archiveFailure(Result& result,const std::exception& error){
 Result Engine::inspect(const std::vector<fs::path>& files,const Options& options,const Progress& progress) {
     return inspectInput(files,options,progress,options.volumesResolved);
 }
+Result Engine::list(const std::vector<fs::path>& files,const Options& options,const Progress& progress) {
+    Result result;
+    try {
+        std::vector<fs::path> paths=files;
+        if(!options.volumesResolved&&files.size()==1)paths=resolveVolumes(files.front(),progress);
+        Input raw(paths);
+        std::wstring used;
+        auto opened=selectArchive(library_,raw,passwords_.ranked(raw.path,options.password),progress,options.deep,result,used,true);
+        if(opened->source.missingVolume){result.status=L"missing_volume";result.note=L"已识别为 7z 续卷，缺少前部 "+std::to_wstring(opened->source.recoveryPrefix)+L" 字节。请补齐首卷，原文件保留。";return result;}
+        const auto& reader=*opened->reader;
+        result.entries.reserve(reader.itemsCount());
+        for(uint32_t i=0;i<reader.itemsCount();++i){
+            EntryInfo info;
+            info.path=reader.itemProperty(i,BitProperty::Path).getString();
+            info.isDir=reader.isItemFolder(i);
+            info.encrypted=reader.isItemEncrypted(i);
+            info.size=propertyUInt(reader.itemProperty(i,BitProperty::Size));
+            info.packedSize=propertyUInt(reader.itemProperty(i,BitProperty::PackSize));
+            info.crc=uint32_t(propertyUInt(reader.itemProperty(i,BitProperty::CRC)));
+            if(!info.isDir)result.bytes+=info.size;
+            result.entries.push_back(std::move(info));
+        }
+        result.archives=1;result.ok=true;result.status=L"listed";
+        result.note=L"共 "+std::to_wstring(result.entries.size())+L" 项";
+    }catch(const std::exception& e){archiveFailure(result,e);}
+    return result;
+}
 Result Engine::inspectInput(const std::vector<fs::path>& files,const Options& options,const Progress& progress,bool volumesResolved) {
     Result result;bool missingFirst=false;
     try {
@@ -393,20 +504,75 @@ static fs::path createUniqueOutputFolder(const fs::path& source,const fs::path& 
     fs::create_directories(target);
     return target;
 }
-static bool extractParallelZip(Bit7zLibrary& lib,const Opened& opened,const fs::path& output,const Progress& progress,const std::wstring& phase,unsigned requestedThreads) {
+static bool matchGlob(const std::wstring& pat,const std::wstring& text){
+    size_t p=0,t=0,star=std::wstring::npos,match=0;
+    while(t<text.size()){
+        if(p<pat.size()&&(pat[p]==L'?'||towlower(pat[p])==towlower(text[t]))){++p;++t;}
+        else if(p<pat.size()&&pat[p]==L'*'){star=p++;match=t;}
+        else if(star!=std::wstring::npos){p=star+1;t=++match;}
+        else return false;
+    }
+    while(p<pat.size()&&pat[p]==L'*')++p;
+    return p==pat.size();
+}
+static bool entryMatchesFilters(const std::wstring& rawPath,const Options& options){
+    std::wstring norm=rawPath;std::replace(norm.begin(),norm.end(),L'\\',L'/');
+    auto slash=norm.rfind(L'/');
+    std::wstring base=(slash==std::wstring::npos)?norm:norm.substr(slash+1);
+    auto matchAny=[&](const std::vector<std::wstring>& patterns){
+        return std::any_of(patterns.begin(),patterns.end(),[&](const std::wstring& pat){
+            return matchGlob(pat,norm)||matchGlob(pat,base);
+        });
+    };
+    if(!options.includePatterns.empty()&&!matchAny(options.includePatterns))return false;
+    if(!options.excludePatterns.empty()&&matchAny(options.excludePatterns))return false;
+    return true;
+}
+static fs::path unwrapSmartFolder(fs::path output){
+    std::error_code ec;
+    fs::path singleDir;
+    unsigned count=0;
+    for(const auto& entry:fs::directory_iterator(output,ec)){
+        if(ec)return output;
+        if(++count>1)return output;
+        if(!entry.is_directory(ec)||ec)return output;
+        singleDir=entry.path();
+    }
+    if(count!=1||singleDir.empty())return output;
+    std::scoped_lock lock(gOutputDirMutex);
+    auto parent=output.parent_path();
+    if(lower(singleDir.filename().wstring())==lower(output.filename().wstring())){
+        auto temp=uniquePath(parent/(output.filename().wstring()+L"._unwrap"));
+        fs::rename(singleDir,temp,ec);if(ec)return output;
+        for(const auto& item:fs::directory_iterator(temp,ec)){
+            if(ec)break;
+            fs::rename(item.path(),output/item.path().filename(),ec);
+            if(ec)break;
+        }
+        fs::remove(temp,ec);
+        return output;
+    }
+    auto target=uniquePath(parent/singleDir.filename());
+    fs::rename(singleDir,target,ec);
+    if(ec)return output;
+    fs::remove(output,ec);
+    return target;
+}
+static bool extractParallelZip(Bit7zLibrary& lib,const Opened& opened,const fs::path& output,const Progress& progress,const std::wstring& phase,unsigned requestedThreads,const std::vector<uint32_t>* selectedIndices=nullptr) {
     const auto& reader=*opened.reader;
     if(reader.detectedFormat()!=BitFormat::Zip||opened.source.nativeVolumes)return false;
     unsigned hw=std::max(1u,std::thread::hardware_concurrency());
     unsigned maxWorkers=requestedThreads==1?1u:(requestedThreads>1?std::min(requestedThreads,16u):std::min(8u,hw));
     if(maxWorkers<2)return false;
-    uint32_t count=reader.itemsCount();
+    uint32_t count=selectedIndices?uint32_t(selectedIndices->size()):reader.itemsCount();
     if(count<16)return false;
     struct Entry{uint32_t index;uint64_t size;};
     std::vector<Entry> files;
     files.reserve(count);
     std::vector<fs::path> dirs;
     uint64_t totalBytes=0;
-    for(uint32_t i=0;i<count;++i){
+    for(uint32_t pos=0;pos<count;++pos){
+        uint32_t i=selectedIndices?(*selectedIndices)[pos]:pos;
         if(reader.isItemFolder(i)){
             auto p=reader.itemProperty(i,BitProperty::Path).getString();
             if(!p.empty())dirs.push_back(output/fs::path(p));
@@ -585,8 +751,23 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
     if(!depth&&options.outputReady)options.outputReady(output);
     result.recovered|=current.recovered;result.attempts+=current.attempts;
     const auto extractPhase=L"解压 "+raw.path.filename().wstring();
+    bool hasFilter=!options.includePatterns.empty()||!options.excludePatterns.empty();
+    std::vector<uint32_t> selectedIndices;
+    if(hasFilter){
+        for(uint32_t i=0;i<reader.itemsCount();++i){
+            if(!reader.isItemFolder(i)&&entryMatchesFilters(reader.itemProperty(i,BitProperty::Path).getString(),options))
+                selectedIndices.push_back(i);
+        }
+    }
     try{
-        if(!extractParallelZip(library_,*opened,output,progress,extractPhase,options.threads)){
+        if(hasFilter){
+            if(!selectedIndices.empty()){
+                if(!extractParallelZip(library_,*opened,output,progress,extractPhase,options.threads,&selectedIndices)){
+                    setCallbacks(reader,progress,extractPhase);reader.setOverwriteMode(OverwriteMode::None);
+                    reader.extractTo(output.wstring(),selectedIndices);
+                }
+            }
+        }else if(!extractParallelZip(library_,*opened,output,progress,extractPhase,options.threads)){
             setCallbacks(reader,progress,extractPhase);reader.setOverwriteMode(OverwriteMode::None);
             reader.extractTo(output.wstring()); // Full CRC/MAC validation belongs to the mature engine.
         }
@@ -596,14 +777,19 @@ void Engine::extractOne(const std::vector<fs::path>& files,const Options& option
     }
     ++result.archives;
     if(!used.empty()) {passwords_.success(used,raw.path);std::scoped_lock lock(batchMutex_);batchPassword_=used;}
+    if(options.smartFolder&&!depth&&!hasFilter){
+        output=unwrapSmartFolder(output);
+        result.output=output;
+    }
     std::vector<fs::path> children;
-    for(const auto& item:reader) {
-        if(!item.isDir()) {
-            auto relative=fs::path(item.path());
-            if(relative.empty()) relative=L"[Content]";
-            auto p=output/relative; result.bytes+=item.size();
-            if(options.recursive && fs::is_regular_file(p)) children.push_back(p);
-        }
+    for(uint32_t i=0;i<reader.itemsCount();++i) {
+        if(reader.isItemFolder(i))continue;
+        auto itemPath=reader.itemProperty(i,BitProperty::Path).getString();
+        if(hasFilter&&!entryMatchesFilters(itemPath,options))continue;
+        auto relative=fs::path(itemPath);
+        if(relative.empty()) relative=L"[Content]";
+        auto p=output/relative; result.bytes+=propertyUInt(reader.itemProperty(i,BitProperty::Size));
+        if(options.recursive && fs::is_regular_file(p)) children.push_back(p);
     }
     // Only inspect files created by this extraction, never rescan an existing destination tree.
     std::unordered_set<std::wstring> handled;VolumeResolver childVolumes;
@@ -702,16 +888,38 @@ Result Engine::restore(const std::vector<fs::path>& files,const Options& options
     } catch(const std::exception& e) {archiveFailure(result,e);}
     return result;
 }
-Result Engine::compress(const std::vector<fs::path>& files,const fs::path& output,const std::wstring& password,const Progress& progress,const std::function<void(const fs::path&)>& outputReady) {
+Result Engine::compress(const std::vector<fs::path>& files,const fs::path& output,const std::wstring& password,const Progress& progress,const std::function<void(const fs::path&)>& outputReady,const CompressOptions& compressOptions) {
     Result result;
     try {
         auto target=uniquePath(output); fs::create_directories(target.parent_path());
-        const auto& format=lower(target.extension().wstring())==L".zip"?BitFormat::Zip:BitFormat::SevenZip;
+        auto ext=lower(target.extension().wstring());
+        static const BitInOutFormat ZstdOut{0x0e,L".zst",BitCompressionMethod::Copy,FormatFeatures::CompressionLevel};
+        const BitInOutFormat& format=ext==L".zip"?BitFormat::Zip:ext==L".zst"?ZstdOut:BitFormat::SevenZip;
         BitFileCompressor compressor(library_,format);
-        compressor.setCompressionLevel(BitCompressionLevel::Normal);
-        compressor.setPassword(password,format==BitFormat::SevenZip);
+        auto level=compressOptions.level==0?BitCompressionLevel::None
+            :compressOptions.level<=2?BitCompressionLevel::Fastest
+            :compressOptions.level<=4?BitCompressionLevel::Fast
+            :compressOptions.level<=6?BitCompressionLevel::Normal
+            :compressOptions.level<=8?BitCompressionLevel::Max
+            :BitCompressionLevel::Ultra;
+        compressor.setCompressionLevel(level);
+        if(format==BitFormat::SevenZip){
+            compressor.setSolidMode(compressOptions.solid);
+            if(!compressOptions.method.empty()){
+                auto m=lower(compressOptions.method);
+                if(m==L"zstd")compressor.setFormatProperty(L"0",L"zstd");
+                else if(m==L"lzma2")compressor.setCompressionMethod(BitCompressionMethod::Lzma2);
+                else if(m==L"store"||m==L"copy")compressor.setCompressionMethod(BitCompressionMethod::Copy);
+            }
+        }else if(format==BitFormat::Zip&&!compressOptions.method.empty()){
+            auto m=lower(compressOptions.method);
+            if(m==L"store"||m==L"copy")compressor.setCompressionMethod(BitCompressionMethod::Copy);
+            else if(m==L"deflate")compressor.setCompressionMethod(BitCompressionMethod::Deflate);
+            else if(m==L"zstd")compressor.setFormatProperty(L"m",L"zstd");
+        }
+        if(format!=ZstdOut)compressor.setPassword(password,format==BitFormat::SevenZip);
         if(format==BitFormat::Zip&&!password.empty())compressor.setFormatProperty(L"em",L"AES256");
-        compressor.setThreadsCount(0);
+        compressor.setThreadsCount(compressOptions.threads);
         setCallbacks(compressor,progress,L"创建压缩包");
         std::vector<std::wstring> paths; for(const auto& p:files) paths.push_back(fs::absolute(p).wstring());
         result.output=target;if(outputReady)outputReady(target);

@@ -1,0 +1,109 @@
+<svg aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img">
+  <title id="title">TUnpack</title>
+  <desc id="desc">An amber T-shaped pull tab lifts out of an open periwinkle archive box.</desc>
+  <defs>
+    <linearGradient id="well" x1="80" y1="107" x2="146" y2="162" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#424377" />
+      <stop offset="0.4" stop-color="#282953" />
+      <stop offset="1" stop-color="#14172F" />
+    </linearGradient>
+    <linearGradient id="left-wall" x1="41" y1="149" x2="133" y2="227" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6677EC" />
+      <stop offset="0.38" stop-color="#4C58C0" />
+      <stop offset="0.8" stop-color="#3B419F" />
+      <stop offset="1" stop-color="#47459C" />
+    </linearGradient>
+    <linearGradient id="right-wall" x1="135" y1="219" x2="216" y2="157" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#303477" />
+      <stop offset="0.48" stop-color="#252A65" />
+      <stop offset="1" stop-color="#474C92" />
+    </linearGradient>
+    <linearGradient id="left-wing" x1="64" y1="125" x2="83" y2="194" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CCD2FF" />
+      <stop offset="0.26" stop-color="#B4BEFF" />
+      <stop offset="0.62" stop-color="#919DF8" />
+      <stop offset="1" stop-color="#7A84EB" />
+    </linearGradient>
+    <linearGradient id="right-wing" x1="180" y1="131" x2="191" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A7AFFF" />
+      <stop offset="0.32" stop-color="#8C98FF" />
+      <stop offset="0.73" stop-color="#7080F4" />
+      <stop offset="1" stop-color="#6571D7" />
+    </linearGradient>
+    <linearGradient id="fold-light" x1="28" y1="137" x2="133" y2="165" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CDD5FF" />
+      <stop offset="0.36" stop-color="#F0F2FF" />
+      <stop offset="1" stop-color="#ACB5FF" />
+    </linearGradient>
+    <linearGradient id="front-ridge" x1="131" y1="179" x2="132" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#585AC4" />
+      <stop offset="0.68" stop-color="#7775CB" />
+      <stop offset="1" stop-color="#57589D" />
+    </linearGradient>
+    <linearGradient id="file-edge" x1="116" y1="112" x2="201" y2="129" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#666BA6" />
+      <stop offset="0.72" stop-color="#9FA8E4" />
+      <stop offset="1" stop-color="#666DA9" />
+    </linearGradient>
+    <linearGradient id="strip-face" x1="99" y1="32" x2="143" y2="152" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFCC80" />
+      <stop offset="0.24" stop-color="#FFB45B" />
+      <stop offset="0.52" stop-color="#FD924A" />
+      <stop offset="0.69" stop-color="#F78B49" />
+      <stop offset="0.82" stop-color="#FFA461" />
+      <stop offset="0.91" stop-color="#FA9957" />
+      <stop offset="1" stop-color="#DB673B" />
+    </linearGradient>
+    <linearGradient id="strip-crown" x1="55" y1="33" x2="188" y2="19" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE3AC" />
+      <stop offset="0.4" stop-color="#FFF0CB" />
+      <stop offset="0.76" stop-color="#FFD294" />
+      <stop offset="1" stop-color="#FFBC72" />
+    </linearGradient>
+    <linearGradient id="strip-side" x1="139" y1="49" x2="152" y2="144" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B34D32" />
+      <stop offset="0.35" stop-color="#CC5A32" />
+      <stop offset="0.69" stop-color="#CA5734" />
+      <stop offset="0.86" stop-color="#ED8242" />
+      <stop offset="1" stop-color="#FFAF60" />
+    </linearGradient>
+    <linearGradient id="strip-return" x1="125" y1="140" x2="167" y2="131" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B24E32" />
+      <stop offset="0.47" stop-color="#DF6936" />
+      <stop offset="0.86" stop-color="#FFB85F" />
+      <stop offset="1" stop-color="#FFCA7C" />
+    </linearGradient>
+    <linearGradient id="strip-hem" x1="51" y1="41" x2="183" y2="27" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE9C2" />
+      <stop offset="0.52" stop-color="#FFF4D9" />
+      <stop offset="1" stop-color="#FFD494" />
+    </linearGradient>
+    <linearGradient id="rolled-edge" x1="102" y1="92" x2="123" y2="147" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFA45B" />
+      <stop offset="0.66" stop-color="#FFBF7B" />
+      <stop offset="1" stop-color="#F49253" />
+    </linearGradient>
+  </defs>
+  <path id="archive-body" d="M 35 130 L 120 91 L 218 121 L 216 188 Q 216 195 210 198 L 139 234 Q 133 237 127 235 L 44 204 Q 37 201 37 195 Z" fill="url(#right-wall)" />
+  <path id="near-wall" d="M 35 130 L 133 163 L 133 236 Q 129 236 125 234 L 44 204 Q 37 201 37 195 Z" fill="url(#left-wall)" />
+  <path id="pressed-corner" d="M 131 168 L 134 166 L 134 231 Q 134 235 132.5 235.8 Q 131 235 131 231 Z" fill="url(#front-ridge)" />
+  <path id="left-flap-shadow" d="M 36.5 154 L 119 180 L 133 164 L 133 171 L 113 192 Q 110 195 105 193 L 36.6 165.8 Z" fill="#4348A7" />
+  <path id="right-flap-shadow" d="M 133 164 L 158 184 L 217 154 L 216.7 164 L 163 192.5 Q 159 195 155.8 192 L 133 169 Z" fill="#2D306F" />
+  <path id="open-mouth" d="M 35 130 L 116 93 Q 120 91 125 92.5 L 218 121 L 137 165 Q 133 167 128 165 Z" fill="url(#well)" />
+  <path id="inside-back-rim" d="M 35 130 L 116 93 Q 120 91 125 92.5 L 218 121 L 213 122.6 L 124 95 Q 120 94 117 95.5 L 39 131.5 Z" fill="#959CDA" />
+  <path id="back-file" d="M 82 129 L 128 107.5 Q 131 106 134 107 L 200 127.3 L 196 129.2 L 134 110 Q 131 109 129 110 L 86 130.5 Z" fill="url(#file-edge)" />
+  <path id="front-file" d="M 94 135 L 139 114 Q 142 112.5 145 113.5 L 190 127.5 Q 192 128.2 190 129.1 L 187.5 130 L 144 116.5 Q 142 116 140 117 L 98 136.4 Z" fill="url(#file-edge)" />
+  <path id="curled-tip" d="M 111 135 C 119 139 135 138 145 131 L 154 125 Q 155 124 157 125 L 167 130 Q 169 131 167 132.5 L 150 144 C 142 149 132 151 125 148 Z" fill="url(#strip-return)" />
+  <path id="pull-tab-edge" d="M 112 49 L 148.5 45 L 145.6 103 C 144 119 145 129 155 137 L 146 145 C 132 145 116 137 111 127 Z" fill="url(#strip-side)" />
+  <path id="pull-tab" d="M 52.5 37.5 Q 52.7 33.7 57.5 33 L 189 21.5 Q 194.5 21.1 194 26.5 L 190.5 50.5 Q 190 54.3 186 55 L 145.5 58.6 L 141.7 105 C 140.2 121 143.5 133 153.8 139 L 132 148 Q 126 150.6 120.7 147.2 C 106 139 100.6 126.5 102 110 L 105.4 62.1 L 58.5 66.2 Q 53.5 66.6 53.3 62 Z" fill="url(#strip-face)" />
+  <path id="upper-bevel" d="M 53 35 Q 53.8 32.9 58 30.6 L 69.5 24.5 Q 72 23.1 76.2 22.7 L 186.4 13.2 Q 189.5 13 191.6 15.5 L 193.4 19.2 Q 194.8 22 193.9 25 L 190.7 24 Q 189 23.3 185 23.7 L 58 35.2 Q 55 35.4 52.6 37.8 Z" fill="url(#strip-crown)" />
+  <path id="cap-return" d="M 194 22 Q 196.5 23 195.9 27 L 192.6 49 Q 192.1 52.5 189.3 54 Q 190.3 52.6 190.5 50 L 193.6 26 Q 194 23.8 192.6 23 Z" fill="url(#strip-side)" />
+  <path id="rolled-highlight" d="M 53 36.5 Q 54.4 34.6 58 34.1 L 184.8 22.7 Q 190.7 22 192.5 23.4 Q 190 23.3 185 24 L 58.1 35.6 Q 54.6 35.9 53 38.4 Z" fill="url(#strip-hem)" />
+  <path id="ribbon-edge-light" d="M 103.2 96 L 102.8 108 C 101.2 125 106.4 138.7 120.8 147.1 C 104.7 139 100.8 124.7 102 110 Z" fill="url(#rolled-edge)" />
+  <path id="left-flap-edge" d="M 7.5 149 L 34 130 L 133 163 L 109 188.2 Q 107 190.5 103.4 189.3 L 10 155.5 Q 7.3 154.5 7.5 151 Z" fill="#5058B3" />
+  <path id="left-flap" d="M 8.8 147.8 L 32.4 130.6 Q 34.5 129.1 37 130 L 132.9 163.5 L 108.2 185 Q 106.1 187.1 103.3 186.1 L 9.4 152.1 Q 5.9 150.8 8.8 147.8 Z" fill="url(#left-wing)" />
+  <path id="right-flap-edge" d="M 132.8 163.4 L 217 121 L 244.7 140.8 L 244.7 144 Q 244.7 146 242 147.3 L 160.3 189.1 Q 157.5 190.7 155 188.4 Z" fill="#464D9F" />
+  <path id="right-flap" d="M 132.6 163.4 L 215.8 121.4 Q 217.9 120.2 220 121.7 L 243.6 139.1 Q 246.3 141.1 243.4 142.8 L 160 185.6 Q 157.3 187.2 154.8 184.9 Z" fill="url(#right-wing)" />
+  <path id="left-hinge" d="M 30.5 132 Q 33.5 128.3 37 129.8 L 132.8 163.2 L 131.3 164.5 L 36.8 131.5 Q 34.1 130.5 30.5 132 Z" fill="url(#fold-light)" />
+  <path id="right-hinge" d="M 133 163.2 L 215.3 121.3 Q 218.2 119.7 220.6 122.1 Q 218 121.6 216 122.8 L 134.2 164.5 Z" fill="#B7C0FF" />
+</svg>

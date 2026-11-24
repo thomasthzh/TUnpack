@@ -3,6 +3,10 @@
 #include <iostream>
 #include <iterator>
 #include <chrono>
+#ifdef __MINGW32__
+// Disable MinGW CRT wildcard expansion so --include/--exclude globs reach wmain intact.
+int _CRT_glob = 0;
+#endif
 
 static std::string json(const std::wstring& value) {
     std::string out="\"";
@@ -20,10 +24,11 @@ int wmain(int argc,wchar_t** argv) {
     int code=1;
     try {
         if(argc<3) {
-            std::cout<<"Usage: unpack_cli inspect|extract|restore FILE... [--out DIR] [--keep] [--no-nested] [--shallow] [--book FILE] [--password-file UTF8_TXT] [--progress]\n       unpack_cli scan DIRECTORY [--flat] [--shallow] [--book FILE] [--progress]\n       unpack_cli create7z|createzip OUTPUT INPUT...\n";
+            std::cout<<"Usage: unpack_cli inspect|list|extract|restore FILE... [--out DIR] [--keep] [--no-nested] [--shallow] [--smart] [--include GLOB] [--exclude GLOB] [--jobs N] [--book FILE] [--password-file UTF8_TXT] [--progress]\n       unpack_cli scan DIRECTORY [--flat] [--shallow] [--book FILE] [--progress]\n       unpack_cli create7z|createzip|createzst OUTPUT INPUT... [--level 0..9] [--method zstd|lzma2|deflate|store] [--no-solid] [--jobs N]\n";
             CoUninitialize();return 2;
         }
         lu::Options options;
+        lu::CompressOptions compressOptions;
         bool showProgress=false;
         lu::fs::path book;
         std::vector<lu::fs::path> files;
@@ -44,10 +49,16 @@ int wmain(int argc,wchar_t** argv) {
             else if(arg==L"--container") options.allowContainer=true;
             else if(arg==L"--no-nested") options.recursive=false;
             else if(arg==L"--shallow") options.deep=false;
+            else if(arg==L"--smart") options.smartFolder=true;
+            else if(arg==L"--include" && i+1<argc) options.includePatterns.push_back(argv[++i]);
+            else if(arg==L"--exclude" && i+1<argc) options.excludePatterns.push_back(argv[++i]);
             else if(arg==L"--progress") showProgress=true;
             else if(arg==L"--flat") options.scanRecursive=false;
             else if(arg==L"--verify") options.verifyData=true;
-            else if(arg==L"--jobs" && i+1<argc) options.threads=unsigned(std::stoul(argv[++i]));
+            else if(arg==L"--jobs" && i+1<argc) {auto j=unsigned(std::stoul(argv[++i]));options.threads=j;compressOptions.threads=j;}
+            else if(arg==L"--level" && i+1<argc) compressOptions.level=unsigned(std::stoul(argv[++i]));
+            else if(arg==L"--method" && i+1<argc) compressOptions.method=argv[++i];
+            else if(arg==L"--no-solid") compressOptions.solid=false;
             else if(arg.starts_with(L"--")) throw std::runtime_error("Unknown option");
             else files.emplace_back(lu::fs::absolute(arg));
         }
@@ -68,14 +79,15 @@ int wmain(int argc,wchar_t** argv) {
         std::vector<std::pair<std::vector<lu::fs::path>,lu::Result>> entries;
         if(command==L"import-passwords") {passwords.importText(files.front());r.ok=true;r.note=L"已导入密码";r.bytes=passwords.count();}
         else if(command==L"inspect") r=engine.inspect(files,options,progress);
+        else if(command==L"list") r=engine.list(files,options,progress);
         else if(command==L"scan")r=engine.scan(files.front(),options,progress,[&](const auto& paths,const auto& result){entries.emplace_back(paths,result);});
         else if(command==L"extract") r=engine.extract(files,options,progress);
         else if(command==L"restore") r=engine.restore(files,options,progress);
-        else if(command==L"create7z"||command==L"createzip") {
+        else if(command==L"create7z"||command==L"createzip"||command==L"createzst") {
             if(files.size()<2) throw std::runtime_error("Create requires output and input");
             auto target=files.front(); files.erase(files.begin());
-            target.replace_extension(command==L"createzip"?L".zip":L".7z");
-            r=engine.compress(files,target,options.password);
+            target.replace_extension(command==L"createzip"?L".zip":command==L"createzst"?L".zst":L".7z");
+            r=engine.compress(files,target,options.password,progress,{},compressOptions);
         } else throw std::runtime_error("Unknown command");
         auto ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
         std::cout<<"{\"ok\":"<<(r.ok?"true":"false")<<",\"type\":"<<json(r.type)<<",\"output\":"<<json(r.output.wstring())
@@ -87,6 +99,10 @@ int wmain(int argc,wchar_t** argv) {
         for(size_t i=0;i<entries.size();++i){if(i)std::cout<<',';const auto& [paths,item]=entries[i];
             std::cout<<"{\"files\":[";for(size_t j=0;j<paths.size();++j){if(j)std::cout<<',';std::cout<<json(paths[j].wstring());}
             std::cout<<"],\"ok\":"<<(item.ok?"true":"false")<<",\"type\":"<<json(item.type)<<",\"status\":"<<json(item.status)<<",\"note\":"<<json(item.note)<<",\"bytes\":"<<item.bytes<<",\"offset\":"<<item.offset<<",\"recovered\":"<<(item.recovered?"true":"false")<<",\"encrypted\":"<<(item.encrypted?"true":"false")<<"}";
+        }
+        std::cout<<"],\"items\":[";
+        for(size_t i=0;i<r.entries.size();++i){if(i)std::cout<<',';const auto& e=r.entries[i];
+            std::cout<<"{\"path\":"<<json(e.path)<<",\"size\":"<<e.size<<",\"packed_size\":"<<e.packedSize<<",\"crc\":"<<e.crc<<",\"is_dir\":"<<(e.isDir?"true":"false")<<",\"encrypted\":"<<(e.encrypted?"true":"false")<<"}";
         }
         std::cout<<"]}\n";
         code=r.ok?0:1;
