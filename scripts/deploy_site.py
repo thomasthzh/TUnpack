@@ -72,7 +72,7 @@ if phase=='stage':
                 target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
     for name in ['app.js','manifest.webmanifest','robots.txt','sitemap.xml']:
         if (old/name).is_file() and not (new/name).exists():shutil.copyfile(old/name,new/name)
-    assert (new/'index.html').is_file() and (new/'assets/hero-icons-polish-20261117-wide.mp4').stat().st_size>100000
+    assert (new/'index.html').is_file() and (new/'assets/hero-cinematic-v100-wide.mp4').stat().st_size>100000
     desired=copy.deepcopy(before)
     desired['handle'][0]['routes'][1]['handle'][1]['root']=str(new)
     headers=desired['handle'][0]['routes'][0]['handle'][0]['response']['set']
@@ -113,9 +113,10 @@ def main():
         with tarfile.open(target,'w') as archive:
             for file in sorted((ROOT/'site').rglob('*')):
                 if file.is_file():archive.add(file,arcname=file.relative_to(ROOT/'site').as_posix(),recursive=False)
-            # Preserve the 0.13.0 legacy URL for cached pages; the current link is versioned.
-            archive.add(ROOT/'dist/TUnpack-0.13.0-windows-x64.zip',arcname='downloads/T解压-portable.zip',recursive=False)
-            archive.add(ROOT/'dist/TUnpack-0.13.1-windows-x64.zip',arcname='downloads/TUnpack-0.13.1-windows-x64.zip',recursive=False)
+            # Preserve legacy downloads for cached pages; current link is v1.0.0.
+            for legacy, arc in [('TUnpack-0.13.0-windows-x64.zip', 'downloads/T解压-portable.zip'), ('TUnpack-0.13.1-windows-x64.zip', 'downloads/TUnpack-0.13.1-windows-x64.zip')]:
+                if (ROOT/'dist'/legacy).is_file(): archive.add(ROOT/'dist'/legacy, arcname=arc, recursive=False)
+            archive.add(ROOT/'dist/TUnpack-1.0.0-windows-x64.zip',arcname='downloads/TUnpack-1.0.0-windows-x64.zip',recursive=False)
         subprocess.run(ssh+['mkdir -p /srv/tunpack-site/incoming'],check=True)
         subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=12',str(target),args.ssh_host+':/srv/tunpack-site/incoming/'+args.release+'.tar'],check=True)
     command='python3 - '+shlex.quote(args.phase)+' '+shlex.quote(args.release)

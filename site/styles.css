@@ -1,10 +1,10 @@
 :root {
   color-scheme: dark;
-  --bg: #071019;
-  --text: #f2f1eb;
-  --muted: #929d98;
-  --accent: #7cddc6;
-  --line: #ffffff23;
+  --bg: #06090F;
+  --text: #F4F3EE;
+  --muted: #98A0AA;
+  --accent: #EE6531;
+  --line: #ffffff20;
   font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
   font-synthesis: none;
   color: var(--text);
@@ -41,7 +41,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,video:focus-visible,i
 .hero h1>span { color: #a9bbae; }
 .hero-copy>p { font-size: 14px; line-height: 1.95; color: #abb7ae; padding-bottom: 5px; }
 .hero-meta { display: block; margin-top: 15px; font-size: 11px; color: #8b9d91; }
-.screen { width: min(1600px,calc(100% - 48px)); position: relative; margin: auto; background: #071019; }
+.screen { width: min(1600px,calc(100% - 48px)); position: relative; margin: auto; background: #06090F; border-radius: 18px; overflow: hidden; box-shadow: 0 32px 90px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.09); }
 .screen picture,.screen picture img,.screen video { height: auto; width: 100%; display: block; object-fit: contain; }
 .screen[data-framing="portrait"] { width: min(100%,660px); }
 .film-caption { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 20px; }
