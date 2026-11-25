@@ -1,8 +1,8 @@
 # T解压
 
-[官网与产品短片](https://tunpack.thomasthzh.top/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.1)
+[官网与产品短片](https://tunpack.thomasthzh.top/) · [下载 Windows x64 便携版](https://github.com/thomasthzh/TUnpack/releases/tag/v1.0.0)
 
-Windows x64 原生轻量解压工具，当前版本 0.13.1。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。图标使用三层错位、边缘厚度与光影，ICO 包含 16–256 像素九个尺寸。
+Windows x64 原生轻量解压工具，当前版本 1.0.0。运行解压目录中的 `T解压.exe`，无需安装 .NET、Python 或 WebView。采用瑞士工业风双列工作台与 3D/平面双版图标（ICO 包含 16–256 像素九个原生尺寸）。
 
 ## 构建
 
@@ -17,7 +17,7 @@ ctest --test-dir build --output-on-failure
 python scripts/package.py
 ```
 
-生成 `dist/TUnpack-0.13.1-windows-x64.zip` 和 `SHA256SUMS.txt`，保留解压目录 `dist/T解压/`。MSVC 可在开发者终端使用 `cmake -S . -B build -A x64` 与 `cmake --build build --config Release`；打包脚本支持可执行文件在 `bin/Release`、附属引擎在 `bin` 的布局；本轮未对 MSVC 实际编译验收。首次 CMake 配置会联网获取固定版本 CPM / 7-Zip 接口头 / ghc::filesystem，不应关闭 TLS 校验。
+生成 `dist/TUnpack-1.0.0-windows-x64.zip` 和 `SHA256SUMS.txt`，保留解压目录 `dist/T解压/`。MSVC 可在开发者终端使用 `cmake -S . -B build -A x64` 与 `cmake --build build --config Release`；打包脚本支持可执行文件在 `bin/Release`、附属引擎在 `bin` 的布局；本轮未对 MSVC 实际编译验收。首次 CMake 配置会联网获取固定版本 CPM / 7-Zip 接口头 / ghc::filesystem，不应关闭 TLS 校验。
 
 `tools/` 不入库。bit7z 固定 [v4.0.10 源码](https://github.com/rikyoz/bit7z/tree/0f03717920442abcdba80183534931c867feb9c0)（MPL-2.0）并应用本项目卷路径补丁；引擎来自 [7-Zip ZS 26.05 官方发布](https://github.com/mcmilk/7-Zip-zstd/releases/tag/v26.05-v1.5.7-R1)，核对官方校验值后用 7-Zip 展开，不运行安装器。脚本保留下载，重复执行会核对版本与补丁，不删除文件。第三方完整许可与对应源码见 `THIRD-PARTY-NOTICES.txt`，便携包同时附带 MIT、依赖许可和使用说明。
 

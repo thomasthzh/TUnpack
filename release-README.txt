@@ -1,4 +1,4 @@
-T解压 0.13.1 — Windows x64 便携版
+T解压 1.0.0 — Windows x64 便携版
 
 开始使用
 1. 将 ZIP 完整展开到普通文件夹，保留全部文件。
@@ -24,8 +24,8 @@ T解压 0.13.1 — Windows x64 便携版
 仅支持 Windows 10/11 x64；本版本尚未数字签名。
 请从官方 GitHub Release 下载，可用同页 SHA256SUMS.txt 核对文件。
 官网：https://tunpack.thomasthzh.top/
-公开发行：https://github.com/thomasthzh/TUnpack/releases/tag/v0.13.1
-0.13.1修复标准ZIP .z01…zip分卷入口和整组识别。
+公开发行：https://github.com/thomasthzh/TUnpack/releases/tag/v1.0.0
+1.0.0 带来双列瑞士工业风工作台、双层并行解压、智能单根解压、Zstd 压缩、160 倍速密码探测与全新 3D/平面双版图标。
 升级前请正常退出旧版工作台，再运行新版，避免文件占用或旧窗口接收任务。
 说明：https://github.com/thomasthzh/TUnpack#readme
 反馈：https://github.com/thomasthzh/TUnpack/issues
